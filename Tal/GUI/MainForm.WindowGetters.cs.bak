@@ -1,0 +1,304 @@
+﻿// Author: Daniel M. Kaminski
+// Year: 2026
+// Location: Lublin
+// Project: TAL
+
+using Tal.Diagnostics;
+using Tal.Forms;
+using Tal.GUI;
+using Tal.Hirshfeld;
+using WeifenLuo.WinFormsUI.Docking;
+
+namespace Tal
+{
+    /// <summary>
+    /// Centralne miejsce dla wszystkich getterów okien DockContent.
+    /// Każdy getter tworzy okno leniwie (lazy) i cache'uje je jako singleton.
+    /// Gdy okno zostanie zamknięte, FormClosed zeruje referencję — następne
+    /// wywołanie utworzy nowe.
+    /// </summary>
+    public partial class MainForm
+    {
+        #region Display Windows
+
+        public DisplayOptionsWindow GetDisplayOptionsWindow()
+        {
+            if (_displayOptionsWindow == null || _displayOptionsWindow.IsDisposed)
+            {
+                _displayOptionsWindow = new DisplayOptionsWindow();
+                _displayOptionsWindow.FormClosed += (s, e) => _displayOptionsWindow = null;
+            }
+            return _displayOptionsWindow;
+        }
+
+        public AtomColorWindow GetAtomColorWindow()
+        {
+            if (_atomColorWindow == null || _atomColorWindow.IsDisposed)
+            {
+                _atomColorWindow = new AtomColorWindow();
+                _atomColorWindow.FormClosed += (s, e) => _atomColorWindow = null;
+            }
+            return _atomColorWindow;
+        }
+
+        public AtomDisplayWindow GetAtomDisplayWindow()
+        {
+            if (_atomDisplayWindow == null || _atomDisplayWindow.IsDisposed)
+            {
+                _atomDisplayWindow = new AtomDisplayWindow();
+                _atomDisplayWindow.FormClosed += (s, e) => _atomDisplayWindow = null;
+            }
+            return _atomDisplayWindow;
+        }
+
+        public LabelsWindow GetLabelsWindow()
+        {
+            if (_labelsWindow == null || _labelsWindow.IsDisposed)
+            {
+                _labelsWindow = new LabelsWindow();
+                _labelsWindow.FormClosed += (s, e) => _labelsWindow = null;
+            }
+            return _labelsWindow;
+        }
+
+        public LightingWindow GetLightingWindow()
+        {
+            if (_lightingWindow == null || _lightingWindow.IsDisposed)
+            {
+                _lightingWindow = new LightingWindow();
+                _lightingWindow.FormClosed += (s, e) => _lightingWindow = null;
+            }
+            return _lightingWindow;
+        }
+
+        public BackgroundColorWindow GetBackgroundColorWindow()
+        {
+            if (_backgroundColorWindow == null || _backgroundColorWindow.IsDisposed)
+            {
+                _backgroundColorWindow = new BackgroundColorWindow();
+                _backgroundColorWindow.FormClosed += (s, e) => _backgroundColorWindow = null;
+            }
+            return _backgroundColorWindow;
+        }
+
+        #endregion
+
+        #region Structure / Analysis Windows
+
+        public CavitySettingsWindow GetCavitySettingsWindow()
+        {
+            if (_cavitySettingsWindow == null || _cavitySettingsWindow.IsDisposed)
+            {
+                _cavitySettingsWindow = new CavitySettingsWindow();
+                _cavitySettingsWindow.FormClosed += (s, e) => _cavitySettingsWindow = null;
+            }
+            return _cavitySettingsWindow;
+        }
+
+        // Pole klasy
+        private DepthCueWindow _depthCueWindow;
+
+        // Getter
+        public DepthCueWindow GetDepthCueWindow()
+        {
+            if (_depthCueWindow == null || _depthCueWindow.IsDisposed)
+            {
+                _depthCueWindow = new DepthCueWindow();
+                _depthCueWindow.FormClosed += (s, e) => _depthCueWindow = null;
+            }
+            return _depthCueWindow;
+        }
+
+        public PackingWindow GetPackingWindow()
+        {
+            if (_packingWindow == null || _packingWindow.IsDisposed)
+            {
+                _packingWindow = new PackingWindow();
+                _packingWindow.FormClosed += (s, e) => _packingWindow = null;
+            }
+            return _packingWindow;
+        }
+
+        public ShortContactsWindow GetShortContactsWindow()
+        {
+            if (_shortContactsWindow == null || _shortContactsWindow.IsDisposed)
+            {
+                _shortContactsWindow = new ShortContactsWindow();
+                _shortContactsWindow.FormClosed += (s, e) => _shortContactsWindow = null;
+            }
+            return _shortContactsWindow;
+        }
+
+        private HirshfeldFingerprintWindow _hirshfeldFingerprintWindow;
+
+        public HirshfeldFingerprintWindow GetHirshfeldFingerprintWindow(string title = null)
+        {
+            if (_hirshfeldFingerprintWindow == null || _hirshfeldFingerprintWindow.IsDisposed)
+            {
+                _hirshfeldFingerprintWindow = new HirshfeldFingerprintWindow(
+                    title ?? "Hirshfeld Fingerprint");
+
+                _hirshfeldFingerprintWindow.FormClosed += (s, e) =>
+                    _hirshfeldFingerprintWindow = null;
+            }
+
+            return _hirshfeldFingerprintWindow;
+        }
+
+        public AutoRotateWindow GetAutoRotateWindow()
+        {
+            if (_autoRotateWindow == null || _autoRotateWindow.IsDisposed)
+            {
+                _autoRotateWindow = new AutoRotateWindow();
+                _autoRotateWindow.FormClosed += (s, e) => _autoRotateWindow = null;
+            }
+            return _autoRotateWindow;
+        }
+
+
+        public MoleculeOverlayWindow GetMoleculeOverlayWindow()
+        {
+            if (_moleculeOverlayWindow == null || _moleculeOverlayWindow.IsDisposed)
+            {
+                _moleculeOverlayWindow = new MoleculeOverlayWindow();
+                _moleculeOverlayWindow.FormClosed += (s, e) => _moleculeOverlayWindow = null;
+            }
+            return _moleculeOverlayWindow;
+        }
+
+        public DebugWindow GetDebugWindow()
+        {
+            if (_debugWindow == null || _debugWindow.IsDisposed)
+            {
+                _debugWindow = new DebugWindow();
+                _debugWindow.FormClosed += (s, e) => _debugWindow = null;
+            }
+            return _debugWindow;
+        }
+
+        public HBondSettingsWindow GetHBondSettingsWindow()
+        {
+            if (_hBondSettingsWindow == null || _hBondSettingsWindow.IsDisposed)
+            {
+                _hBondSettingsWindow = new HBondSettingsWindow();
+                _hBondSettingsWindow.FormClosed += (s, e) => _hBondSettingsWindow = null;
+            }
+            return _hBondSettingsWindow;
+        }
+
+        #region Hirshfeld
+
+        private HirshfeldDocument _hirshfeldDocument;
+
+        public HirshfeldDocument GetHirshfeldDocument()
+        {
+            if (_hirshfeldDocument == null || _hirshfeldDocument.IsDisposed)
+            {
+                _hirshfeldDocument = new HirshfeldDocument("Hirshfeld Surface");
+                _hirshfeldDocument.FormClosed += (s, e) => _hirshfeldDocument = null;
+            }
+            return _hirshfeldDocument;
+        }
+
+        private HydrogenNormalizationWindow _hydrogenNormalizationWindow;
+
+        public HydrogenNormalizationWindow GetHydrogenNormalizationWindow()
+        {
+            if (_hydrogenNormalizationWindow == null || _hydrogenNormalizationWindow.IsDisposed)
+            {
+                _hydrogenNormalizationWindow = new HydrogenNormalizationWindow();
+                _hydrogenNormalizationWindow.FormClosed += (s, e) => _hydrogenNormalizationWindow = null;
+            }
+            return _hydrogenNormalizationWindow;
+        }
+
+        #endregion
+
+        private MorphologyWindow _morphologyWindow;
+
+        public MorphologyWindow GetMorphologyWindow()
+        {
+            if (_morphologyWindow == null || _morphologyWindow.IsDisposed)
+            {
+                _morphologyWindow = new MorphologyWindow();
+                _morphologyWindow.FormClosed += (s, e) => _morphologyWindow = null;
+            }
+            return _morphologyWindow;
+        }
+
+        private SceneQualityWindow _sceneQualityWindow;
+
+        public SceneQualityWindow GetSceneQualityWindow()
+        {
+            if (_sceneQualityWindow == null || _sceneQualityWindow.IsDisposed)
+            {
+                _sceneQualityWindow = new SceneQualityWindow();
+                _sceneQualityWindow.FormClosed += (s, e) => _sceneQualityWindow = null;
+            }
+            return _sceneQualityWindow;
+        }
+
+        private AtomPropertiesWindow _atomPropertiesWindow;
+
+        public AtomPropertiesWindow GetAtomPropertiesWindow()
+        {
+            if (_atomPropertiesWindow == null || _atomPropertiesWindow.IsDisposed)
+            {
+                _atomPropertiesWindow = new AtomPropertiesWindow();
+                _atomPropertiesWindow.FormClosed += (s, e) => _atomPropertiesWindow = null;
+            }
+            return _atomPropertiesWindow;
+        }
+
+
+ 
+
+        public SymmetryElementsWindow GetSymmetryElementsWindow()
+        {
+            if (_symmetryElementsWindow == null || _symmetryElementsWindow.IsDisposed)
+            {
+                _symmetryElementsWindow = new SymmetryElementsWindow();
+                _symmetryElementsWindow.FormClosed += (s, e) => _symmetryElementsWindow = null;
+            }
+            return _symmetryElementsWindow;
+        }
+        #endregion
+
+
+
+
+
+        #region Show Tool Window Helper
+
+        /// <summary>
+        /// Pokazuje okno narzędziowe po lewej stronie z jednolitym rozmiarem.
+        /// Jeśli już otwarte — aktywuje.
+        /// </summary>
+        public void ShowToolWindow(DockContent window, string title = null)
+        {
+            if (window == null || window.IsDisposed) return;
+
+            if (!string.IsNullOrEmpty(title))
+                window.Text = title;
+
+            if (window.IsHidden)
+            {
+                window.Show(_dockPanel, DockState.DockLeft);
+
+                // ⭐ Ustaw szerokość lewego portu (px → proporcja)
+                if (this.Width > 0)
+                {
+                    _dockPanel.DockLeftPortion = DockWindowConfig.DefaultDockPortionPx
+                                               / Math.Max(this.Width, 1);
+                }
+                _dockPanel.Refresh();
+            }
+            else
+            {
+                window.Activate();
+            }
+        }
+
+        #endregion
+    }
+}
