@@ -1857,6 +1857,7 @@ namespace Tal.Forms
             return angle;
         }
 
+<<<<<<< HEAD
  /// <summary>
  /// Estimates the bond length error from per-atom aftersitional errors.
  /// Uses the same formula as Measure.CalculateDistanceError, but the
@@ -1930,6 +1931,24 @@ namespace Tal.Forms
 
             return Math.Clamp(errDeg, 0.001f, 30.0f);
         }
+=======
+        // Error estimates come from Measure (full position covariance incl. symmetry rotation
+        // + unit-cell esds), so Structure Info and on-screen measurements agree exactly.
+        // new Measure per call: cheap, and always bound to the current molecule
+        private Measure ErrorMeasure => new Measure(_molecule);
+
+        /// <summary>Bond-length esd (Å); same model as the on-screen distance measurement.</summary>
+        private float EstimateBondError(Molecule.Atom a1, Molecule.Atom a2)
+            => ErrorMeasure.DistanceError(a1, a2);
+
+        /// <summary>Valence-angle esd (degrees); same model as the on-screen angle measurement (b = vertex).</summary>
+        private float EstimateAngleError(Molecule.Atom a, Molecule.Atom b, Molecule.Atom c)
+            => ErrorMeasure.AngleError(a, b, c);
+
+        /// <summary>Torsion-angle esd (degrees); same model as the on-screen torsion measurement.</summary>
+        private float EstimateTorsionError(Molecule.Atom a, Molecule.Atom b, Molecule.Atom c, Molecule.Atom d)
+            => ErrorMeasure.TorsionError(a, b, c, d);
+>>>>>>> Dodaj pliki projektów.
 
         #endregion
 
