@@ -65,8 +65,14 @@ namespace Tal
 
             foreach (var structureAtom in structure.Atoms)
             {
+<<<<<<< HEAD
                 Vector3 fracErr = new Vector3(structureAtom.X_Error, structureAtom.Y_Error, structureAtom.Z_Error) * 0.001f;
                 Vector3 cartErr = Vector3.Transform(fracErr, Amatrix);
+=======
+                // X_Error..Z_Error are true fractional esds (e.g. 0.12345(6) -> 0.00006).
+                Vector3 fracErr = new Vector3(structureAtom.X_Error, structureAtom.Y_Error, structureAtom.Z_Error);
+                Vector3 cartErr = FracErrorToCartError(fracErr);
+>>>>>>> Dodaj pliki projektów.
 
                 var simpleAtom = new AtomSimple
                 {
@@ -78,6 +84,10 @@ namespace Tal
                     x_e = cartErr.X,
                     y_e = cartErr.Y,
                     z_e = cartErr.Z,
+<<<<<<< HEAD
+=======
+                    CoordCov = Cov3.FromFractionalSigma(fracErr, Amatrix),
+>>>>>>> Dodaj pliki projektów.
                     occupancy = structureAtom.Occupancy,
                     iso = structureAtom.iso,
                     isAnisotropic = structureAtom.AdpType == "Uani",
@@ -213,6 +223,7 @@ namespace Tal
                 atom.y_e = resAtom.y_e;
                 atom.z_e = resAtom.z_e;
 
+<<<<<<< HEAD
                 Vector3 fracErr = new Vector3(atom.x_e, atom.y_e, atom.z_e);
                 Vector3 cartErr = Vector3.Transform(fracErr, Amatrix);
 
@@ -222,6 +233,14 @@ namespace Tal
 
                 atom.iso = isoValue;
                 CalculateError(ref atom.x_e, ref atom.y_e, ref atom.z_e);
+=======
+                // full Cartesian covariance (keeps axis correlations) + its per-axis sigmas
+                atom.CoordCov = Cov3.FromFractionalSigma(new Vector3(atom.x_e, atom.y_e, atom.z_e), Amatrix);
+                // fractional esd -> Cartesian esd (single conversion, in quadrature)
+                CalculateError(ref atom.x_e, ref atom.y_e, ref atom.z_e);
+
+                atom.iso = isoValue;
+>>>>>>> Dodaj pliki projektów.
 
                 atom.occupancy = resAtom.occ;
                 atom.Transformation = Matrix.Identity;

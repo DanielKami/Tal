@@ -93,7 +93,6 @@ namespace Tal
  /// <summary>
  /// Fallback cell error fraction, used ONLY when atomic Coordinate_error
  /// is unavailable (all zero). In normal crystallographic data the
- /// per-atom aftersitional error already contains the cell-error contribution.
  /// </summary>
         private float _cellErrorFraction = 0f;
 
@@ -358,9 +357,6 @@ namespace Tal
 
             double distance = Vector3.Distance(pos1, pos2);
 
-            float error = CalculateDistanceError(pos1, pos2,
-                _molecule.atom[atom1].Coordinate_error,
-                _molecule.atom[atom2].Coordinate_error);
 
             int errorDigit = LErr(ref distance, error);
             Message = $"Distance {symbol1}-{symbol2}: " +
@@ -446,10 +442,6 @@ namespace Tal
             double angleRad = Math.Acos(cosAngle);
             double angleDeg = MathHelperTal.ToDegrees((float)angleRad);
 
-            float error = CalculateAngleError(v1, v2, v3,
-                _molecule.atom[atom1].Coordinate_error,
-                _molecule.atom[atom2].Coordinate_error,
-                _molecule.atom[atom3].Coordinate_error);
 
             int errorDigit = LErr(ref angleDeg, error);
             Message = $"Angle {symbol1}-{symbol2}-{symbol3}: " +
@@ -526,11 +518,6 @@ namespace Tal
             double torsionRad = CalculateTorsionAngleRad(V1, V2, V3, V4);
             double torsionDeg = MathHelperTal.ToDegrees((float)torsionRad);
 
-            float error = CalculateTorsionError(V1, V2, V3, V4,
-                _molecule.atom[atom1].Coordinate_error,
-                _molecule.atom[atom2].Coordinate_error,
-                _molecule.atom[atom3].Coordinate_error,
-                _molecule.atom[atom4].Coordinate_error);
 
             int errorDigit = LErr(ref torsionDeg, error);
             Message = $"Torsion {symbol1}-{symbol2}-{symbol3}-{symbol4}: " +
@@ -613,8 +600,22 @@ namespace Tal
             Vector3 projShifted = projRaw - shift;
 
             UpdateCellError();
-            float posErr = CalculateVectorError(_molecule.atom[atomIdx].Coordinate_error);
-            float error = posErr > 0f ? posErr : distance * _cellErrorFraction;
+
+            float error;
+            if (posErr > 0f)
+            {
+                error = posErr;
+                // real refined esds -> add the unit-cell esd contribution in quadrature
+                if (MakePosErr(_molecule.atom[atomIdx]).Real)
+                {
+                    double cellC = PlaneCellContribution(atomRaw, plane, shift);
+                    error = (float)Math.Sqrt((double)posErr * posErr + cellC * cellC);
+                }
+            }
+            else
+            {
+                error = distance * _cellErrorFraction;   // no esds in the file: rough fallback
+            }
 
             double distVal = distance;
             int errDigit = LErr(ref distVal, error);
@@ -759,6 +760,50 @@ namespace Tal
 
         #region Error Calculation Methods
 
+        // ─────────────────────────────────────────────────────────────────────
+        // Error propagation model
+        //   * every atom carries a full Cartesian position covariance C (Cov3):
+        //     fractional esds are independent, Cartesian ones are correlated for
+        //     oblique cells, and C is rotated together with symmetry operations;
+        //   * the geometric quantity q (d, theta, tau) is linearised:
+        //         var(q) = sum_atoms  g_a^T C_a g_a      g_a = dq/dr_a
+        //   * the unit-cell esds (a, b, c, alpha, beta, gamma) are propagated
+        //     separately at fixed fractional coordinates and added in quadrature:
+        //         var_cell(q) = sum_k ( dq/dp_k * sigma(p_k) )^2
+        //     (cell parameters treated as independent, as in SHELXL / PLATON).
+        // ─────────────────────────────────────────────────────────────────────
+
+        private struct PosErr
+        {
+            public Vector3 Pos;
+            /// <summary>Position covariance (Å²).</summary>
+            public Cov3 Cov;
+            /// <summary>True when Cov comes from real refined esds (not the fallback guess).</summary>
+            public bool Real;
+        }
+
+        private PosErr MakePosErr(in Molecule.Atom a)
+        {
+            var pe = new PosErr { Pos = a.Coordinate };
+
+            if (!a.Coordinate_cov.IsZero)
+            {
+                pe.Cov = a.Coordinate_cov;
+                pe.Real = true;
+            }
+            else if (CalculateVectorError(a.Coordinate_error) > 0f)
+            {
+                pe.Cov = Cov3.FromDiagonal(a.Coordinate_error);
+                pe.Real = true;
+            }
+            else
+            {
+                pe.Cov = Cov3.FromDiagonal(EffectivePositionalError(a.Coordinate, a.Coordinate_error, a.Coordinate));
+                pe.Real = false;
+            }
+            return pe;
+        }
+
         private Vector3 EffectivePositionalError(Vector3 pos, Vector3 coordErr, Vector3 cellRefPos)
         {
             float mag = CalculateVectorError(coordErr);
@@ -771,30 +816,15 @@ namespace Tal
             return new Vector3(e, e, e);
         }
 
-        private float CalculateDistanceError(Vector3 pos1, Vector3 pos2,
-            Vector3 err1, Vector3 err2)
         {
-            Vector3 diff = pos1 - pos2;
             float d = diff.Length();
             if (d < 1e-4f) return 0.001f;
 
-            Vector3 e1 = EffectivePositionalError(pos1, err1, pos1);
-            Vector3 e2 = EffectivePositionalError(pos2, err2, pos2);
 
-            float dx = diff.X / d, dy = diff.Y / d, dz = diff.Z / d;
 
-            float errorSq =
-                dx * dx * e1.X * e1.X + dy * dy * e1.Y * e1.Y + dz * dz * e1.Z * e1.Z +
-                dx * dx * e2.X * e2.X + dy * dy * e2.Y * e2.Y + dz * dz * e2.Z * e2.Z;
-
-            return (float)Math.Sqrt(Math.Max(errorSq, 1e-12));
         }
 
-        private float CalculateAngleError(Vector3 pos1, Vector3 pos2, Vector3 pos3,
-            Vector3 err1, Vector3 err2, Vector3 err3)
         {
-            Vector3 a = pos1 - pos2;
-            Vector3 b = pos3 - pos2;
             float lenA = a.Length();
             float lenB = b.Length();
 
@@ -814,9 +844,6 @@ namespace Tal
 
             if (Math.Abs(sinTheta) < 0.01)
             {
-                float avgErr = (CalculateVectorError(e1) +
-                                CalculateVectorError(e2) +
-                                CalculateVectorError(e3)) / 3.0f;
                 float avgDist = 0.5f * (lenA + lenB);
                 float errDeg_ = (avgErr / avgDist) * (180.0f / MathF.PI);
                 return Math.Clamp(errDeg_, 0.001f, 10.0f);
@@ -835,62 +862,335 @@ namespace Tal
             grad3 = ClampVector(grad3, GRAD_CLAMP);
 
             double errRadSq =
-                grad1.X * grad1.X * e1.X * e1.X + grad1.Y * grad1.Y * e1.Y * e1.Y + grad1.Z * grad1.Z * e1.Z * e1.Z +
-                grad2.X * grad2.X * e2.X * e2.X + grad2.Y * grad2.Y * e2.Y * e2.Y + grad2.Z * grad2.Z * e2.Z * e2.Z +
-                grad3.X * grad3.X * e3.X * e3.X + grad3.Y * grad3.Y * e3.Y * e3.Y + grad3.Z * grad3.Z * e3.Z * e3.Z;
 
             double errDeg = Math.Sqrt(Math.Max(errRadSq, 0.0)) * (180.0 / Math.PI);
             return (float)Math.Clamp(errDeg, 0.001, 10.0);
         }
 
-        private float CalculateTorsionError(Vector3 pos1, Vector3 pos2, Vector3 pos3, Vector3 pos4,
-            Vector3 err1, Vector3 err2, Vector3 err3, Vector3 err4)
         {
-            const float EPS = 1e-4f;
-            Vector3[] positions = { pos1, pos2, pos3, pos4 };
-            Vector3[] errs = { err1, err2, err3, err4 };
 
-            Vector3[] eff = new Vector3[4];
             for (int i = 0; i < 4; i++)
-                eff[i] = EffectivePositionalError(positions[i], errs[i], positions[i]);
-
-            if (!IsTorsionWellDefined(pos1, pos2, pos3, pos4))
-                return 0.5f;
 
             double errRadSq = 0.0;
 
             for (int atom = 0; atom < 4; atom++)
             {
+                double[] g = new double[3];
                 for (int coord = 0; coord < 3; coord++)
                 {
-                    float e = (coord == 0) ? eff[atom].X
-                            : (coord == 1) ? eff[atom].Y
-                                           : eff[atom].Z;
-                    if (e < 1e-6f) continue;
 
-                    Vector3[] plus = (Vector3[])positions.Clone();
-                    Vector3[] minus = (Vector3[])positions.Clone();
-                    if (coord == 0) { plus[atom].X += EPS; minus[atom].X -= EPS; }
-                    if (coord == 1) { plus[atom].Y += EPS; minus[atom].Y -= EPS; }
-                    if (coord == 2) { plus[atom].Z += EPS; minus[atom].Z -= EPS; }
 
-                    double tPlus = CalculateTorsionAngleRad(plus[0], plus[1], plus[2], plus[3]);
-                    double tMinus = CalculateTorsionAngleRad(minus[0], minus[1], minus[2], minus[3]);
 
-                    double diff = tPlus - tMinus;
-                    while (diff > Math.PI) diff -= 2.0 * Math.PI;
-                    while (diff < -Math.PI) diff += 2.0 * Math.PI;
 
-                    double deriv = diff / (2.0 * EPS);
-                    if (Math.Abs(deriv) > 1e3) deriv = Math.Sign(deriv) * 1e3;
 
-                    errRadSq += deriv * deriv * e * e;
-                }
+        }
+
+        /// <summary>
+        /// Cell contribution for a quantity of atomic positions (distance, angle, torsion).
+        /// Fractional vectors relative to the first atom are held fixed (translation cancels).
+        /// </summary>
+        private double CellContribution(Vector3[] pos, Func<double[][], double> q, bool wrapAngle)
+        {
+            if (!TryGetCell(out double[] p, out _)) return 0.0;
+            if (!TryInvert3(CellMatrix(p), out double[,] inv)) return 0.0;
+
+            double[][] frac = new double[pos.Length][];
+            for (int i = 0; i < pos.Length; i++)
+            {
+                Vector3 r = pos[i] - pos[0];
+                frac[i] = MulVec(inv, r.X, r.Y, r.Z);
             }
 
-            double errDeg = Math.Sqrt(Math.Max(errRadSq, 0.0)) * (180.0 / Math.PI);
-            return (float)Math.Clamp(errDeg, 0.001, 10.0);
         }
+
+        /// <summary>
+        /// Least-squares mean plane through the points: centroid c and unit normal
+        /// (eigenvector of the smallest eigenvalue of the scatter matrix). Same fit as MeanPlaneCalculator.
+        /// </summary>
+        private static bool TryFitMeanPlane(double[][] pts, out double[] c, out double[] nrm)
+        {
+            int n = pts.Length;
+            c = new double[3];
+            nrm = null;
+            if (n < 3) return false;
+
+            for (int i = 0; i < n; i++)
+                for (int a = 0; a < 3; a++) c[a] += pts[i][a] / n;
+
+            double[,] cov = new double[3, 3];
+            for (int i = 0; i < n; i++)
+                for (int a = 0; a < 3; a++)
+                    for (int b = 0; b < 3; b++)
+                        cov[a, b] += (pts[i][a] - c[a]) * (pts[i][b] - c[b]) / n;
+
+            if (!MeanPlaneCalculator.SymmetricEigen3x3(cov, out double[] ev, out double[,] vec))
+                return false;
+
+            int min = 0;
+            if (ev[1] < ev[min]) min = 1;
+            if (ev[2] < ev[min]) min = 2;
+
+            double[] v = { vec[0, min], vec[1, min], vec[2, min] };
+            double len = Math.Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+            if (len < 1e-12) return false;
+
+            nrm = new[] { v[0] / len, v[1] / len, v[2] / len };
+            return true;
+        }
+
+        /// <summary>
+        /// Variance (Å²) of the signed distance atom → mean plane caused by the position errors of
+        /// BOTH the measured atom and every atom that defines the plane:
+        ///     var = sum_k g_kᵀ C_k g_k ,  g_k = ∂d/∂r_k  (numerical, the plane is refitted).
+        /// When the measured atom is itself one of the plane atoms its position is the same variable
+        /// (direct term and plane term are differentiated together). Plane atoms without refined
+        /// esds contribute nothing.
+        /// </summary>
+        private double MeanPlanePositionVariance(int atomIdx, CrystalPlane plane, Vector3 shift,
+                                                 Vector3 atomRaw, out bool ok)
+        {
+            ok = false;
+            if (plane == null || plane.AtomIndices == null) return 0.0;
+
+            var members = new List<int>();
+            foreach (int idx in plane.AtomIndices)
+                if (idx >= 0 && idx < _molecule.NumberOfAtoms) members.Add(idx);
+            if (members.Count < 3) return 0.0;
+
+            double[][] pts = new double[members.Count][];
+            int memberOfAtom = -1;
+            for (int i = 0; i < members.Count; i++)
+            {
+                Vector3 r = _molecule.atom[members[i]].Coordinate + shift;
+                pts[i] = new double[] { r.X, r.Y, r.Z };
+                if (members[i] == atomIdx) memberOfAtom = i;
+            }
+
+            // measured atom: the same array as the plane atom when it is a member
+            double[] a = memberOfAtom >= 0 ? pts[memberOfAtom] : new double[] { atomRaw.X, atomRaw.Y, atomRaw.Z };
+
+            if (!TryFitMeanPlane(pts, out double[] c0, out double[] nRef)) return 0.0;
+
+            bool failed = false;
+            double SignedDistance()
+            {
+                if (!TryFitMeanPlane(pts, out double[] c, out double[] nn)) { failed = true; return 0.0; }
+                if (nn[0] * nRef[0] + nn[1] * nRef[1] + nn[2] * nRef[2] < 0)
+                    for (int k = 0; k < 3; k++) nn[k] = -nn[k];
+                return nn[0] * (a[0] - c[0]) + nn[1] * (a[1] - c[1]) + nn[2] * (a[2] - c[2]);
+            }
+
+            const double EPS = 1e-4;
+
+            double Gradient(double[] target, Cov3 cov)
+            {
+                double[] g = new double[3];
+                for (int k = 0; k < 3; k++)
+                {
+                    double saved = target[k];
+                    target[k] = saved + EPS;
+                    double dp = SignedDistance();
+                    target[k] = saved - EPS;
+                    double dm = SignedDistance();
+                    target[k] = saved;
+                    g[k] = (dp - dm) / (2.0 * EPS);
+                }
+                return cov.Quadratic(new Vector3((float)g[0], (float)g[1], (float)g[2]));
+            }
+
+            double var = 0.0;
+            for (int i = 0; i < members.Count; i++)
+            {
+                PosErr pe = MakePosErr(_molecule.atom[members[i]]);
+                if (!pe.Real) continue;
+                var += Gradient(pts[i], pe.Cov);
+            }
+
+            if (memberOfAtom < 0)
+            {
+                PosErr pa = MakePosErr(_molecule.atom[atomIdx]);
+                if (pa.Real) var += Gradient(a, pa.Cov);
+            }
+
+            if (failed || !(var > 0.0) || double.IsNaN(var)) return 0.0;
+            ok = true;
+            return var;
+        }
+
+        /// <summary>
+        /// Cell contribution to the atom → plane distance (Å).
+        ///  * HKL plane  h·x + k·y + l·z = 1 is fixed in fractional space, so only the length of the
+        ///    reciprocal vector |g| = |M⁻ᵀ(h,k,l)| changes with the cell: d = |h·x+k·y+l·z−1| / |g|.
+        ///  * Mean plane: all plane atoms and the measured atom keep their fractional coordinates,
+        ///    the plane is refitted (centroid + smallest-variance direction) for each cell variant.
+        /// atomRaw = atom position WITHOUT molecule shift (absolute Cartesian).
+        /// </summary>
+        private double PlaneCellContribution(Vector3 atomRaw, CrystalPlane plane, Vector3 shift)
+        {
+            if (plane == null) return 0.0;
+            if (!TryGetCell(out double[] p0, out _)) return 0.0;
+            if (!TryInvert3(CellMatrix(p0), out double[,] inv0)) return 0.0;
+
+            double[] fAtom = MulVec(inv0, atomRaw.X, atomRaw.Y, atomRaw.Z);
+
+            if (plane.Type == CrystalPlaneType.HKL)
+            {
+                if (plane.H == 0 && plane.K == 0 && plane.L == 0) return 0.0;
+                double h = plane.H, k = plane.K, l = plane.L;
+
+                return CellContributionParams(pp =>
+                {
+                    if (!TryInvert3(CellMatrix(pp), out double[,] im)) return 0.0;
+                    double gx = im[0, 0] * h + im[1, 0] * k + im[2, 0] * l;
+                    double gy = im[0, 1] * h + im[1, 1] * k + im[2, 1] * l;
+                    double gz = im[0, 2] * h + im[1, 2] * k + im[2, 2] * l;
+                    double gl = Math.Sqrt(gx * gx + gy * gy + gz * gz);
+                    if (gl < 1e-12) return 0.0;
+                    return Math.Abs(h * fAtom[0] + k * fAtom[1] + l * fAtom[2] - 1.0) / gl;
+                }, false);
+            }
+
+            if (plane.Type == CrystalPlaneType.MeanPlane && plane.AtomIndices != null)
+            {
+                var fr = new List<double[]>();
+                foreach (int idx in plane.AtomIndices)
+                {
+                    if (idx < 0 || idx >= _molecule.NumberOfAtoms) continue;
+                    Vector3 r = _molecule.atom[idx].Coordinate + shift;
+                    fr.Add(MulVec(inv0, r.X, r.Y, r.Z));
+                }
+                if (fr.Count < 3) return 0.0;
+
+                return CellContributionParams(pp =>
+                {
+                    double[,] mp = CellMatrix(pp);
+                    double[][] pts = new double[fr.Count][];
+                    for (int i = 0; i < pts.Length; i++)
+                        pts[i] = MulVec(mp, fr[i][0], fr[i][1], fr[i][2]);
+
+                    if (!TryFitMeanPlane(pts, out double[] c, out double[] nrm)) return 0.0;
+
+                    double[] ap = MulVec(mp, fAtom[0], fAtom[1], fAtom[2]);
+                    return Math.Abs(nrm[0] * (ap[0] - c[0]) + nrm[1] * (ap[1] - c[1]) + nrm[2] * (ap[2] - c[2]));
+                }, false);
+            }
+
+            return 0.0;
+        }
+
+        /// <summary>
+        /// Column convention x_cart = M · x_frac, identical to FractionaltoCarttesianMatrix
+        /// (a along x, b in the xy plane). Angles in radians.
+        /// </summary>
+        private static double[,] CellMatrix(double[] p)
+        {
+            double a = p[0], b = p[1], c = p[2];
+            double cosA = Math.Cos(p[3]), cosB = Math.Cos(p[4]), cosG = Math.Cos(p[5]);
+            double sinB = Math.Sin(p[4]), sinG = Math.Sin(p[5]);
+
+            double cosAStar = (cosB * cosG - cosA) / (sinB * sinG);
+            double sinAStar = Math.Sqrt(Math.Max(1.0 - cosAStar * cosAStar, 0.0));
+
+            return new double[,]
+            {
+                { a, b * cosG, c * cosB },
+                { 0, b * sinG, -c * sinB * cosAStar },
+                { 0, 0,        c * sinB * sinAStar }
+            };
+        }
+
+        private static bool TryInvert3(double[,] m, out double[,] inv)
+        {
+            double a = m[0, 0], b = m[0, 1], c = m[0, 2];
+            double d = m[1, 0], e = m[1, 1], f = m[1, 2];
+            double g = m[2, 0], h = m[2, 1], i = m[2, 2];
+
+            double det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+            inv = new double[3, 3];
+            if (Math.Abs(det) < 1e-12) return false;
+
+            inv[0, 0] = (e * i - f * h) / det; inv[0, 1] = (c * h - b * i) / det; inv[0, 2] = (b * f - c * e) / det;
+            inv[1, 0] = (f * g - d * i) / det; inv[1, 1] = (a * i - c * g) / det; inv[1, 2] = (c * d - a * f) / det;
+            inv[2, 0] = (d * h - e * g) / det; inv[2, 1] = (b * g - a * h) / det; inv[2, 2] = (a * e - b * d) / det;
+            return true;
+        }
+
+        private static double[] MulVec(double[,] m, double x, double y, double z)
+        {
+            return new[]
+            {
+                m[0, 0] * x + m[0, 1] * y + m[0, 2] * z,
+                m[1, 0] * x + m[1, 1] * y + m[1, 2] * z,
+                m[2, 0] * x + m[2, 1] * y + m[2, 2] * z
+            };
+        }
+
+        private static double[][] ToCartesian(double[,] m, double[][] frac)
+        {
+            double[][] r = new double[frac.Length][];
+            for (int i = 0; i < frac.Length; i++)
+                r[i] = MulVec(m, frac[i][0], frac[i][1], frac[i][2]);
+            return r;
+        }
+
+        private static double WrapAngle(double d)
+        {
+            while (d > Math.PI) d -= 2.0 * Math.PI;
+            while (d < -Math.PI) d += 2.0 * Math.PI;
+            return d;
+        }
+
+        // ── quantities evaluated on double[][] positions ──
+
+        private static double DistanceOf(double[][] q)
+        {
+            double dx = q[1][0] - q[0][0], dy = q[1][1] - q[0][1], dz = q[1][2] - q[0][2];
+            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
+
+        /// <summary>Angle (rad) at q[1] between q[0] and q[2].</summary>
+        private static double AngleOf(double[][] q)
+        {
+            double[] a = { q[0][0] - q[1][0], q[0][1] - q[1][1], q[0][2] - q[1][2] };
+            double[] b = { q[2][0] - q[1][0], q[2][1] - q[1][1], q[2][2] - q[1][2] };
+            double la = Math.Sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+            double lb = Math.Sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
+            double cos = (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (la * lb);
+            return Math.Acos(Math.Clamp(cos, -1.0, 1.0));
+        }
+
+        /// <summary>Torsion angle (rad) of q[0]-q[1]-q[2]-q[3], same sign convention as CalculateTorsionAngleRad.</summary>
+        private static double TorsionOf(double[][] q)
+        {
+            double[] b1 = Sub(q[1], q[0]);
+            double[] b2 = Sub(q[2], q[1]);
+            double[] b3 = Sub(q[3], q[2]);
+
+            double[] n1 = Cross(b1, b2);
+            double[] n2 = Cross(b2, b3);
+            double l1 = Math.Sqrt(Dot(n1, n1));
+            double l2 = Math.Sqrt(Dot(n2, n2));
+            if (l1 < 1e-9 || l2 < 1e-9) return 0.0;
+
+            for (int i = 0; i < 3; i++) { n1[i] /= l1; n2[i] /= l2; }
+
+            double angle = Math.Acos(Math.Clamp(Dot(n1, n2), -1.0, 1.0));
+            double lb2 = Math.Sqrt(Dot(b2, b2));
+            double[] c = Cross(n1, n2);
+            if (Dot(c, b2) / lb2 < 0) angle = -angle;
+            return angle;
+        }
+
+        private static double[] Sub(double[] a, double[] b) => new[] { a[0] - b[0], a[1] - b[1], a[2] - b[2] };
+        private static double Dot(double[] a, double[] b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        private static double[] Cross(double[] a, double[] b) => new[]
+        {
+            a[1] * b[2] - a[2] * b[1],
+            a[2] * b[0] - a[0] * b[2],
+            a[0] * b[1] - a[1] * b[0]
+        };
+
+        // ── displayed torsion value (float, unchanged) ──
 
         private double CalculateTorsionAngleRad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
         {

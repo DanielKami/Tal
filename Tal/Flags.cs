@@ -74,7 +74,11 @@ namespace Tal
  /// </summary>
     public sealed class Flags
     {
+<<<<<<< HEAD
         public static string VERSION = "3.70";
+=======
+        public static string VERSION = "3.71";
+>>>>>>> Dodaj pliki projektów.
         public static string Friend = "Symmetry replication · directional packing · cavity visibility";
 
  // ─────────────────────────────────────────────────────────────────

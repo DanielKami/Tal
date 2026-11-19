@@ -311,6 +311,10 @@ namespace Tal
                 atom[idx].show = true;
                 atom[idx].selected = false;
                 atom[idx].Coordinate_error = new Vector3(na.x_e, na.y_e, na.z_e);
+<<<<<<< HEAD
+=======
+                atom[idx].Coordinate_cov = na.CoordCov;
+>>>>>>> Dodaj pliki projektów.
                 atom[idx].Ue = na.Ue;
                 atom[idx].Un = na.Un;
                 atom[idx].Transformation = na.Transformation;
