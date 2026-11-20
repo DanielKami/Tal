@@ -226,7 +226,7 @@
             <a href="https://dkami.umcs.pl/cavity-detector-in-cif-v1-82/">Cavity detector notes</a>
         </p>
         <p class="editorial-meta">
-            Version 3.69 · Last updated: 2026 · Help aligned with source
+            Version 3.71 · Last updated: 2026 · Help aligned with source
         </p>
 
         <nav>
@@ -410,7 +410,7 @@
             <h3>Help menu</h3>
             <ul>
                 <li><code>Contents</code> (F1) — opens this <code>help.html</code> documentation.</li>
-                <li><code>About</code> — shows <code>Flags.VERSION</code> (currently <strong>3.69</strong>), author, MACE computational package, and third-party credits (.NET 8, MonoGame, DockPanel Suite, SharpDX).</li>
+                <li><code>About</code> — shows <code>Flags.VERSION</code> (currently <strong>3.71</strong>), author, and a scrollable box (vertical scrollbar) listing the projects TAL is based on: the MACE computational package and third-party credits (.NET 8, MonoGame, DockPanel Suite, SharpDX).</li>
                 <li>Program home page: <a href="https://dkami.umcs.pl/tal/"><strong>https://dkami.umcs.pl/tal/</strong></a></li>
             </ul>
         </section>
@@ -1119,7 +1119,13 @@
                 <li>
                     <strong>Signed Distance Function (SDF) calculation:</strong>
                     A high-resolution 3D grid (the "voxel grid") is created over the unit cell, extended by
-                    a margin of <code>ScanMargin</code> on each side. For every voxel the algorithm computes
+                    a margin of <code>ScanMargin</code> on each side. For non-orthogonal cells the voxels
+                    are parallelepipeds whose edges follow the cell axes (not axis-aligned cubes).
+                    <figure style="text-align:center; margin:1.2em 0;">
+                        <img src="Resources/nonorthogonal_voxels.png" alt="Non-orthogonal voxel grid over a molecule" style="max-width:100%; height:auto; border:1px solid #ddd;">
+                        <figcaption style="font-size:0.9em; color:#555; margin-top:0.5em;">Non-orthogonal voxel grid (points follow the skewed cell) over a molecular fragment.</figcaption>
+                    </figure>
+                    For every voxel the algorithm computes
                     the signed distance to the surface of any atom:
                     <pre><code>d_i       = distance from the voxel to the surface of atom i
             = |p − c_i| − r_eff(i)      (spherical case)
@@ -3488,10 +3494,10 @@ H···H         412.5    30.9     16840
         <section id="powder">
             <h2>8. Powder Diffraction</h2>
             <p>
-                The <code>Powder Diffraction</code> window simulates the theoretical powder X-ray diffraction pattern for the loaded crystal structure. It is opened from <code>Calculate → Powder Pattern...</code>.
+                The <code>Powder Diffraction</code> window simulates the theoretical powder X-ray diffraction pattern for the loaded crystal structure. It is opened from <code>Calculate → Powder Pattern...</code>. Hovering over a peak in the plot shows its 2θ (or d), the Miller indices of the contributing reflections together with their multiplicities (e.g. (1 0 0)×6), and the summed intensity.
             </p>
             <p>
-                The underlying engine (<code>PowderDiffractionEngine</code>) enumerates allowed <em>hkl</em> reflections in the 2θ range, computes the structure factor <code>F(hkl)</code> from the full unit cell, applies Lorentz–polarization and Debye–Waller corrections, groups symmetry-equivalent reflections, and renders the resulting profile in a WinForms plot.
+                The underlying engine (<code>PowderDiffractionEngine</code>) enumerates allowed <em>hkl</em> reflections in the 2θ range, computes the structure factor <code>F(hkl)</code> from the full unit cell, applies Lorentz–polarization and Debye–Waller corrections, treats each symmetry-independent reflection once with its true multiplicity, and renders the resulting profile in a WinForms plot. If the structure contains an element without tabulated scattering factors, no pattern is calculated and the window says so (see 8.4, item 5).
             </p>
 
             <h3>8.1. Window Layout</h3>
@@ -3511,15 +3517,18 @@ H···H         412.5    30.9     16840
                 <tr><th>Control</th><th>Description</th></tr>
                 <tr><td><code>numericFWHM</code></td><td>Peak full-width at half-maximum (FWHM) in the units of the X axis. Range 0.01–10, default <strong>0.05</strong>.</td></tr>
                 <tr><td><code>comboProfile</code></td><td>Profile type: <code>Gaussian</code>, <code>Lorentzian</code>, <code>Pseudo-Voigt</code> (default).</td></tr>
-                <tr><td><code>numericResolution</code></td><td>Number of profile sample points per pixel (profile resolution). Range 1–10, default <strong>2</strong>.</td></tr>
+                <tr><td><code>numericResolution</code> (label <em>Points / pixel</em>)</td><td>Number of profile points calculated per screen pixel of the plot width. Range 1–10, default <strong>2</strong>. It only controls how smoothly the curve is drawn (higher = smoother, slower redraw); peak positions, intensities and FWHM are not affected, and it is <em>not</em> an instrumental resolution — use <code>numericFWHM</code> for the peak width.</td></tr>
             </table>
 
             <h4>Debye-Waller (groupBoxDebye)</h4>
             <table class="param-table">
                 <tr><th>Control</th><th>Description</th></tr>
-                <tr><td><code>numericDebyeWaller</code></td><td>Debye-Waller isotropic B factor in Å². Range 0–20, default <strong>0.5</strong>.</td></tr>
+                <tr><td><code>numericDebyeWaller</code></td><td>Debye-Waller isotropic B factor in Å² applied uniformly to all atoms. Range 0–20, default <strong>0.5</strong>. This single global value is primarily illustrative; in a realistic calculation each independent atom in the asymmetric unit should have its own B (or U) factor.</td></tr>
                 <tr><td><code>trackDebyeWaller</code></td><td>Slider linked to the numeric box (value = B × 10). Range 0–200, default 5.</td></tr>
             </table>
+            <p>
+                <strong>Note on Debye–Waller:</strong> The single B factor used here is a simplified, illustrative approximation. In proper crystallographic work the isotropic displacement parameter should be independent for every atom in the asymmetric unit (different atoms have different thermal motion). The global value is useful for quick visual exploration of the effect of thermal damping on the calculated pattern.
+            </p>
 
             <h4>Radiation source (groupBoxSource)</h4>
             <table class="param-table">
@@ -3562,13 +3571,13 @@ H···H         412.5    30.9     16840
                 <li><strong>Wheel:</strong> Zooms the 2θ range about the cursor position (factor 0.8 in, 1.25 out).</li>
                 <li><strong>Left drag:</strong> Rubber-band zoom. The selected pixel range is converted into a new 2θ range.</li>
                 <li><strong>Double-click:</strong> Resets the range to 0–90°.</li>
-                <li><strong>Hover:</strong> Updates the readout labels. The "closest peak" tolerance is 2% of the current 2θ span.</li>
+                <li><strong>Hover:</strong> Updates the readout labels. The "closest peak" tolerance is 2% of the current 2θ span. Distinct reflections that coincide in 2θ are all listed (strongest first, as <code>(h k l)×multiplicity</code>) and the intensity shown is their sum.</li>
             </ul>
 
             <h3>8.4. Algorithm and Formulas</h3>
             <ol>
                 <li>
-                    <strong>d-spacing:</strong> Computed from the metric tensor of the triclinic cell using the standard reciprocal-lattice formula.
+                    <strong>Reflection range (no fixed index limit):</strong> with the reciprocal metric tensor <code>Q = G⁻¹</code> (<code>G</code> = direct metric of the cell), <code>d*² = hᵀ·Q·h</code>. All lattice points inside the ellipsoid <code>d*² ≤ (2 sinθ<sub>max</sub> / λ)²</code> are visited exactly (the loop bounds for <em>k</em> and <em>l</em> are solved from the ellipsoid, the largest |h| is <code>a / d<sub>min</sub></code>). This is correct for every cell, including oblique ones, and replaces the former hard cap of 30 on each index.
                 </li>
                 <li>
                     <strong>Angle:</strong> 2θ = 2 · asin(λ / (2d)), rejected if sinθ &gt; 1.
@@ -3577,16 +3586,19 @@ H···H         412.5    30.9     16840
                     <strong>Centering prefilter:</strong> Determined from the first letter of the actual Hermann–Mauguin symbol (P/A/B/C/F/I/R), not from the space-group number. This is only a fast performance filter — systematic absences from screw axes and glide planes are handled naturally by F(hkl).
                 </li>
                 <li>
-                    <strong>Structure factor:</strong> F(hkl) = Σ<sub>j</sub> f<sub>j</sub>(s) · exp(−B·s²) · occ<sub>j</sub> · exp(2πi(h·x<sub>j</sub> + k·y<sub>j</sub> + l·z<sub>j</sub>)), summed over <em>all</em> atoms in the unit cell (using <code>SymetryEquivalents</code> if available). The atomic scattering factors f<sub>j</sub>(s) use the Cromer–Mann 4-Gaussian + constant approximation (International Tables Vol. C, Table 6.1.1.4).
+                    <strong>Structure factor:</strong> F(hkl) = Σ<sub>j</sub> f<sub>j</sub>(s) · exp(−B·s²) · occ<sub>j</sub> · exp(2πi(h·x<sub>j</sub> + k·y<sub>j</sub> + l·z<sub>j</sub>)), summed over <em>all</em> atoms of the unit cell. The cell is built from the asymmetric unit and <em>all</em> space-group operations, independently of the symmetry operations that are switched on or off in the 3D view; images that coincide on special positions (closer than 0.1 Å) are counted once.
+                </li>
+                <li>
+                    <strong>Scattering factors:</strong> f<sub>j</sub>(s) uses the Cromer–Mann 4-Gaussian + constant approximation, International Tables Vol. C, Table 6.1.1.4, for H to Cf (Z = 1–98). The table (<code>CromerMannTable</code>) was checked against the IUCr core CIF dictionary and by the sum rule Σa<sub>i</sub> + c = Z for every element. For elements without coefficients (Z &gt; 98, unknown Z) there is <strong>no silent fallback</strong>: <code>UnsupportedElementException</code> is thrown, the pattern is not calculated, and the window shows <em>No scattering factors: …</em> (details in the tooltip and a one-time message box). Neutral-atom factors are used; anomalous dispersion f′, f″ is not included.
                 </li>
                 <li>
                     <strong>Lorentz-polarization correction:</strong> L·P = (1 / (2 sin²θ cosθ)) · ((1 + cos²2θ) / 2).
                 </li>
                 <li>
-                    <strong>Intensity:</strong> I = |F|² · L·P.
+                    <strong>Symmetry-equivalent reflections:</strong> the Laue group is built from the rotation parts <code>R</code> of all space-group operations plus inversion (Friedel). Since <code>|F(h)| = |F(Rᵀh)|</code>, the equivalent indices are the row vectors <code>h·R</code>. Each orbit is processed exactly once (its lexicographically largest member is the representative) and the multiplicity <em>m</em> is the orbit size. Equivalence is decided by symmetry, <em>not</em> by rounding 2θ.
                 </li>
                 <li>
-                    <strong>Grouping:</strong> Reflections with the same rounded 2θ (4 decimal places) are merged; intensities are summed, multiplicities added. This is valid for every crystal system without hard-coded symmetry tables.
+                    <strong>Intensity:</strong> I = m · |F|² · L·P. Different reflections that merely overlap in 2θ remain separate entries of the peak list (and of the CSV export); they are added only when the profile is drawn.
                 </li>
                 <li>
                     <strong>Profile:</strong> The rendered profile is a sum of pseudo-Voigt profiles centered at each peak 2θ<sub>k</sub> with the chosen FWHM:
@@ -4215,9 +4227,7 @@ p_new = P0_target + a · xt + b · yt + c · zt</code></pre>
             </ul>
         </section>
 
-        <!-- 12. ADVANCED TOOLS -->
-        <section id="advanced">
-            
+        <!-- 11b. MACE -->
         <section id="mace">
             <h2>11b. Crystal Calculations (MACE)</h2>
             <p>Opened from <code>Advanced → Crystal Calculations...</code>.</p>
@@ -4225,7 +4235,7 @@ p_new = P0_target + a · xt + b · yt + c · zt</code></pre>
             <h3>The model</h3>
             <p>
                 TAL uses a <strong>MACE</strong> machine-learning interatomic potential
-                (<em>Multi-ACE</em>, higher-order equivariant message passing)
+                (<em>Multi Atomic Cluster Expansion</em>, higher-order equivariant message passing)
                 through an external worker process.
                 Authors: I. Batatia, D. P. Kovács, G. N. C. Simm, C. Ortner, G. Csányi.
                 Paper: <a href="https://arxiv.org/abs/2206.07697">MACE: Higher Order Equivariant Message Passing Neural Networks for Fast and Accurate Force Fields</a>.
@@ -4236,27 +4246,147 @@ p_new = P0_target + a · xt + b · yt + c · zt</code></pre>
             </p>
             <ul>
                 <li><code>evaluate_energy.exe</code> — packaged Python worker (PyInstaller) that loads the TorchScript model and runs <code>forward_lammps</code>.</li>
-                <li><code>mace_medium.pt</code> and/or <code>mace_large.pt</code> — exported with <code>xnn export</code> (TorchScript + <code>forward_lammps</code>).</li>
+                <li>One or more model files, e.g. <code>mace_off23_medium.pt</code>, <code>mace_off23_large.pt</code>, <code>mace_mp0_medium.pt</code>, …</li>
             </ul>
+
+            <h3>MACE models — selection and use</h3>
             <p>
-                In the Crystal Calculations window choose <strong>medium</strong> or <strong>large</strong>
-                and the supercell size <strong>1×1×1</strong>, <strong>2×2×2</strong> (default), or <strong>3×3×3</strong>.
-                Large + 3×3×3 needs substantial GPU VRAM (&gt;12&nbsp;GB). Last choice is stored in <code>tal_mace_settings.json</code>.
+                Model is chosen from a <strong>drop-down list (ComboBox)</strong> in the Crystal Calculations window.
+                The worker loads that model on every calculation. The choice affects accuracy, speed, and GPU memory use.
+                Last selection is stored in <code>tal_mace_settings.json</code>.
             </p>
+
+            <h4>Available models</h4>
+            <table>
+                <tr>
+                    <th>Model</th>
+                    <th>Use case</th>
+                    <th>Accuracy</th>
+                    <th>Speed</th>
+                    <th>GPU memory</th>
+                </tr>
+                <tr>
+                    <td><strong>MACE-OFF23 small</strong></td>
+                    <td>Organic molecules, quick tests</td>
+                    <td>basic</td>
+                    <td>fastest</td>
+                    <td>smallest</td>
+                </tr>
+                <tr>
+                    <td><strong>MACE-OFF23 medium</strong> (default)</td>
+                    <td>Organic molecules, everyday work</td>
+                    <td>good</td>
+                    <td>medium</td>
+                    <td>medium</td>
+                </tr>
+                <tr>
+                    <td><strong>MACE-OFF23 large</strong></td>
+                    <td>Organics, publication-quality</td>
+                    <td>highest</td>
+                    <td>slowest</td>
+                    <td>largest</td>
+                </tr>
+                <tr>
+                    <td><strong>MACE-MP-0 medium</strong></td>
+                    <td>Inorganic materials, crystals</td>
+                    <td>good</td>
+                    <td>medium</td>
+                    <td>medium</td>
+                </tr>
+                <tr>
+                    <td><strong>MACE-MP-0 large</strong></td>
+                    <td>Inorganics, high accuracy</td>
+                    <td>high</td>
+                    <td>slow</td>
+                    <td>large</td>
+                </tr>
+            </table>
+
+            <h4>Which model to choose?</h4>
+            <p><strong>Organic molecules</strong> (H, C, N, O, F, S, Cl):</p>
+            <ul>
+                <li><strong>medium</strong> — default, good accuracy/time balance</li>
+                <li><strong>large</strong> — highest accuracy (e.g. publications); longer runtime</li>
+                <li><strong>small</strong> — speed first (preliminary tests)</li>
+            </ul>
+            <p><strong>Inorganic materials</strong> (crystals, solids, surfaces):</p>
+            <ul>
+                <li><strong>mp0-medium</strong> — default for materials</li>
+                <li><strong>mp0-large</strong> — higher accuracy, slower</li>
+            </ul>
+            <div class="note">
+                <strong>Important:</strong> OFF23 and MP-0 families use <em>different energy definitions</em> —
+                do not mix them or compare energies 1:1. For organic molecules use OFF23; for inorganic crystals use MP-0.
+            </div>
+
+            <h4>If the selected model is missing</h4>
+            <p>
+                TAL checks for the exact <code>.pt</code> file of the selected model before it starts.
+                If the file is not next to <code>TAL.exe</code>, the calculation is <strong>not started</strong>
+                and a message shows the expected path &mdash; there is no silent swap between models
+                (e.g. large&nbsp;&rarr;&nbsp;medium).
+                The worker has its own safety net: for an unknown model name, or if it cannot see the file,
+                it falls back to <strong>off23-medium</strong>, sets <code>fallback=True</code> and reports a warning
+                in the log. Always check <code>requested</code> vs <code>used</code> in the log line below.
+            </p>
+
+            <h4>Which model was actually used?</h4>
+            <p>After every run the log contains a line like:</p>
+            <pre>[C#] used: requested=off23-medium used=off23-medium params=1428568 file=mace_off23_medium.pt fallback=False</pre>
+            <ul>
+                <li><code>requested</code> — model selected in the ComboBox</li>
+                <li><code>used</code> — model actually loaded (may differ on fallback)</li>
+                <li><code>params</code> — parameter count (proof of which weights loaded: off23-medium ≈ 1.43M, off23-large ≈ 5.7M, mp0-medium ≈ 2M)</li>
+                <li><code>fallback</code> — <code>True</code> if the worker substituted another model</li>
+            </ul>
+            <p>If <code>requested ≠ used</code> (<code>fallback=True</code>), the worker performed a fallback — read the warning.</p>
+            <p>The device is reported separately, on the worker's own stderr line shown in the Debug window:</p>
+            <pre>[worker] device=cuda GPU=NVIDIA GeForce RTX 3060 Laptop GPU</pre>
+            <p><code>device=cuda</code> means the GPU is used; <code>device=cpu</code> (no GPU name) means no CUDA device was found and the calculation is much slower.</p>
+
+            <h4>Performance and GPU memory</h4>
+            <ul>
+                <li><strong>large</strong> models need more VRAM. On a 6&nbsp;GB card (e.g. RTX 3060 Laptop), supercell <strong>3×3×3</strong> may hit OOM. The worker then stops with an out-of-memory error; it does not retry on the CPU.</li>
+                <li>If you see an OOM error with a large model (or <code>device=cpu</code> because no CUDA GPU was found):
+                    <ul>
+                        <li>use supercell <strong>1×1×1</strong> only for quick tests (incomplete environment), or keep <strong>3×3×3</strong> with a medium model;</li>
+                        <li>prefer <strong>medium</strong> instead of large;</li>
+                        <li>close other GPU applications.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4>Supercell</h4>
+            <p>
+                Choose <strong>1×1×1</strong> (fast, incomplete neighbour environment) or
+                <strong>3×3×3</strong> (recommended — forces taken from the central cell).
+                2×2×2 is not offered.
+            </p>
+
+            <h4>FAQ</h4>
+            <p><strong>Q: I selected large, but the log shows medium. Why?</strong><br>
+            A: This should not happen in normal use: TAL refuses to start when the <code>.pt</code> file of the selected model is missing next to <code>TAL.exe</code>. If you still see <code>requested ≠ used</code> and <code>fallback=True</code>, the worker substituted <code>off23-medium</code> (unknown model name or file not visible to the worker). Read the warning and check the file name and location.</p>
+            <p><strong>Q: What does <code>params=1428568</code> mean?</strong><br>
+            A: Number of model parameters. Approximate values: off23-medium ≈ 1.43M, off23-large ≈ 5.7M, mp0-medium ≈ 2M. If params does not match the chosen model, the weight file may be wrong.</p>
+            <p><strong>Q: Can I use OFF23 for crystals?</strong><br>
+            A: Technically yes, but OFF23 is trained on organic molecules; for inorganic crystals prefer MP-0.</p>
+            <p><strong>Q: Can I add my own model?</strong><br>
+            A: Yes, after exporting to TorchScript (with <code>forward_lammps</code>) and placing the <code>.pt</code> next to the executable. The new model name must be added in three places: the <code>MODEL_FILES</code> table in the worker (<code>evaluate_energy.py</code>), <code>KnownModels</code> / <code>ModelFileName</code> in <code>MaceCrystalAnalyzer</code>, and the model ComboBox in the Crystal Calculations window; then rebuild the worker.</p>
+            <p><strong>Q: Why is the calculation slow?</strong><br>
+            A: Check <code>device=</code> in the log. If <code>cpu</code>, the GPU was not used (OOM or no CUDA). If <code>cuda</code>, a large model is simply slower — consider medium.</p>
 
             <h3>How TAL evaluates a crystal</h3>
             <ol>
                 <li>Hydrogens are moved to neutron X–H distances (<code>HydrogenNormalizer</code>) and the structure is rebuilt. The UI stays responsive (background thread).</li>
                 <li>The <strong>crystallographic unit cell</strong> is taken from <code>SymetryEquivalents</code> (full cell content). Display mode (asymmetric / symmetry / packing) does <em>not</em> change what is sent to MACE.</li>
-                <li>Molecules are detected with the existing TAL pipeline (<code>DetectMolecules</code> on symmetry equivalents) so each atom has a <strong>Molecule ID</strong> (<code>IndividualMoleculeInCell</code>).</li>
-                <li>TAL builds an <strong>N×N×N supercell</strong> (N = selected size) and a neighbour graph with R<sub>cut</sub> = 5&nbsp;Å.</li>
-                <li><code>evaluate_energy.exe</code> runs MACE. Energy and per-atom forces F = −∇E are returned as JSON. Device is reported on the worker <strong>stderr</strong> as <code>[worker] device=cuda</code> or <code>[worker] device=cpu</code> (also shown in the Debug window).</li>
-                <li>Energy per cell = supercell energy / N³. Forces on the central cell are kept and mapped onto display atoms. Switching asymmetric / symmetry / packing rebuilds the view but re-applies forces from an internal cache when possible.</li>
-                <li>Net force is projected onto lattice vectors a, b, c.</li>
+                <li>Molecules are detected so each atom has a <strong>Molecule ID</strong> (<code>IndividualMoleculeInCell</code>).</li>
+                <li>TAL builds an <strong>N×N×N supercell</strong> (N = selected size) and a neighbour graph with R<sub>cut</sub> = 5&nbsp;Å. The supercell is treated as periodic (minimum-image convention, with integer cell shifts passed to the model), so with 3×3×3 the central cell sees the full crystal environment. With 1×1×1 the cutoff exceeds half the cell, so the environment is incomplete.</li>
+                <li><code>evaluate_energy.exe</code> runs MACE. Energy and per-atom forces F = −∇E are returned as JSON, together with model metadata (<code>model_used</code>, <code>fallback_used</code>, <code>model_params</code>). Device is reported on stderr as <code>[worker] device=cuda GPU=&lt;name&gt;</code> or <code>[worker] device=cpu</code>.</li>
+                <li>Energy per cell = supercell energy / N³. Forces on the <strong>central</strong> image (for 3×3×3: index (1,1,1)) are mapped onto display atoms. After calculation the view switches to <strong>symmetry</strong> mode so the full cell is visible.</li>
             </ol>
 
-            <h3>Two kinds of force arrows (distinct)</h3>
-            <table class="param-table">
+            <h3>Atomic vs intermolecular force arrows</h3>
+            <table>
                 <tr><th></th><th>Atomic (MACE)</th><th>Intermolecular (TAL)</th></tr>
                 <tr>
                     <td><strong>Source</strong></td>
@@ -4266,12 +4396,12 @@ p_new = P0_target + a · xt + b · yt + c · zt</code></pre>
                 <tr>
                     <td><strong>Where drawn</strong></td>
                     <td>From each atom position along F<sub>i</sub></td>
-                    <td>Between molecule centroids (COM → COM), for pairs in contact (&lt;&nbsp;~5&nbsp;Å)</td>
+                    <td>At the centroid of molecule A (unweighted mean of its atom positions, not the mass-weighted centre), pointing along the net force on A; drawn for pairs of molecules in contact (shortest atom–atom distance ≤ 5&nbsp;Å)</td>
                 </tr>
                 <tr>
                     <td><strong>Checkbox</strong></td>
-                    <td>Show MACE force arrows</td>
-                    <td>Show intermolecular arrows (molecule COM)</td>
+                    <td>Show MACE force arrows (on by default)</td>
+                    <td>Show intermolecular arrows (molecule COM) (off by default — enable if needed)</td>
                 </tr>
                 <tr>
                     <td><strong>Flag</strong></td>
@@ -4282,25 +4412,27 @@ p_new = P0_target + a · xt + b · yt + c · zt</code></pre>
             <p>
                 MACE supplies only the <strong>total</strong> force on each atom. TAL does
                 <em>not</em> use approximate electrostatic / dispersion / repulsion (PEOE + LJ)
-                for these arrows. Older “component” checkboxes are unused for Crystal Calculations.
+                for these arrows.
             </p>
             <div class="note">
-                <strong>Note:</strong> Intermolecular arrows are a visualization of the net MACE force
+                <strong>Note:</strong> Intermolecular arrows visualise the net MACE force
                 on each molecule (grouped by Molecule ID). They are not a separate energy
-                decomposition from the ML potential. The worker does not need molecule labels
-                to compute energy; grouping is done entirely in TAL after forces return.
+                decomposition from the ML potential.
             </div>
 
             <h3>Debug log</h3>
             <ul>
-                <li>Unit-cell composition, molecule count and sizes, supercell size, edge count.</li>
-                <li>Full table of MACE atomic forces (F<sub>x</sub>, F<sub>y</sub>, F<sub>z</sub>, |F|).</li>
-                <li>Net energy / cell, net force, projections on a, b, c.</li>
-                <li>Worker stderr lines, including <code>[worker] device=cuda|cpu</code>.</li>
-                <li>Intermolecular pairs and |F| per pair after Molecule-ID grouping.</li>
+                <li>ComboBox selection and <code>[C#] sending to worker: model=…</code></li>
+                <li>Unit-cell composition, molecule count and sizes, model, supercell size, number of supercell atoms and edges (the central image index is written only to the IDE debug output)</li>
+                <li>Full table of MACE atomic forces (F<sub>x</sub>, F<sub>y</sub>, F<sub>z</sub>, |F|)</li>
+                <li>Net energy / cell, net force; verify mapping of forces to display atoms</li>
+                <li>Worker stderr: device, GPU name, loaded file, params, fallback</li>
+                <li>Intermolecular pairs and |F| per pair after Molecule-ID grouping (if enabled)</li>
             </ul>
         </section>
 
+        <!-- 12. ADVANCED TOOLS -->
+        <section id="advanced">
             <h2>12. Advanced Tools</h2>
             <h3>12.1. H-Bond Settings</h3>
             <p>
@@ -4505,7 +4637,7 @@ p_new = P0_target + a · xt + b · yt + c · zt</code></pre>
                 <tr>
                     <td><code>Bonds</code></td>
                     <td><code>#</code>, <code>Atom1</code>, <code>Atom2</code>, <code>Length (Å)</code>, <code>Error</code>, <code>Occ</code></td>
-                    <td>Every unique covalent bond, deduplicated via a sorted <code>(i, j)</code> pair set. The error column is an e.s.d. estimate computed from the two atoms' <code>Coordinate_error</code> vectors projected along the bond direction (see 12.5.3). Occupancy is the minimum of the two atoms' occupancies.</td>
+                    <td>Every unique covalent bond, deduplicated via a sorted <code>(i, j)</code> pair set. The error column is an e.s.d. estimate computed from the two atoms' position covariances projected along the bond direction, plus the unit-cell e.s.d. contribution (see 12.5.3). Occupancy is the minimum of the two atoms' occupancies.</td>
                 </tr>
                 <tr>
                     <td><code>Contacts</code></td>
@@ -4566,28 +4698,24 @@ p_new = P0_target + a · xt + b · yt + c · zt</code></pre>
 
             <h4>12.5.3. Error Estimation</h4>
             <p>
-                For every geometric quantity, the window reports an estimated standard uncertainty (e.s.d.). The formulas are consistent with the ones used by the <code>Measure</code> tool, and propagate the per-atom positional errors stored in <code>Coordinate_error</code> (which already include the cell-parameter contribution):
+                For every geometric quantity, the window reports an estimated standard uncertainty (e.s.d.). The numbers come from exactly the same code as the on-screen <code>Measure</code> tool (<code>Measure.DistanceError / AngleError / TorsionError</code>), so the Structure Info table and a measurement made on screen always agree. The model has three parts:
             </p>
             <ul>
                 <li>
-                    <strong>Bond length error:</strong> if the two atoms have positions <code>p1, p2</code> with errors <code>e1, e2</code> and <code>d = |p1 − p2|</code>, then
-                    <pre><code>σ_d² = (dx/d)²·(e1x² + e2x²)
-     + (dy/d)²·(e1y² + e2y²)
-     + (dz/d)²·(e1z² + e2z²)</code></pre>
-                    where <code>(dx, dy, dz) = p1 − p2</code>.
+                    <strong>Atomic position covariance.</strong> The refined fractional e.s.d.'s σ<sub>x</sub>, σ<sub>y</sub>, σ<sub>z</sub> are independent, but in a non-orthogonal cell the Cartesian errors are correlated. Each atom therefore stores a full 3×3 covariance <code>C = A · diag(σ²) · Aᵀ</code> (<code>A</code> = fractional→Cartesian matrix). For a symmetry-generated atom the covariance is rotated with the operation, <code>C' = R<sub>cart</sub> · C · R<sub>cart</sub>ᵀ</code>, with <code>R<sub>cart</sub> = A · R<sub>frac</sub> · A⁻¹</code>.
                 </li>
                 <li>
-                    <strong>Angle error:</strong> an upper-bound estimate
-                    <pre><code>σ_angle ≈ √2 · mean(|e1|, |e2|, |e3|) / min(l1, l2)   [rad]
-       → σ_angle · 180/π                                  [deg]</code></pre>
-                    clamped to [0.001°, 10°] to avoid absurd values for near-degenerate geometries.
+                    <strong>Linearised propagation</strong> to the measured quantity <code>q</code> (distance, angle, torsion):
+                    <pre><code>σ_q² = Σ_atoms  g_aᵀ · C_a · g_a ,   g_a = ∂q/∂r_a</code></pre>
+                    For a bond <code>g = ±u</code> (unit vector along the bond); the angle uses the analytic gradients of arccos; the torsion uses numerical gradients. Angles are reported in degrees and clamped to [0.001°, 10°].
                 </li>
                 <li>
-                    <strong>Torsion error:</strong> an upper-bound estimate
-                    <pre><code>σ_torsion ≈ √2 · mean(|e1|, |e2|, |e3|, |e4|) / l_BC · 180/π</code></pre>
-                    where <code>l_BC</code> is the length of the central bond, clamped to [0.001°, 30°]. This reflects the fact that torsions are most sensitive to errors when the central bond is short.
+                    <strong>Unit-cell e.s.d.'s.</strong> The cell parameters a, b, c, α, β, γ are propagated separately, with the fractional coordinates held fixed: <code>σ_cell² = Σ<sub>k</sub> (∂q/∂p<sub>k</sub> · σ(p<sub>k</sub>))²</code> (central difference at ±σ), and added in quadrature to the positional part. The cell parameters are treated as independent. The cell term is added only when all atoms carry refined e.s.d.'s.
                 </li>
             </ul>
+            <p>
+                <strong>Atom → plane distance</strong> (on-screen measurement): the positional part is the atom's σ along the plane normal, <code>√(nᵀ·C·n)</code>. The unit-cell part is added in quadrature when the atom has refined e.s.d.'s: for an (hkl) plane (<code>h·x + k·y + l·z = 1</code>, fixed in fractional space) only the length of the reciprocal vector <code>|g| = |M⁻ᵀ(h,k,l)|</code> changes with the cell; for a mean plane all plane atoms and the measured atom keep their fractional coordinates and the plane is refitted for every cell variant. For a mean plane the positional part also includes the e.s.d.'s of all atoms that define the plane: the plane is refitted for small displacements of each atom (numerical gradients), and when the measured atom belongs to the plane it is treated as one variable (direct and plane terms together). Plane atoms without refined e.s.d.'s add nothing.
+            </p>
             <p>
                 When an error is too small to be meaningful (or the source file did not provide positional errors), the cell shows an em-dash (<code>—</code>) instead of a number.
             </p>
