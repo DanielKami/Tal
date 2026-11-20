@@ -271,10 +271,7 @@ namespace Tal.Calculate
                 molecule.atom[idx].selected = false;
                 molecule.atom[idx].SelectionOrder = 0;
                 molecule.atom[idx].Coordinate_error = new Vector3(na.x_e, na.y_e, na.z_e);
-<<<<<<< HEAD
-=======
                 molecule.atom[idx].Coordinate_cov = na.CoordCov;
->>>>>>> Dodaj pliki projektów.
 
  // ═══════════════════════════════════════════════════════
  // Macierze ADP / transformacje
