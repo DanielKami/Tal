@@ -224,7 +224,7 @@ namespace Tal.Core.PowderDiffraction
  /// eigenvectors[i,k] - i-th comafternent of k-th eigenvector
  /// (eigenvectors are COLUMNS of the output matrix)
  /// </summary>
-        private static bool SymmetricEigen3x3(double[,] A,
+        internal static bool SymmetricEigen3x3(double[,] A,
                                               out double[] eigenvalues,
                                               out double[,] eigenvectors)
         {
