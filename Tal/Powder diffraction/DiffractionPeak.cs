@@ -23,7 +23,8 @@
         public int Multiplicity { get; set; }
         public double StructureFactor { get; set; }
 
-        public string HKL => $"({H}{K}{L})";
+        /// <summary>Miller indices, space-separated so that multi-digit and negative indices stay unambiguous.</summary>
+        public string HKL => $"({H} {K} {L})";
 
         public override string ToString()
         {

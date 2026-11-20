@@ -127,7 +127,11 @@ namespace Tal.Forms
  /// <summary>Maksymalna liczba peaks do display etykiet.</summary>
         public int MaxLabelsToShow { get; set; } = DefaultMaxLabelsToShow;
 
- /// <summary>Rozdzielczość profilu (liczba points na pixel).</summary>
+ /// <summary>
+ /// Profile sampling density: number of calculated profile points per screen pixel of the plot width.
+ /// Affects only how smoothly the curve is drawn; it is not an instrumental resolution and does not
+ /// change peak positions, intensities or FWHM.
+ /// </summary>
         public int ProfileResolution { get; set; } = DefaultProfileResolution;
 
         #endregion

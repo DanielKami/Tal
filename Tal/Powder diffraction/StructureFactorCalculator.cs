@@ -4,306 +4,247 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: StructureFactorCalculator.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
-using Tal.Utils;
+// Powder diffraction module: StructureFactorCalculator.
 
 namespace Tal.Core.PowderDiffraction
 {
+    /// <summary>
+    /// Thrown when the structure contains atoms for which no X-ray scattering factor is tabulated.
+    /// Such atoms would otherwise contribute nothing to F(hkl) and silently falsify the pattern.
+    /// </summary>
+    public class UnsupportedElementException : Exception
+    {
+        public IReadOnlyList<string> Elements { get; }
+
+        public UnsupportedElementException(IReadOnlyList<string> elements)
+            : base(BuildMessage(elements))
+        {
+            Elements = elements;
+        }
+
+        private static string BuildMessage(IReadOnlyList<string> elements)
+        {
+            return "No X-ray scattering factors are tabulated for: " + string.Join(", ", elements) +
+                   ". The powder pattern was not calculated, because these atoms would contribute " +
+                   "nothing to F(hkl) and the intensities would be wrong " +
+                   "(tabulated range: H to Cf, Z = 1-" + CromerMannTable.MaxSupportedZ + ").";
+        }
+    }
+
     public class StructureFactorCalculator
     {
+        private struct CellAtom
+        {
+            public int ElementIndex;   // index into _elementZ / _f0
+            public double X, Y, Z;     // fractional, folded into [0,1)
+            public double Occupancy;
+        }
+
         private readonly Molecule _molecule;
-        private readonly Dictionary<int, double[]> _formFactors;
+
+        private CellAtom[] _cell = null;
+        private int[] _elementZ = Array.Empty<int>();
+        private double[] _f0 = Array.Empty<double>();
+
+        /// <summary>Number of atoms in the complete unit cell used for F(hkl) (valid after PrepareCell).</summary>
+        public int CellAtomCount => _cell?.Length ?? 0;
 
         public StructureFactorCalculator(Molecule molecule)
         {
             _molecule = molecule;
-            _formFactors = InitializeFormFactors();
         }
 
+        /// <summary>
+        /// Distinct elements of the asymmetric unit that have no scattering-factor coefficients
+        /// (Z outside H..Cf, or Z &lt;= 0 for unknown / dummy atoms). Empty list = pattern can be calculated.
+        /// </summary>
+        public IReadOnlyList<string> GetUnsupportedElements()
+        {
+            var result = new List<string>();
+            var seen = new HashSet<int>();
+
+            foreach (var atom in _molecule.AsymmetricPart)
+            {
+                int z = atom.AtomicNumber;
+                if (!seen.Add(z)) continue;
+                if (!CromerMannTable.Has(z))
+                    result.Add(z <= 0 ? "unknown element (Z=" + z + ")" : CromerMannTable.Symbol(z));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Builds the complete unit cell from the asymmetric unit and ALL space-group operations.
+        /// This deliberately ignores the "selective symmetry" toggles of the 3D view
+        /// (Flags.EnabledSymmetryOps) and does not touch the molecule, so the pattern never depends
+        /// on which symmetry operations happen to be displayed.
+        /// Symmetry images of one atom that coincide (special positions) are counted once.
+        /// </summary>
+        /// <exception cref="UnsupportedElementException">An element has no tabulated scattering factor.</exception>
+        public void PrepareCell()
+        {
+            var unsupported = GetUnsupportedElements();
+            if (unsupported.Count > 0)
+                throw new UnsupportedElementException(unsupported);
+
+            double[,] g = DirectMetric();
+            const double mergeDistance = 0.1;               // Å; images closer than this are one atom
+            double mergeDistance2 = mergeDistance * mergeDistance;
+
+            var ops = _molecule.SymmetryOperations;
+            int nOps = ops?.Count ?? 0;
+
+            var elementIndex = new Dictionary<int, int>();
+            var cell = new List<CellAtom>();
+
+            foreach (var atom in _molecule.AsymmetricPart)
+            {
+                if (!elementIndex.TryGetValue(atom.AtomicNumber, out int ei))
+                {
+                    ei = elementIndex.Count;
+                    elementIndex[atom.AtomicNumber] = ei;
+                }
+
+                double[] pos = { atom.x, atom.y, atom.z };
+                var images = new List<double[]>();
+
+                if (nOps == 0)
+                {
+                    images.Add(Fold(pos));
+                }
+                else
+                {
+                    for (int i = 0; i < nOps; i++)
+                    {
+                        double[] f = Fold(ApplyOperation(ops[i], pos));
+
+                        bool duplicate = false;
+                        foreach (var other in images)
+                        {
+                            if (PeriodicDistance2(f, other, g) < mergeDistance2)
+                            {
+                                duplicate = true;
+                                break;
+                            }
+                        }
+                        if (!duplicate) images.Add(f);
+                    }
+                }
+
+                foreach (var f in images)
+                {
+                    cell.Add(new CellAtom
+                    {
+                        ElementIndex = ei,
+                        X = f[0],
+                        Y = f[1],
+                        Z = f[2],
+                        Occupancy = atom.occupancy
+                    });
+                }
+            }
+
+            _cell = cell.ToArray();
+            _elementZ = new int[elementIndex.Count];
+            foreach (var kv in elementIndex) _elementZ[kv.Value] = kv.Key;
+            _f0 = new double[_elementZ.Length];
+        }
+
+        /// <summary>
+        /// |F(hkl)| = | sum_j f_j(s) * occ_j * exp(-B s^2) * exp(2 pi i (h x_j + k y_j + l z_j)) |
+        /// summed over the whole unit cell. s = sin(theta)/lambda, B = overall isotropic displacement.
+        /// </summary>
         public double Calculate(int h, int k, int l, double theta, double wavelength, double debyeWallerB)
         {
-            double sinThetaOverLambda = Math.Sin(theta * Math.PI / 180) / wavelength;
+            if (_cell == null) PrepareCell();
 
-            Complex F = Complex.Zero;
+            double s = Math.Sin(theta * Math.PI / 180.0) / wavelength;
+            double s2 = s * s;
+            double dw = Math.Exp(-debyeWallerB * s2);
 
- // ✅ FIX: F(hkl) = Σ f_j·exp(2πi(h·x_j + k·y_j + l·z_j)) must sum over ALL
- // atoms in the unit cell, not just the asymmetric unit.
-            var cellAtoms = (_molecule.SymetryEquivalents != null && _molecule.SymetryEquivalents.Count > 0)
-                ? _molecule.SymetryEquivalents
-                : _molecule.AsymmetricPart;
+            for (int e = 0; e < _elementZ.Length; e++)
+                _f0[e] = CromerMannTable.FormFactor(_elementZ[e], s2);
 
-            foreach (var atom in cellAtoms)
+            double re = 0.0, im = 0.0;
+            const double twoPi = 2.0 * Math.PI;
+
+            for (int i = 0; i < _cell.Length; i++)
             {
- // Form factor
-                double f0 = GetFormFactor(atom.AtomicNumber, sinThetaOverLambda);
-
- // Debye-Waller
-                double dw = Math.Exp(-debyeWallerB * sinThetaOverLambda * sinThetaOverLambda);
-
- // Faza
-                double phase = 2 * Math.PI * (h * atom.x + k * atom.y + l * atom.z);
-
- // Occupancy
-                double occ = atom.occupancy;
-
-                F += new Complex(f0 * dw * occ * Math.Cos(phase), f0 * dw * occ * Math.Sin(phase));
+                var a = _cell[i];
+                double w = _f0[a.ElementIndex] * dw * a.Occupancy;
+                double phase = twoPi * (h * a.X + k * a.Y + l * a.Z);
+                re += w * Math.Cos(phase);
+                im += w * Math.Sin(phase);
             }
 
-            return F.Magnitude;
+            return Math.Sqrt(re * re + im * im);
         }
 
-        private double GetFormFactor(int atomicNumber, double sinThetaOverLambda)
-        {
-            if (_formFactors.TryGetValue(atomicNumber, out var coeffs))
-            {
-                double s = sinThetaOverLambda;
-                double s2 = s * s;
+        #region Helpers
 
- // co_standard layout: { a1, b1, a2, b2, a3, b3, a4, b4, c }
- // f0(s) = Σ a_i·exp(-b_i·s²) + c
- // ✅ POPRAWKA: full 4 składniki Gaussa + stała c
-                return coeffs[0] * Math.Exp(-coeffs[1] * s2) +
-                       coeffs[2] * Math.Exp(-coeffs[3] * s2) +
-                       coeffs[4] * Math.Exp(-coeffs[5] * s2) +
-                       coeffs[6] * Math.Exp(-coeffs[7] * s2) +
-                       coeffs[8];
+        /// <summary>x' = R x + t, written exactly like Molecule.CalculateSymmetryEquivalents.</summary>
+        private static double[] ApplyOperation(SymmetryElements.ReadSymm op, double[] pos)
+        {
+            double[] r = new double[3];
+            for (int a = 0; a < 3; a++)
+            {
+                double v = op.shift[a];
+                int p1 = op.pos1[a], s1 = op.sign1[a];
+                int p2 = op.pos2[a], s2 = op.sign2[a];
+                if (s1 != 0 && p1 >= 0 && p1 < 3) v += pos[p1] * s1;
+                if (s2 != 0 && p2 >= 0 && p2 < 3) v += pos[p2] * s2;
+                r[a] = v;
+            }
+            return r;
+        }
+
+        private static double[] Fold(double[] f)
+        {
+            double[] r = new double[3];
+            for (int a = 0; a < 3; a++)
+            {
+                double v = f[a] - Math.Floor(f[a]);
+                if (v >= 1.0) v -= 1.0;
+                if (v < 0.0) v += 1.0;
+                r[a] = v;
+            }
+            return r;
+        }
+
+        /// <summary>Squared distance (Å²) between two fractional points, minimum-image convention.</summary>
+        private static double PeriodicDistance2(double[] f1, double[] f2, double[,] g)
+        {
+            double[] d = new double[3];
+            for (int a = 0; a < 3; a++)
+            {
+                double v = f1[a] - f2[a];
+                v -= Math.Round(v);
+                d[a] = v;
             }
 
- // Domyślny form factor (for węgla)
-            return 6.0 * Math.Exp(-10 * sinThetaOverLambda * sinThetaOverLambda);
+            double s = 0.0;
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    s += d[i] * g[i, j] * d[j];
+            return s;
         }
 
-        private Dictionary<int, double[]> InitializeFormFactors()
+        /// <summary>Direct metric tensor G (Å²) of the current cell (angles stored in radians).</summary>
+        private double[,] DirectMetric()
         {
- // Współczynniki atomowe z array co_standard (9 values na pierwiastek):
- // { a1, b1, a2, b2, a3, b3, a4, b4, c }
- // Źródło: International Tables for Crystallography, Vol. C, Table 6.1.1.4
- // (Cromer-Mann coefficients, 4-Gaussian approximation)
-            var factors = new Dictionary<int, double[]>
+            double a = _molecule.a, b = _molecule.b, c = _molecule.c;
+            double ca = Math.Cos(_molecule.alpha);
+            double cb = Math.Cos(_molecule.beta);
+            double cg = Math.Cos(_molecule.gamma);
+
+            return new double[,]
             {
- // 1 H
-                [1] = new double[] { 0.493002, 10.5109, 0.322912, 26.1257, 0.140191, 3.14236, 0.040810, 57.7997, 0.003038 },
- // 2 He 
-                [2] = new double[] { 0.8734, 9.1037, 0.6309, 3.3568, 0.3112, 22.9276, 0.1780, 0.9821, 0.0064 },
- // 3 Li
-                [3] = new double[] { 1.282, 3.9546, 0.7508, 1.0524, 0.6175, 85.3905, 0.4653, 168.261, 0.0377 },
- // 4 Be
-                [4] = new double[] { 1.5919, 43.6427, 1.1278, 1.8623, 0.5391, 103.483, 0.7029, 0.542, 0.0385 },
- // 5 B
-                [5] = new double[] { 2.0545, 23.2185, 1.3326, 1.021, 1.0979, 60.3498, 0.7068, 0.1403, -0.1932 },
- // 6 C
-                [6] = new double[] { 2.31, 20.8439, 1.02, 10.2075, 1.5886, 0.5687, 0.865, 51.6512, 0.2156 },
- // 7 N
-                [7] = new double[] { 12.2126, 0.0057, 3.1322, 9.8933, 2.0125, 28.9975, 1.1663, 0.5826, -11.529 },
- // 8 O
-                [8] = new double[] { 3.0485, 13.2771, 2.2868, 5.7011, 1.5463, 0.3239, 0.867, 32.9089, 0.2508 },
- // 9 F
-                [9] = new double[] { 3.5392, 10.2825, 2.6412, 4.2944, 1.517, 0.2615, 1.0243, 26.1476, 0.2776 },
- // 10 Ne 
-                [10] = new double[] { 3.9553, 8.4042, 3.1125, 3.4262, 1.4546, 0.2306, 1.1251, 21.7184, 0.3515 },
- // 11 Na
-                [11] = new double[] { 4.7626, 3.285, 3.1736, 8.8422, 1.2674, 0.3136, 1.1128, 129.424, 0.676 },
- // 12 Mg
-                [12] = new double[] { 5.4204, 2.8275, 2.1735, 79.2611, 1.2269, 0.3808, 2.3073, 7.1937, 0.8584 },
- // 13 Al
-                [13] = new double[] { 6.4202, 3.0387, 1.9002, 0.7426, 1.5936, 31.5472, 1.9646, 85.0886, 1.1151 },
- // 14 Si
-                [14] = new double[] { 6.2915, 2.4386, 3.0353, 32.3337, 1.9891, 0.6785, 1.541, 81.6937, 1.1407 },
- // 15 P
-                [15] = new double[] { 6.4345, 1.9067, 4.1791, 27.157, 1.78, 0.526, 1.4908, 68.1645, 1.1149 },
- // 16 S
-                [16] = new double[] { 6.9053, 1.4679, 5.2034, 22.2151, 1.4379, 0.2536, 1.5863, 56.172, 0.8669 },
- // 17 Cl
-                [17] = new double[] { 11.4604, 0.0104, 7.1964, 1.1662, 6.2556, 18.5194, 1.6455, 47.7784, -9.5574 },
- // 18 Ar 
-                [18] = new double[] { 7.4845, 0.9072, 6.7723, 14.8407, 0.6539, 43.8983, 1.6442, 33.3929, 1.4445 },
- // 19 K
-                [19] = new double[] { 8.2186, 12.7949, 7.4398, 0.7748, 1.0519, 213.187, 0.8659, 41.6841, 1.4228 },
- // 20 Ca
-                [20] = new double[] { 8.6266, 10.4421, 7.3873, 0.6599, 1.5899, 85.7484, 1.0211, 178.437, 1.3751 },
- // 21 Sc
-                [21] = new double[] { 9.189, 9.0213, 7.3679, 0.5729, 1.6409, 136.108, 1.468, 51.3531, 1.3329 },
- // 22 Ti
-                [22] = new double[] { 9.7595, 7.8508, 7.3558, 0.5, 1.6991, 35.6338, 1.9021, 116.105, 1.2807 },
- // 23 V
-                [23] = new double[] { 10.2971, 6.8657, 7.3511, 0.4385, 2.0703, 26.8938, 2.0571, 102.478, 1.2199 },
- // 24 Cr
-                [24] = new double[] { 10.6406, 6.1038, 7.3537, 0.392, 3.324, 20.2626, 1.4922, 98.7399, 1.1832 },
- // 25 Mn
-                [25] = new double[] { 11.2819, 5.3409, 7.3573, 0.3432, 3.0193, 17.8674, 2.2441, 83.7543, 1.0896 },
- // 26 Fe
-                [26] = new double[] { 11.7695, 4.7611, 7.3573, 0.3072, 3.5222, 15.3535, 2.3045, 76.8805, 1.0369 },
- // 27 Co
-                [27] = new double[] { 12.2841, 4.2791, 7.3409, 0.2784, 4.0034, 13.5359, 2.3488, 71.1692, 1.0118 },
- // 28 Ni
-                [28] = new double[] { 12.8376, 3.8785, 7.292, 0.2565, 4.4438, 12.1763, 2.38, 66.3421, 1.0341 },
- // 29 Cu
-                [29] = new double[] { 13.338, 3.5828, 7.1676, 0.247, 5.6158, 11.3966, 1.6735, 64.8126, 1.191 },
- // 30 Zn
-                [30] = new double[] { 14.0743, 3.2655, 7.0318, 0.2333, 5.1652, 10.3163, 2.41, 58.7097, 1.3041 },
- // 31 Ga
-                [31] = new double[] { 15.2354, 3.0669, 6.7006, 0.2412, 4.3591, 10.7805, 2.9623, 61.4135, 1.7189 },
- // 32 Ge
-                [32] = new double[] { 16.0816, 2.8509, 6.3747, 0.2516, 3.7068, 11.4468, 3.683, 54.7625, 2.1313 },
- // 33 As
-                [33] = new double[] { 16.6723, 2.6345, 6.0701, 0.2647, 3.4313, 12.9479, 4.2779, 47.7972, 2.531 },
- // 34 Se
-                [34] = new double[] { 17.0006, 2.4098, 5.8196, 0.2726, 3.973, 15.2372, 4.3543, 43.8163, 2.8409 },
- // 35 Br
-                [35] = new double[] { 17.1789, 2.1723, 5.2358, 16.5796, 5.6377, 0.2609, 3.9851, 41.4328, 2.9557 },
- // 36 Kr 
-                [36] = new double[] { 17.355, 1.938, 6.729, 16.562, 5.549, 0.226, 3.537, 39.397, 2.825 },
- // 37 Rb
-                [37] = new double[] { 17.1784, 1.7888, 9.6435, 17.3151, 5.1399, 0.2748, 1.5292, 164.934, 3.4873 },
- // 38 Sr
-                [38] = new double[] { 17.5663, 1.5564, 9.8184, 14.0988, 5.422, 0.1664, 2.6694, 132.376, 2.5064 },
- // 39 Y
-                [39] = new double[] { 17.776, 1.4029, 10.2946, 12.8006, 5.72629, 0.125599, 3.26588, 104.354, 1.91213 },
- // 40 Zr
-                [40] = new double[] { 17.8765, 1.27618, 10.948, 11.916, 5.41732, 0.117622, 3.65721, 87.6627, 2.06929 },
- // 41 Nb
-                [41] = new double[] { 17.6142, 1.18865, 12.0144, 11.766, 4.04183, 0.204785, 3.53346, 69.7957, 3.75591 },
- // 42 Mo
-                [42] = new double[] { 3.7025, 0.2772, 17.2356, 1.0958, 12.8876, 11.0040, 3.7429, 61.6584, 4.3875 },
- // 43 Tc
-                [43] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 44 Ru
-                [44] = new double[] { 19.2674, 0.80852, 12.9182, 8.4367, 4.86337, 24.7997, 1.56756, 94.2928, 5.37874 },
- // 45 Rh
-                [45] = new double[] { 19.2957, 0.751536, 14.3501, 8.21758, 4.73425, 25.8749, 1.28918, 98.6062, 5.328 },
- // 46 Pd
-                [46] = new double[] { 19.3319, 0.698655, 15.5017, 7.98929, 5.29537, 25.2052, 0.605844, 76.8986, 5.26593 },
- // 47 Ag
-                [47] = new double[] { 19.2808, 0.6446, 16.6885, 7.4726, 4.8045, 24.6605, 1.0463, 99.8156, 5.179 },
- // 48 Cd
-                [48] = new double[] { 19.2214, 0.5946, 17.6444, 6.9089, 4.461, 24.7008, 1.6029, 87.4825, 5.0694 },
- // 49 In
-                [49] = new double[] { 19.1624, 0.5476, 18.5596, 6.3776, 4.2948, 25.8499, 2.0396, 92.8029, 4.9391 },
- // 50 Sn
-                [50] = new double[] { 19.1889, 5.8303, 19.1005, 0.5031, 4.4585, 26.8909, 2.4663, 83.9571, 4.7821 },
- // 51 Sb
-                [51] = new double[] { 19.6418, 5.3034, 19.0455, 0.4607, 5.0371, 27.9074, 2.6827, 75.2825, 4.5909 },
- // 52 Te
-                [52] = new double[] { 19.9644, 4.81742, 19.0138, 0.420885, 6.14487, 28.5284, 2.5239, 70.8403, 4.352 },
- // 53 I
-                [53] = new double[] { 20.1472, 4.347, 18.9949, 0.3814, 7.5138, 27.766, 2.2735, 66.8776, 4.0712 },
- // 54 Xe
-                [54] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 55 Cs
-                [55] = new double[] { 20.3892, 3.569, 19.1062, 0.3107, 10.662, 24.3879, 1.4953, 213.904, 3.3352 },
- // 56 Ba
-                [56] = new double[] { 20.3361, 3.216, 19.297, 0.2756, 10.888, 20.2073, 2.6959, 167.202, 2.7731 },
- // 57 La
-                [57] = new double[] { 20.578, 2.94817, 19.599, 0.244475, 11.3727, 18.7726, 3.28719, 133.124, 2.14678 },
- // 58 Ce
-                [58] = new double[] { 21.1671, 2.81219, 19.7695, 0.226836, 11.8513, 17.6083, 3.33049, 127.113, 1.86264 },
- // 59 Pr
-                [59] = new double[] { 22.044, 2.77393, 19.6697, 0.222087, 12.3856, 16.7669, 2.82428, 143.644, 2.0583 },
- // 60 Nd
-                [60] = new double[] { 22.6845, 2.66248, 19.6847, 0.210628, 12.774, 15.8850, 2.85137, 137.903, 1.98486 },
- // 61 Pm 
-                [61] = new double[] { 24.0042, 2.47274, 19.4258, 0.196451, 13.4396, 14.3996, 2.89604, 128.007, 2.20963 },
- // 62 Sm
-                [62] = new double[] { 24.0042, 2.47274, 19.4258, 0.196451, 13.4396, 14.3996, 2.89604, 128.007, 2.20963 },
- // 63 Eu
-                [63] = new double[] { 24.6274, 2.3879, 19.0886, 0.1942, 13.7603, 13.7546, 2.9227, 123.174, 2.5745 },
- // 64 Gd
-                [64] = new double[] { 25.0709, 2.2534, 19.0798, 0.1820, 13.8518, 12.9331, 3.5455, 101.398, 2.4196 },
- // 65 Tb — UZUPEŁNIONE
-                [65] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 66 Dy
-                [66] = new double[] { 26.507, 2.1802, 17.6383, 0.202172, 14.5596, 12.1899, 2.96577, 111.874, 4.29728 },
- // 67 Ho
-                [67] = new double[] { 26.9049, 2.07051, 17.294, 0.19794, 14.5583, 11.4407, 3.63837, 92.6566, 4.56796 },
- // 68 Er
-                [68] = new double[] { 27.6563, 2.07356, 16.4285, 0.223545, 14.9779, 11.3604, 2.98233, 105.703, 5.92046 },
- // 69 Tm
-                [69] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 70 Yb
-                [70] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 71 Lu
-                [71] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 72 Hf
-                [72] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 73 Ta
-                [73] = new double[] { 29.2024, 1.77333, 15.2293, 9.37046, 14.5135, 0.295977, 4.76492, 63.3644, 9.24354 },
- // 74 W
-                [74] = new double[] { 29.0818, 1.72029, 15.43, 9.2259, 14.4327, 0.321703, 5.11982, 57.056, 9.8875 },
- // 75 Re
-                [75] = new double[] { 28.7621, 1.67191, 15.7189, 9.09227, 14.5564, 0.3505, 5.44174, 52.0861, 10.472 },
- // 76 Os
-                [76] = new double[] { 28.1894, 1.62903, 16.155, 8.97948, 14.9305, 0.382661, 5.67589, 48.1647, 11.0005 },
- // 77 Ir
-                [77] = new double[] { 27.3049, 1.59279, 16.7296, 8.86553, 15.6115, 0.417916, 5.83377, 45.0011, 11.4722 },
- // 78 Pt
-                [78] = new double[] { 27.0059, 1.51293, 17.7639, 8.81174, 15.7131, 0.424593, 5.7837, 38.6103, 11.6883 },
- // 79 Au
-                [79] = new double[] { 16.8819, 0.4611, 18.5913, 8.6216, 25.5582, 1.4826, 5.86, 36.3956, 12.0658 },
- // 80 Hg
-                [80] = new double[] { 20.6809, 0.545, 19.0417, 8.4484, 21.6575, 1.5729, 5.9676, 38.3246, 12.6089 },
- // 81 Tl
-                [81] = new double[] { 27.5446, 0.65515, 19.1584, 8.70751, 15.538, 1.96347, 5.52593, 45.8149, 13.1746 },
- // 82 Pb
-                [82] = new double[] { 31.0617, 0.6902, 13.0637, 2.3576, 18.442, 8.618, 5.9696, 47.2579, 13.4118 },
- // 83 Bi
-                [83] = new double[] { 33.3689, 0.704, 12.951, 2.9238, 16.5877, 8.7937, 6.4692, 48.0093, 13.5782 },
- // 84 After
-                [84] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 85 At
-                [85] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 86 Rn
-                [86] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 87 Fr
-                [87] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 88 Ra
-                [88] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 89 Ac
-                [89] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 90 Th
-                [90] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 91 Pa
-                [91] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 92 U
-                [92] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 93 Np
-                [93] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 94 Pu
-                [94] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 95 Am
-                [95] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 96 Cm
-                [96] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 97 Bk
-                [97] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 98 Cf
-                [98] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 99 E1 (fake element for general use)
-                [99] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 100 E2
-                [100] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 101 E3
-                [101] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 102 E4
-                [102] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 103 E5
-                [103] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 104 E6
-                [104] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 105 E7
-                [105] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
- // 106 E8
-                [106] = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { a * a,       a * b * cg, a * c * cb },
+                { a * b * cg,  b * b,      b * c * ca },
+                { a * c * cb,  b * c * ca, c * c      }
             };
-
-            return factors;
         }
-    }
 
- // ⭐ struct Complex usunięte — we use Tal.Utils.Complex
+        #endregion
+    }
 }

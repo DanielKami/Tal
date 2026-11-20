@@ -169,9 +169,9 @@
  // 
             labelResolution.Location = new Point(8, 100);
             labelResolution.Name = "labelResolution";
-            labelResolution.Size = new Size(92, 25);
+            labelResolution.Size = new Size(112, 25);
             labelResolution.TabIndex = 4;
-            labelResolution.Text = "Resolution:";
+            labelResolution.Text = "Points / pixel:";
  // 
  // numericResolution
  // 

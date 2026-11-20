@@ -12,6 +12,7 @@
 // Project: TAL
 
 using Tal.Core.PowderDiffraction;
+using System.Threading.Tasks;
 using GdiBitmap = System.Drawing.Bitmap;
 using GdiColor = System.Drawing.Color;
 using GdiDashStyle = System.Drawing.Drawing2D.DashStyle;
@@ -213,21 +214,32 @@ namespace Tal.Forms
             double[] twoThetaValues = new double[points];
             double[] yValues = new double[points];
 
-            for (int i = 0; i < points; i++)
+            // Precalculate for speed: peaks are already sorted by TwoTheta
+            double fwhm = _settings.FWHM;
+            double cutoff = 8.0 * fwhm;
+            double[] peakThetas = _peaks.Select(p => p.TwoTheta).ToArray();
+            double[] peakIntensities = _peaks.Select(p => p.Intensity * scale).ToArray();
+
+            Parallel.For(0, points, i =>
             {
                 double fraction = i / (double)(points - 1);
                 double twoTheta = _settings.MinTwoTheta + fraction * (_settings.MaxTwoTheta - _settings.MinTwoTheta);
                 twoThetaValues[i] = twoTheta;
-                yValues[i] = 0;
 
-                foreach (var peak in _peaks)
+                // Binary search the range of peaks within cutoff
+                int left = Array.BinarySearch(peakThetas, twoTheta - cutoff);
+                if (left < 0) left = ~left;
+                int right = Array.BinarySearch(peakThetas, twoTheta + cutoff);
+                if (right < 0) right = ~right;
+
+                double sum = 0;
+                for (int j = left; j < right && j < _peaks.Count; j++)
                 {
-                    double fwhm = _settings.FWHM;
-                    double contribution = peak.Intensity * scale *
-                        PeakBroadening.ProfileFunction(twoTheta, peak.TwoTheta, fwhm, _settings.ProfileType);
-                    yValues[i] += contribution;
+                    sum += peakIntensities[j] *
+                           PeakBroadening.ProfileFunction(twoTheta, peakThetas[j], fwhm, _settings.ProfileType);
                 }
-            }
+                yValues[i] = sum;
+            });
 
             double maxY = yValues.Max();
             if (maxY <= 0) return;
@@ -335,7 +347,17 @@ namespace Tal.Forms
 
             if (closestPeak != null && minDist < tolerance)
             {
-                labelHoverDetail.Text = $"2θ: {closestPeak.TwoTheta:F2}° | d: {closestPeak.DSpacing:F3} Å | hkl: ({closestPeak.H}{closestPeak.K}{closestPeak.L}) | I: {closestPeak.Intensity:F0}";
+                // distinct reflections can overlap in 2θ: list them all (strongest first), the
+                // profile already shows their sum
+                var overlapping = _peaks
+                    .Where(p => Math.Abs(p.TwoTheta - closestPeak.TwoTheta) < 0.005)
+                    .OrderByDescending(p => p.Intensity)
+                    .ToList();
+
+                string hklText = string.Join(", ", overlapping.Select(p => $"{p.HKL}×{p.Multiplicity}"));
+                double totalIntensity = overlapping.Sum(p => p.Intensity);
+
+                labelHoverDetail.Text = $"2θ: {closestPeak.TwoTheta:F2}° | d: {closestPeak.DSpacing:F3} Å | hkl×m: {hklText} | I: {totalIntensity:F0}";
             }
             else
             {

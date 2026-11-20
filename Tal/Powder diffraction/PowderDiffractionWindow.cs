@@ -74,6 +74,16 @@ namespace Tal.Forms
             chkShowBackground.Checked = true;
             numericResolution.Value = 2;
 
+            // This control only sets how densely the drawn curve is sampled. It is NOT the
+            // instrumental resolution and does not change the calculated peaks in any way.
+            const string pointsTip =
+                "Number of profile points calculated per screen pixel of the plot width.\n" +
+                "Higher = smoother curve, slower redraw (matters for narrow peaks).\n" +
+                "It affects only how the curve is drawn: peak positions, intensities and FWHM stay the same.\n" +
+                "It is not the instrumental resolution (use FWHM for peak width).";
+            toolTip.SetToolTip(labelResolution, pointsTip);
+            toolTip.SetToolTip(numericResolution, pointsTip);
+
             WireEvents();
             LoadSettingsToUI();
             CalculatePattern();
@@ -373,6 +383,9 @@ namespace Tal.Forms
 
         #region Calculate Pattern
 
+        /// <summary>Elements for which the unsupported-element dialog was already shown.</summary>
+        private string _unsupportedWarningShownFor;
+
         private void CalculatePattern()
         {
             if (_isCalculating || _isUpdatingUI) return;
@@ -404,6 +417,9 @@ namespace Tal.Forms
                 _engine.ApplyCorrections(_peaks);
                 _peaks = _peaks.OrderBy(p => p.TwoTheta).ToList();
 
+                toolTip.SetToolTip(labelStatus, string.Empty);
+                _unsupportedWarningShownFor = null;
+
                 labelPeakCount.Text = $"Peaks: {_peaks.Count}";
                 labelStatus.Text = _peaks.Count > 0 ?
                     $"Calculated {_peaks.Count} peaks" :
@@ -412,6 +428,27 @@ namespace Tal.Forms
 
                 _needsRedraw = true;
                 panelPlot.Invalidate();
+            }
+            catch (UnsupportedElementException ex)
+            {
+                // Never show a pattern from an incomplete structure factor.
+                _peaks = new List<DiffractionPeak>();
+                labelPeakCount.Text = "Peaks: 0";
+                labelStatus.Text = "No scattering factors: " + string.Join(", ", ex.Elements);
+                labelStatus.ForeColor = GdiColor.Red;
+                toolTip.SetToolTip(labelStatus, ex.Message);
+
+                _needsRedraw = true;
+                panelPlot.Invalidate();
+
+                // one dialog per set of elements, not on every parameter change
+                string key = string.Join(",", ex.Elements);
+                if (_unsupportedWarningShownFor != key)
+                {
+                    _unsupportedWarningShownFor = key;
+                    MessageBox.Show(this, ex.Message, "Powder diffraction",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
             catch (Exception ex)
             {
