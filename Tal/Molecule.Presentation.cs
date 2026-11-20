@@ -275,6 +275,7 @@ namespace Tal
                     atom[NumberOfAtoms].Coordinate_error.X = data[n].x_e;
                     atom[NumberOfAtoms].Coordinate_error.Y = data[n].y_e;
                     atom[NumberOfAtoms].Coordinate_error.Z = data[n].z_e;
+                    atom[NumberOfAtoms].Coordinate_cov = data[n].CoordCov;
 
 atom[NumberOfAtoms].AtomicNumber = data[n].AtomicNumber;
                             atom[NumberOfAtoms].Ue = data[n].Ue;
@@ -350,6 +351,7 @@ atom[NumberOfAtoms].AtomicNumber = data[n].AtomicNumber;
                             atom[NumberOfAtoms].Coordinate_error.X = data[n].x_e;
                             atom[NumberOfAtoms].Coordinate_error.Y = data[n].y_e;
                             atom[NumberOfAtoms].Coordinate_error.Z = data[n].z_e;
+                            atom[NumberOfAtoms].Coordinate_cov = data[n].CoordCov;
 
                             atom[NumberOfAtoms].AtomicNumber = data[n].AtomicNumber;
                             atom[NumberOfAtoms].Ue = data[n].Ue;
@@ -430,6 +432,7 @@ atom[NumberOfAtoms].AtomicNumber = data[n].AtomicNumber;
                 atom[idx].selected = false;
                 atom[idx].SelectionOrder = 0;
                 atom[idx].Coordinate_error = new Vector3(na.x_e, na.y_e, na.z_e);
+                atom[idx].Coordinate_cov = na.CoordCov;
 
                 atom[idx].Ue = na.Ue;
                 atom[idx].Un = na.Un;

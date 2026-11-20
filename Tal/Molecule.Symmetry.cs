@@ -429,6 +429,7 @@ namespace Tal
                     atom_local.x_e = AsymmetricPart[j].x_e;
                     atom_local.y_e = AsymmetricPart[j].y_e;
                     atom_local.z_e = AsymmetricPart[j].z_e;
+                    atom_local.CoordCov = AsymmetricPart[j].CoordCov;
 
                     if (haveCell)
                     {
@@ -442,6 +443,13 @@ namespace Tal
  // T = R → Draw: M = T·Un' = R·Un·Rᵀ (≃ old S·Un·S)
  // VoxelScanner / CavityDetector ignore Transformation.
                             atom_local.Transformation = rCart;
+                            // Position covariance rotates with the operation: C' = R_cart · C · R_cartᵀ
+                            if (!atom_local.CoordCov.IsZero)
+                            {
+                                atom_local.CoordCov = AsymmetricPart[j].CoordCov.Rotated(rCart);
+                                Vector3 sg = atom_local.CoordCov.Sigma;
+                                atom_local.x_e = sg.X; atom_local.y_e = sg.Y; atom_local.z_e = sg.Z;
+                            }
                         }
                         else
                         {

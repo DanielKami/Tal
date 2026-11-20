@@ -267,11 +267,8 @@ namespace Tal
             public int AtomicNumber;
             public float x, y, z;
             public float x_e, y_e, z_e;
-<<<<<<< HEAD
-=======
             /// <summary>Cartesian position covariance (Å²); keeps axis correlations. x_e..z_e = sqrt of its diagonal.</summary>
             public Cov3 CoordCov;
->>>>>>> Dodaj pliki projektów.
             public Matrix Ue;
             public Matrix Un;
             public float iso;
@@ -307,11 +304,8 @@ namespace Tal
             public bool show;
             public Vector3 Coordinate;
             public Vector3 Coordinate_error;
-<<<<<<< HEAD
-=======
             /// <summary>Full Cartesian position covariance (Å²), rotated for symmetry equivalents.</summary>
             public Cov3 Coordinate_cov;
->>>>>>> Dodaj pliki projektów.
             public int Z_Depth;
             public int disorder_group;
             public float charge;

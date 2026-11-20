@@ -93,6 +93,7 @@ namespace Tal
  /// <summary>
  /// Fallback cell error fraction, used ONLY when atomic Coordinate_error
  /// is unavailable (all zero). In normal crystallographic data the
+ /// atomic esds do NOT contain the cell-error contribution; it is propagated separately (see CellContribution).
  /// </summary>
         private float _cellErrorFraction = 0f;
 
@@ -357,6 +358,9 @@ namespace Tal
 
             double distance = Vector3.Distance(pos1, pos2);
 
+            float error = DistanceErrorCore(
+                MakePosErr(_molecule.atom[atom1]),
+                MakePosErr(_molecule.atom[atom2]));
 
             int errorDigit = LErr(ref distance, error);
             Message = $"Distance {symbol1}-{symbol2}: " +
@@ -442,6 +446,10 @@ namespace Tal
             double angleRad = Math.Acos(cosAngle);
             double angleDeg = MathHelperTal.ToDegrees((float)angleRad);
 
+            float error = AngleErrorCore(
+                MakePosErr(_molecule.atom[atom1]),
+                MakePosErr(_molecule.atom[atom2]),
+                MakePosErr(_molecule.atom[atom3]));
 
             int errorDigit = LErr(ref angleDeg, error);
             Message = $"Angle {symbol1}-{symbol2}-{symbol3}: " +
@@ -518,6 +526,13 @@ namespace Tal
             double torsionRad = CalculateTorsionAngleRad(V1, V2, V3, V4);
             double torsionDeg = MathHelperTal.ToDegrees((float)torsionRad);
 
+            float error = TorsionErrorCore(new[]
+            {
+                MakePosErr(_molecule.atom[atom1]),
+                MakePosErr(_molecule.atom[atom2]),
+                MakePosErr(_molecule.atom[atom3]),
+                MakePosErr(_molecule.atom[atom4])
+            });
 
             int errorDigit = LErr(ref torsionDeg, error);
             Message = $"Torsion {symbol1}-{symbol2}-{symbol3}-{symbol4}: " +
@@ -600,6 +615,21 @@ namespace Tal
             Vector3 projShifted = projRaw - shift;
 
             UpdateCellError();
+            // sigma of the atom position ALONG the plane normal: sqrt(nᵀ C n)
+            float posErr;
+            Cov3 atomCov = _molecule.atom[atomIdx].Coordinate_cov;
+            if (!atomCov.IsZero)
+                posErr = (float)Math.Sqrt(atomCov.Quadratic(n));
+            else
+                posErr = CalculateVectorError(_molecule.atom[atomIdx].Coordinate_error);
+            // mean plane: add the position errors of the atoms that define the plane
+            // (and treat the measured atom as one variable when it belongs to the plane)
+            if (posErr > 0f && plane.Type == CrystalPlaneType.MeanPlane &&
+                MakePosErr(_molecule.atom[atomIdx]).Real)
+            {
+                double pv = MeanPlanePositionVariance(atomIdx, plane, shift, atomRaw, out bool okPlane);
+                if (okPlane) posErr = (float)Math.Sqrt(pv);
+            }
 
             float error;
             if (posErr > 0f)
@@ -816,15 +846,44 @@ namespace Tal
             return new Vector3(e, e, e);
         }
 
+        // ── public API (used by Measure itself and by StructureInfoWindow) ──
+
+        /// <summary>Bond-length esd (Å) between two atoms.</summary>
+        public float DistanceError(in Molecule.Atom a, in Molecule.Atom b)
+            => DistanceErrorCore(MakePosErr(a), MakePosErr(b));
+
+        /// <summary>Valence-angle esd (degrees) a–b–c, b is the vertex.</summary>
+        public float AngleError(in Molecule.Atom a, in Molecule.Atom b, in Molecule.Atom c)
+            => AngleErrorCore(MakePosErr(a), MakePosErr(b), MakePosErr(c));
+
+        /// <summary>Torsion-angle esd (degrees) a–b–c–d.</summary>
+        public float TorsionError(in Molecule.Atom a, in Molecule.Atom b, in Molecule.Atom c, in Molecule.Atom d)
+            => TorsionErrorCore(new[] { MakePosErr(a), MakePosErr(b), MakePosErr(c), MakePosErr(d) });
+
+        // ── cores ──
+
+        private float DistanceErrorCore(PosErr p1, PosErr p2)
         {
+            Vector3 diff = p1.Pos - p2.Pos;
             float d = diff.Length();
             if (d < 1e-4f) return 0.001f;
 
+            Vector3 u = diff / d;
+            double var = p1.Cov.Quadratic(u) + p2.Cov.Quadratic(u);
 
+            if (p1.Real && p2.Real)
+            {
+                double c = CellContribution(new[] { p1.Pos, p2.Pos }, DistanceOf, false);
+                var += c * c;
+            }
 
+            return (float)Math.Sqrt(Math.Max(var, 1e-12));
         }
 
+        private float AngleErrorCore(PosErr p1, PosErr p2, PosErr p3)
         {
+            Vector3 a = p1.Pos - p2.Pos;
+            Vector3 b = p3.Pos - p2.Pos;
             float lenA = a.Length();
             float lenB = b.Length();
 
@@ -838,12 +897,12 @@ namespace Tal
             double theta = Math.Acos(cosTheta);
             double sinTheta = Math.Sin(theta);
 
-            Vector3 e1 = EffectivePositionalError(pos1, err1, pos1);
-            Vector3 e2 = EffectivePositionalError(pos2, err2, pos2);
-            Vector3 e3 = EffectivePositionalError(pos3, err3, pos3);
-
             if (Math.Abs(sinTheta) < 0.01)
             {
+                // (almost) linear: gradient is singular -> rough upper estimate
+                float avgErr = (CalculateVectorError(p1.Cov.Sigma) +
+                                CalculateVectorError(p2.Cov.Sigma) +
+                                CalculateVectorError(p3.Cov.Sigma)) / 3.0f;
                 float avgDist = 0.5f * (lenA + lenB);
                 float errDeg_ = (avgErr / avgDist) * (180.0f / MathF.PI);
                 return Math.Clamp(errDeg_, 0.001f, 10.0f);
@@ -862,14 +921,29 @@ namespace Tal
             grad3 = ClampVector(grad3, GRAD_CLAMP);
 
             double errRadSq =
+                p1.Cov.Quadratic(grad1) +
+                p2.Cov.Quadratic(grad2) +
+                p3.Cov.Quadratic(grad3);
+
+            if (p1.Real && p2.Real && p3.Real)
+            {
+                double c = CellContribution(new[] { p1.Pos, p2.Pos, p3.Pos }, AngleOf, false);
+                errRadSq += c * c;
+            }
 
             double errDeg = Math.Sqrt(Math.Max(errRadSq, 0.0)) * (180.0 / Math.PI);
             return (float)Math.Clamp(errDeg, 0.001, 10.0);
         }
 
+        private float TorsionErrorCore(PosErr[] p)
         {
+            if (!IsTorsionWellDefined(p[0].Pos, p[1].Pos, p[2].Pos, p[3].Pos))
+                return 0.5f;
 
+            const double EPS = 1e-4;
+            double[][] x = new double[4][];
             for (int i = 0; i < 4; i++)
+                x[i] = new double[] { p[i].Pos.X, p[i].Pos.Y, p[i].Pos.Z };
 
             double errRadSq = 0.0;
 
@@ -878,11 +952,76 @@ namespace Tal
                 double[] g = new double[3];
                 for (int coord = 0; coord < 3; coord++)
                 {
+                    double saved = x[atom][coord];
+                    x[atom][coord] = saved + EPS;
+                    double tPlus = TorsionOf(x);
+                    x[atom][coord] = saved - EPS;
+                    double tMinus = TorsionOf(x);
+                    x[atom][coord] = saved;
 
+                    double diff = WrapAngle(tPlus - tMinus);
+                    double deriv = diff / (2.0 * EPS);
+                    if (Math.Abs(deriv) > 1e3) deriv = Math.Sign(deriv) * 1e3;
+                    g[coord] = deriv;
+                }
+                errRadSq += p[atom].Cov.Quadratic(new Vector3((float)g[0], (float)g[1], (float)g[2]));
+            }
 
+            if (p[0].Real && p[1].Real && p[2].Real && p[3].Real)
+            {
+                double c = CellContribution(new[] { p[0].Pos, p[1].Pos, p[2].Pos, p[3].Pos }, TorsionOf, true);
+                errRadSq += c * c;
+            }
 
+            double errDeg = Math.Sqrt(Math.Max(errRadSq, 0.0)) * (180.0 / Math.PI);
+            return (float)Math.Clamp(errDeg, 0.001, 10.0);
+        }
 
+        // ── unit-cell contribution ──
 
+        /// <summary>Unit-cell parameters (Å, rad) and their esds; false when there are no cell esds.</summary>
+        private bool TryGetCell(out double[] p, out double[] s)
+        {
+            p = null; s = null;
+            if (_molecule == null) return false;
+
+            p = new[] { (double)_molecule.a, _molecule.b, _molecule.c, _molecule.alpha, _molecule.beta, _molecule.gamma };
+            s = new[] { (double)_molecule.a_e, _molecule.b_e, _molecule.c_e, _molecule.alpha_e, _molecule.beta_e, _molecule.gamma_e };
+
+            if (p[0] <= 0 || p[1] <= 0 || p[2] <= 0) return false;
+
+            for (int k = 0; k < 6; k++)
+                if (s[k] > 0 && !double.IsNaN(s[k]) && !double.IsInfinity(s[k]))
+                    return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Contribution of the unit-cell esds to any quantity q(cell parameters) with the
+        /// fractional coordinates held fixed: sqrt( sum_k ( (q(p_k+s_k) - q(p_k-s_k)) / 2 )^2 ).
+        /// Same units as q. Returns 0 when the structure has no cell esds.
+        /// </summary>
+        private double CellContributionParams(Func<double[], double> q, bool wrapAngle)
+        {
+            if (!TryGetCell(out double[] p, out double[] s)) return 0.0;
+
+            double sum = 0.0;
+            for (int k = 0; k < 6; k++)
+            {
+                if (!(s[k] > 0) || double.IsInfinity(s[k]) || double.IsNaN(s[k])) continue;
+
+                double[] pp = (double[])p.Clone();
+                pp[k] = p[k] + s[k];
+                double qPlus = q(pp);
+                pp[k] = p[k] - s[k];
+                double qMinus = q(pp);
+
+                double d = qPlus - qMinus;
+                if (wrapAngle) d = WrapAngle(d);
+                d *= 0.5;
+                sum += d * d;
+            }
+            return Math.Sqrt(sum);
         }
 
         /// <summary>
@@ -901,6 +1040,7 @@ namespace Tal
                 frac[i] = MulVec(inv, r.X, r.Y, r.Z);
             }
 
+            return CellContributionParams(pp => q(ToCartesian(CellMatrix(pp), frac)), wrapAngle);
         }
 
         /// <summary>

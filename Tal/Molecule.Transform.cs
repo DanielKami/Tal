@@ -203,23 +203,31 @@ namespace Tal
 
         #region Error Propagation
 
- /// <summary>
- /// Propagates fractional aftersitional errors to Cartesian errors.
- /// Uses per-axis edge vectors (a, b, c) to build the error tensor.
- /// </summary>
+        /// <summary>
+        /// Propagates independent fractional coordinate errors (sigma_x, sigma_y, sigma_z)
+        /// to per-axis Cartesian errors in quadrature:
+        ///   sigma_X^2 = sum_j (A[X,j] * sigma_j)^2
+        /// where A is the fractional -> Cartesian matrix (columns = cell vectors a, b, c;
+        /// x_cart = A * x_frac, i.e. FracToCart). Components are in Angstrom.
+        /// NOTE: correlations between Cartesian axes (off-diagonal covariance) are not kept.
+        /// </summary>
+        public Vector3 FracErrorToCartError(Vector3 fracErr)
+        {
+            Matrix A = FractionaltoCarttesianMatrix(0, 0, 0);
+
+            float ex = (float)Math.Sqrt(sqr(A.M11 * fracErr.X) + sqr(A.M12 * fracErr.Y) + sqr(A.M13 * fracErr.Z));
+            float ey = (float)Math.Sqrt(sqr(A.M22 * fracErr.Y) + sqr(A.M23 * fracErr.Z));
+            float ez = Math.Abs(A.M33 * fracErr.Z);
+
+            return new Vector3(ex, ey, ez);
+        }
+
         private void CalculateError(ref float x_e, ref float y_e, ref float z_e)
         {
-            Matrix X = Matrix.Transpose(FractionaltoCarttesianMatrix(1, 0, 0));
-            Matrix Y = Matrix.Transpose(FractionaltoCarttesianMatrix(0, 1, 0));
-            Matrix Z = Matrix.Transpose(FractionaltoCarttesianMatrix(0, 0, 1));
-
-            float x = sqr(x_e * X[0, 0]) + sqr(y_e * Y[1, 0]) + sqr(z_e * Z[2, 0]);
-            float y = sqr(x_e * X[0, 1]) + sqr(y_e * Y[1, 1]) + sqr(z_e * Z[2, 1]);
-            float z = sqr(x_e * X[0, 2]) + sqr(y_e * Y[1, 2]) + sqr(z_e * Z[2, 2]);
-
-            x_e = (float)Math.Sqrt(x);
-            y_e = (float)Math.Sqrt(y);
-            z_e = (float)Math.Sqrt(z);
+            Vector3 cart = FracErrorToCartError(new Vector3(x_e, y_e, z_e));
+            x_e = cart.X;
+            y_e = cart.Y;
+            z_e = cart.Z;
         }
 
         #endregion
