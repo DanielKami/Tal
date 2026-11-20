@@ -1857,81 +1857,6 @@ namespace Tal.Forms
             return angle;
         }
 
-<<<<<<< HEAD
- /// <summary>
- /// Estimates the bond length error from per-atom aftersitional errors.
- /// Uses the same formula as Measure.CalculateDistanceError, but the
- /// cell-error contribution is already embedded in Coordinate_error.
- /// </summary>
-        private float EstimateBondError(Molecule.Atom a1, Molecule.Atom a2)
-        {
-            Vector3 diff = a1.Coordinate - a2.Coordinate;
-            float d = diff.Length();
-
-            if (d < 1e-4f) return 0.001f;
-
-            Vector3 e1 = a1.Coordinate_error;
-            Vector3 e2 = a2.Coordinate_error;
-
-            float dx = diff.X / d;
-            float dy = diff.Y / d;
-            float dz = diff.Z / d;
-
-            float errorSq =
-                dx * dx * e1.X * e1.X + dy * dy * e1.Y * e1.Y + dz * dz * e1.Z * e1.Z +
-                dx * dx * e2.X * e2.X + dy * dy * e2.Y * e2.Y + dz * dz * e2.Z * e2.Z;
-
-            return (float)Math.Sqrt(Math.Max(errorSq, 1e-12));
-        }
-
- /// <summary>
- /// Estimates the angle error (aftersitional + cell contribution).
- /// Consistent with Measure.CalculateAngleError.
- /// </summary>
-        private float EstimateAngleError(Molecule.Atom a, Molecule.Atom b, Molecule.Atom c)
-        {
-            Vector3 v1 = a.Coordinate - b.Coordinate;
-            Vector3 v2 = c.Coordinate - b.Coordinate;
-
-            float l1 = v1.Length();
-            float l2 = v2.Length();
-            if (l1 < 1e-4f || l2 < 1e-4f) return 0.5f;
-
-            float e1 = a.Coordinate_error.Length();
-            float e2 = b.Coordinate_error.Length();
-            float e3 = c.Coordinate_error.Length();
-
-            float avgPosErr = (e1 + e2 + e3) / 3f;
-            float minLen = Math.Min(l1, l2);
-            if (minLen < 1e-4f) return 0.5f;
-
-            float errRad = (float)Math.Sqrt(2.0) * avgPosErr / minLen;
-            float errDeg = MathHelperTal.ToDegrees(errRad);
-
-            return Math.Clamp(errDeg, 0.001f, 10.0f);
-        }
-
- /// <summary>
- /// Estimates the torsion error (aftersitional + cell contribution).
- /// Consistent with Measure.CalculateTorsionError.
- /// </summary>
-        private float EstimateTorsionError(Molecule.Atom a, Molecule.Atom b, Molecule.Atom c, Molecule.Atom d)
-        {
-            float lBC = Vector3.Distance(b.Coordinate, c.Coordinate);
-            if (lBC < 1e-4f) return 1.0f;
-
-            float e1 = a.Coordinate_error.Length();
-            float e2 = b.Coordinate_error.Length();
-            float e3 = c.Coordinate_error.Length();
-            float e4 = d.Coordinate_error.Length();
-
-            float avgPosErr = (e1 + e2 + e3 + e4) / 4f;
-
-            float errDeg = (float)Math.Sqrt(2.0) * avgPosErr / lBC * 57.2958f;
-
-            return Math.Clamp(errDeg, 0.001f, 30.0f);
-        }
-=======
         // Error estimates come from Measure (full position covariance incl. symmetry rotation
         // + unit-cell esds), so Structure Info and on-screen measurements agree exactly.
         // new Measure per call: cheap, and always bound to the current molecule
@@ -1948,7 +1873,6 @@ namespace Tal.Forms
         /// <summary>Torsion-angle esd (degrees); same model as the on-screen torsion measurement.</summary>
         private float EstimateTorsionError(Molecule.Atom a, Molecule.Atom b, Molecule.Atom c, Molecule.Atom d)
             => ErrorMeasure.TorsionError(a, b, c, d);
->>>>>>> Dodaj pliki projektów.
 
         #endregion
 
