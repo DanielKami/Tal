@@ -6,14 +6,6 @@
 //
 // Molecule partial — atom label generation.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — offsety etykiet atoms.
-// Used when the user drags labels in "Move Labels" mode.
-
 namespace Tal
 {
     public partial class Molecule

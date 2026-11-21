@@ -6,14 +6,6 @@
 //
 // Molecule partial — structure metadata.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — metadane krystalograficzne, eksperymentalne i publikacyjne.
-// All fields are optional — populated from CIF/RES, empty when no data.
-
 using System.Diagnostics;
 using Tal.Parsers;
 
@@ -176,7 +168,7 @@ namespace Tal
  /// Copies refinement, experiment, and publication metadata from a
  /// StructureData object into this Molecule.
  /// Called at the end of AsignXYZ so the data is available to the
- /// StructureInfoWindow and other UI comafternents.
+ /// StructureInfoWindow and other UI components.
  /// </summary>
         internal void CopyMetadataFromStructure(StructureData structure)
         {

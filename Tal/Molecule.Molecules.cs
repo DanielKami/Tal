@@ -6,23 +6,6 @@
 //
 // Molecule partial — molecule detection within the cell.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — wykrywanie indywidualnych molecules w cell.
-//
-// Version v2: entire BFS moved to Tal.Calculate.MoleculeFinder.
-// Molecule.DetectMolecules jest teraz cienkim wrapperem.
-//
-// Thanks to this:
-// - JEDNO source prawdy for BFS (used also przez Hirshfeld).
-// - Consistent bond threshold (Flags.BOND_FACTOR) everywhere.
-// - Fractional minimum-image (joins molecules across cell boundary).
-// - Full IsHydrogenBond logic with donor search (step 4) —
-// identyczna jak w oryginalnym Molecule.IsHydrogenBond.
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
@@ -82,7 +65,7 @@ namespace Tal
 
  /// <summary>
  /// Runs molecule detection over symmetry equivalents
- /// and propagates the result to the 3D atoms (by aftersition match).
+ /// and propagates the result to the 3D atoms (by position match).
  /// </summary>
 
         /// <summary>

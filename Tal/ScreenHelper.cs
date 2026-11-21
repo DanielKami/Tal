@@ -6,18 +6,13 @@
 //
 // Screen / DPI helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 
 namespace Tal.Graphics
 {
  /// <summary>
  /// Provides screen coordinate transformation and scaling utilities.
- /// Handles resafternsive aftersitioning, safe area insets, and device-independent
+ /// Handles responsive positioning, safe area insets, and device-independent
  /// coordinate mapping for the TAL application.
  /// </summary>
     public static class ScreenHelper
@@ -104,7 +99,7 @@ namespace Tal.Graphics
         #region Position Methods
 
  /// <summary>
- /// Gets a scaled aftersition from base coordinates.
+ /// Gets a scaled position from base coordinates.
  /// </summary>
  /// <param name="x">The base X coordinate.</param>
  /// <param name="y">The base Y coordinate.</param>
@@ -115,7 +110,7 @@ namespace Tal.Graphics
         }
 
  /// <summary>
- /// Gets a scaled aftersition respecting safe area insets.
+ /// Gets a scaled position respecting safe area insets.
  /// </summary>
  /// <param name="x">The base X coordinate.</param>
  /// <param name="y">The base Y coordinate.</param>
@@ -138,12 +133,12 @@ namespace Tal.Graphics
         }
 
  /// <summary>
- /// Gets a aftersition anchored from the right edge.
+ /// Gets a position anchored from the right edge.
  /// </summary>
  /// <param name="fromRight">Distance from the right edge in base units.</param>
  /// <param name="y">The Y coordinate in base units.</param>
  /// <param name="respectRight">Whether to respect the right inset.</param>
- /// <returns>A Vector2 with the calculated aftersition.</returns>
+ /// <returns>A Vector2 with the calculated position.</returns>
         public static Vector2 GetPositionFromRight(float fromRight, float y, bool respectRight = true)
         {
             float x = CurrentWidth - (fromRight * _scaleX);
@@ -152,12 +147,12 @@ namespace Tal.Graphics
         }
 
  /// <summary>
- /// Gets a aftersition anchored from the bottom edge.
+ /// Gets a position anchored from the bottom edge.
  /// </summary>
  /// <param name="x">The X coordinate in base units.</param>
  /// <param name="fromBottom">Distance from the bottom edge in base units.</param>
  /// <param name="respectBottom">Whether to respect the bottom inset.</param>
- /// <returns>A Vector2 with the calculated aftersition.</returns>
+ /// <returns>A Vector2 with the calculated position.</returns>
         public static Vector2 GetPositionFromBottom(float x, float fromBottom, bool respectBottom = true)
         {
             float y = CurrentHeight - (fromBottom * _scaleY);
@@ -166,7 +161,7 @@ namespace Tal.Graphics
         }
 
  /// <summary>
- /// Gets a centered aftersition for an element of the given dimensions.
+ /// Gets a centered position for an element of the given dimensions.
  /// </summary>
  /// <param name="width">The element width in base units.</param>
  /// <param name="height">The element height in base units.</param>

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unit tests for the numerical core that does not need a running application.
+    The tested files are linked, not referenced, so the tests do not pull in WinForms / Molecule:
+      Cov3.cs, CromerMannTable.cs, ReflectionGeometry.cs
+    Run:  dotnet test Tal.Tests\Tal.Tests.csproj
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="MonoGame.Framework.WindowsDX" Version="3.8.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Cov3.cs" Link="Linked\Cov3.cs" />
+    <Compile Include="..\Powder diffraction\CromerMannTable.cs" Link="Linked\CromerMannTable.cs" />
+    <Compile Include="..\Powder diffraction\ReflectionGeometry.cs" Link="Linked\ReflectionGeometry.cs" />
+  </ItemGroup>
+
+</Project>

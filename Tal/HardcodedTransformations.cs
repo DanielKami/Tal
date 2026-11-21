@@ -499,9 +499,9 @@ namespace Tal.Saver
 
  // ⭐ P21/c ↔ P21/b (unique axis b ↔ unique axis c)
             Add(14, "p21/c", "p21/b", Q_bc);
- // P21/n → P21/b: P21/n → P21/c (Q_21) aftertem P21/c → P21/b (Q_bc)
+ // P21/n → P21/b: P21/n → P21/c (Q_21) potem P21/c → P21/b (Q_bc)
             Add(14, "p21/n", "p21/b", Compose(Q_bc, Q_21));
- // P21/a → P21/b: P21/a → P21/c (Q_31) aftertem P21/c → P21/b (Q_bc)
+ // P21/a → P21/b: P21/a → P21/c (Q_31) potem P21/c → P21/b (Q_bc)
             Add(14, "p21/a", "p21/b", Compose(Q_bc, Q_31));
 
  // ═══════════════════════════════════════════════════════════

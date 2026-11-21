@@ -6,12 +6,6 @@
 //
 // Loaded structure collection / storage.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// EXTENDED: full metadata mapping CifData/ResData -> StructureData
-
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -658,7 +652,7 @@ namespace Tal
  ///
  /// KEY: Atomic number for each atom is determined from the SYMBOL
  /// elementu (resAtom.element, setionego przez ResParser
- /// na afterdstawie maafterwania SFAC), a NIE z sztywnej tabeli
+ /// na podstawie mapowania SFAC), a NIE z sztywnej tabeli
  /// MapSfacTypeToAtomicNumber. Thanks to this, files with non-standard
  /// SFAC order (e.g. "C H O" instead of "C H N O") map 
  /// correctly.

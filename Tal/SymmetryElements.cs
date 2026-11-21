@@ -6,10 +6,6 @@
 //
 // Symmetry element definitions and rendering data.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 using System.Globalization;
@@ -56,7 +52,7 @@ namespace Tal
  /// </summary>
         private static void GenerateACenteredVariants()
         {
- // ⭐ Maafterwanie: grupa → (nazwa C, nazwa A)
+ // ⭐ Mapowanie: grupa → (nazwa C, nazwa A)
             var variantMap = new Dictionary<int, (string cName, string aName)>
     {
         { 5,  ("C2",    "A2") },
@@ -1054,13 +1050,13 @@ namespace Tal
  /// <summary>
  /// Helper method — parses a single expression for one axis.
  /// Handles:
- /// "x" → afters1=0, sign1=+1
- /// "-x" → afters1=0, sign1=-1
- /// "y+1/2" → afters1=1, sign1=+1, shift=+0.5
- /// "-z+1/4" → afters1=2, sign1=-1, shift=+0.25
- /// "0.5-x" → afters1=0, sign1=-1, shift=+0.5 (SHELX)
- /// "x-y" → afters1=0, sign1=+1, afters2=1, sign2=-1
- /// "1/3+z" → afters1=2, sign1=+1, shift=+1/3
+ /// "x" → pos1=0, sign1=+1
+ /// "-x" → pos1=0, sign1=-1
+ /// "y+1/2" → pos1=1, sign1=+1, shift=+0.5
+ /// "-z+1/4" → pos1=2, sign1=-1, shift=+0.25
+ /// "0.5-x" → pos1=0, sign1=-1, shift=+0.5 (SHELX)
+ /// "x-y" → pos1=0, sign1=+1, pos2=1, sign2=-1
+ /// "1/3+z" → pos1=2, sign1=+1, shift=+1/3
  /// </summary>
         private static void ParseAxisExpression(string expr, int axis, ref ReadSymm rs)
         {
@@ -1286,7 +1282,7 @@ namespace Tal
         #endregion
 
  /// <summary>
- /// Normalisee name space group do kanonicznej afterstaci lowercase without spacji.
+ /// Normalisee name space group do kanonicznej postaci lowercase without spacji.
  ///
  /// Examples:
  /// "P 21/c" -> "p21/c"
@@ -1303,7 +1299,7 @@ namespace Tal
  /// "F d -3 m" -> "fd-3m"
  /// </summary>
  /// <summary>
- /// Normalisee name space group do kanonicznej afterstaci lowercase without spacji.
+ /// Normalisee name space group do kanonicznej postaci lowercase without spacji.
  ///
  /// Examples:
  /// "P 21/c" -> "p21/c"
@@ -1618,7 +1614,7 @@ namespace Tal
  // For each orientacji
                 foreach (var entry in kvp.Value)
                 {
- // Afterlicz operacje w tabeli
+ // Policz operacje w tabeli
                     var tableOpStrings = new List<string>();
                     for (int i = 4; i < entry.Length; i++)
                     {
@@ -1678,7 +1674,7 @@ namespace Tal
 
  /// <summary>
  /// Checks whether two symmetry operations give the same effect on the test point
- /// (mod 1). Odafterrne na:
+ /// (mod 1). Odporne na:
  /// - translacje ±1/2, ±1/3, ±1/4 (mod 1)
  /// - different algebraic writing (x-y vs -y+x)
  /// - order of components in the expression
@@ -1914,7 +1910,7 @@ namespace Tal
  /// <summary>
  /// Are two fingerprints identical (within tolerance)?
  /// Both must have the same number of points and each point must have
- /// odafterwiednik w drugim (mod 1, tolerancja).
+ /// odpowiednik w drugim (mod 1, tolerancja).
  /// </summary>
         private static bool FingerprintsMatch(
             List<(float x, float y, float z)> fp1,

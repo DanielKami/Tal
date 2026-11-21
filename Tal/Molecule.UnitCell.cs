@@ -6,14 +6,6 @@
 //
 // Molecule partial — unit-cell geometry.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — przygotowanie ramki cell elementarnej:
-// 8 corners + 12 edges + 3 axes (a, b, c) in RGB colours.
-
 using Microsoft.Xna.Framework;
 
 namespace Tal
@@ -94,7 +86,7 @@ namespace Tal
 
  /// <summary>
  /// Builds an <see cref="object3d"/> describing the segment from v1 to v2:
- /// aftersition, distance, and the two angles used by the renderer.
+ /// position, distance, and the two angles used by the renderer.
  /// </summary>
         private object3d CalcAngles(Vector3 v1, Vector3 v2)
         {

@@ -6,17 +6,6 @@
 //
 // Molecule partial — coordinate transforms.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — matrixe transformation krystalograficznych:
-// - konversion frakcjonalne ↔ Cartesian
-// - transformation matrixy U (Ustat → U)
-// - propagation of atom position errors
-// - access do per-atomowych matrixy Ue / Un
-
 using Microsoft.Xna.Framework;
 
 namespace Tal

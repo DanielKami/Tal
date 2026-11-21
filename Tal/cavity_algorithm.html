@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TAL — Cavity Detection Algorithm</title>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.55; max-width: 920px; margin: 2rem auto; padding: 0 1.2rem; color: #222; }
+        h1 { border-bottom: 2px solid #007acc; padding-bottom: 0.3rem; }
+        h2 { color: #007acc; margin-top: 1.8rem; }
+        h3 { margin-top: 1.2rem; }
+        code { background: #f4f4f6; padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.92em; }
+        pre { background: #f4f4f6; padding: 0.8rem 1rem; border-radius: 6px; overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        th, td { border: 1px solid #ddd; padding: 0.45rem 0.6rem; text-align: left; }
+        th { background: #f0f4f8; }
+        .note { background: #f8f9fa; border-left: 4px solid #007acc; padding: 0.7rem 1rem; margin: 1rem 0; }
+        ul, ol { padding-left: 1.4rem; }
+    </style>
+</head>
+<body>
+<h1>Cavity Detection in TAL</h1>
+<p>
+    TAL implements a voxel-based cavity (void / pore / channel) detector that works for all 230 space groups,
+    including triclinic and other non-orthogonal cells. The algorithm is fully integrated into the desktop
+    application and produces quantitative geometric, topological and property-mapped results.
+</p>
+
+<h2>1. Definition</h2>
+<p>
+    A cavity is any connected region of empty voxels that lies outside the van der Waals surface of every atom
+    (including symmetry-generated atoms). Empty voxels are those for which the signed distance function (SDF) is positive.
+</p>
+<p>The method therefore detects:</p>
+<ul>
+    <li>closed cavities (isolated voids),</li>
+    <li>surface-connected voids,</li>
+    <li>channels / tunnels that percolate through the unit cell,</li>
+    <li>interconnected 3-D pore networks.</li>
+</ul>
+
+<h2>2. Crystal-aligned voxel grid</h2>
+<p>
+    The grid is built in fractional coordinates along the actual unit-cell vectors \( \mathbf{a} \), \( \mathbf{b} \), \( \mathbf{c} \):
+</p>
+<pre><code>p = origin + f<sub>x</sub>·a + f<sub>y</sub>·b + f<sub>z</sub>·c</code></pre>
+<p>
+    This guarantees that voxel faces align with the cell walls even for skewed cells. A Cartesian grid would
+    introduce systematic errors in wall detection, periodic wrapping and volume for non-orthogonal systems.
+</p>
+
+<h3>Voxel volume</h3>
+<p>
+    The volume of one voxel is the absolute value of the scalar triple product of the step vectors:
+</p>
+<pre><code>stepA = Δf<sub>x</sub> · a
+stepB = Δf<sub>y</sub> · b
+stepC = Δf<sub>z</sub> · c
+V<sub>voxel</sub> = | (stepA × stepB) · stepC |</code></pre>
+<p>
+    (Implemented in <code>CellParameters.GetVoxelVolume()</code>.)  
+    The older approximate formula that multiplies <code>stepX·a · stepY·b · stepZ·c · sinα · sinβ · sinγ</code>
+    is not used; the triple-product form is exact for any cell angles.
+</p>
+
+<h2>3. Detection pipeline</h2>
+<ol>
+    <li>
+        <strong>Atom generation</strong> — all symmetry equivalents inside the unit cell plus a margin
+        (<code>ScanMargin = 2 Å</code>) of neighbouring cells are generated.  
+        Effective radius of atom <i>i</i>:
+        <pre><code>r_eff(i) = r<sub>vdW</sub>(i) · VdWMultiplier + ProbeRadius</code></pre>
+        When thermal motion is enabled the effective shape becomes an ellipsoid whose half-axes are
+        <code>r_eff + √|λ<sub>k</sub>|</code> (1σ ADP amplitudes from the <code>Un</code> matrix).
+    </li>
+    <li>
+        <strong>SDF computation</strong> — for every voxel the signed distance to the nearest atom surface is calculated.
+        SDF < 0 inside an atom, SDF > 0 in free space. Distant voxels are truncated.
+    </li>
+    <li>
+        <strong>Flood-fill</strong> — connected empty (SDF > 0) regions are extracted
+        (<code>CavityFillAndSpread</code>). Regions smaller than <code>MinCavityVolume</code> (default 0.1 Å³) are discarded.
+    </li>
+    <li>
+        <strong>Wall / topology classification</strong> — each cavity records which of the six unit-cell walls it touches.
+        Topology type = number of touched walls (0–6).
+    </li>
+    <li>
+        <strong>Channel detection</strong> — continuous paths that connect opposite walls are identified.
+        Direction labels: XX, YY, ZZ, XXYY, XXZZ, YYZZ, XXYYZZ.  
+        Path geometry, length, width, helicity and cell crossings are computed by an A* pathfinder
+        (<code>ChannelPathFinder</code>) operating on the semi-periodic grid.
+    </li>
+    <li>
+        <strong>Marching Cubes</strong> — a triangle mesh is generated from the SDF isosurface of each cavity
+        (smoothing level controllable). Surface area is the sum of triangle areas.
+    </li>
+    <li>
+        <strong>Derived quantities</strong> — volume (= voxel count × V<sub>voxel</sub>), surface area,
+        sphericity, normalised V/N and S/N (divided by Z), and error estimates.
+    </li>
+</ol>
+
+<h2>4. Topology classification</h2>
+<table>
+    <tr><th>Type</th><th>Walls touched</th><th>Typical meaning</th></tr>
+    <tr><td>0</td><td>0</td><td>Closed cavity</td></tr>
+    <tr><td>1</td><td>1</td><td>Surface-connected</td></tr>
+    <tr><td>2</td><td>2</td><td>Corridor / channel</td></tr>
+    <tr><td>3</td><td>3</td><td>Corner void</td></tr>
+    <tr><td>4</td><td>4</td><td>Tunnel</td></tr>
+    <tr><td>5</td><td>5</td><td>Pore</td></tr>
+    <tr><td>6</td><td>6</td><td>Through-channel (all walls)</td></tr>
+</table>
+
+<h2>5. Quantitative results (per cavity)</h2>
+<ul>
+    <li>Volume and volume error (Å³)</li>
+    <li>Surface area and surface error (Å²)</li>
+    <li>Sphericity = \( (36\pi V^2)^{1/3} / S \) (1.0 = sphere)</li>
+    <li>V/N and S/N (normalised by formula units Z)</li>
+    <li>Channel directions and path metrics (length, min/avg/max width, helicity, crossings)</li>
+    <li>Topology type and list of touched walls</li>
+</ul>
+
+<h2>6. Surface property mapping</h2>
+<p>
+    Atomic properties can be projected onto the cavity mesh vertices by spatial proximity
+    (weighted average inside a configurable search radius):
+</p>
+<ul>
+    <li><strong>Charge</strong> — partial charges from the SQE (Simple Quantum Electronegativity) method
+        (default; Gasteiger/PEOE is also available in the codebase)</li>
+    <li><strong>Hydrophobicity</strong> — Eisenberg–Weiss consensus scale</li>
+    <li><strong>Atomic number</strong></li>
+    <li><strong>Van der Waals radius</strong></li>
+    <li><strong>Occupancy</strong></li>
+</ul>
+<p>Colour scales are adjustable; the mapping is independent of the detection step.</p>
+
+<h2>7. Multi-scale VdW analysis</h2>
+<p>
+    The detector can be run across a range of VdW multipliers. Because the effective radius of every atom
+    scales individually, the SDF grid is rebuilt from scratch for each multiplier
+    (there is no simple constant shift that maps one multiplier onto another).
+    The analysis tracks cavity evolution, merging/splitting and disappearance, and produces
+    QSPR-style descriptors.
+</p>
+
+<h2>8. Performance notes</h2>
+<ul>
+    <li>Parallel processing of independent cavities / grid regions</li>
+    <li>Spatial sorting + binary search + 3-D culling for atom rejection (typically 85–95 % of candidate atoms discarded)</li>
+    <li>Flat arrays and pooled queues in the flood-fill</li>
+    <li>Cache-friendly vertex merging in Marching Cubes</li>
+</ul>
+<p>
+    Typical resolution used interactively is 0.10–0.15 Å. Finer grids increase accuracy at a cubic cost in voxel count.
+</p>
+
+<h2>9. Supported systems</h2>
+<p>
+    All seven crystal systems and all 230 space groups. The fractional-coordinate grid and the triple-product
+    voxel volume ensure correct results for triclinic, monoclinic, hexagonal and rhombohedral cells.
+</p>
+
+<div class="note">
+    <strong>Implementation status (TAL PC, November 2026)</strong><br>
+    The algorithm described above is the current desktop implementation.
+    Key classes: <code>VoxelScanner</code>, <code>CavityDetector</code>, <code>CavityFillAndSpread</code>,
+    <code>ChannelPathFinder</code>, <code>MarchingCubesMeshGenerator</code>, <code>CavityPropertyMapper</code>,
+    <code>CellParameters</code>.
+</div>
+</body>
+</html>

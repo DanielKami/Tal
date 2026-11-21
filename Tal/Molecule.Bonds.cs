@@ -6,18 +6,6 @@
 //
 // Molecule partial — covalent bonds and bond matrices.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — bonds:
-// - Calculate_Bonds3D: covalent bonds w cell (without cross-cell)
-// - PrecomputeBondMatrices: ready matrices for drawing sticks
-// - ExpandWithNeighbors: dodanie neighbours z cells ±1 (for packing)
-// - Calculate_Hbonds3D / ClearHBonds: delegacja do HBondFinder
-// - RegisterExpandedAtoms: tracking atoms added by finders
-
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 using Tal.Calculate;
@@ -315,6 +303,7 @@ namespace Tal
                 atom[idx].Ue = na.Ue;
                 atom[idx].Un = na.Un;
                 atom[idx].Transformation = na.Transformation;
+                atom[idx].AsymmetricIndexPlusOne = na.AsymmetricIndexPlusOne;
                 atom[idx].disorder_group = na.disorder_group;
                 atom[idx].charge = na.charge;
                 atom[idx].Hydrophobicity = na.Hydrophobicity;

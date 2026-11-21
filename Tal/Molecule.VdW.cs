@@ -6,14 +6,6 @@
 //
 // Molecule partial — van der Waals radii / surfaces.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — access do promieni van der Waalsa i jonewch
-// (delegacja do VdwParameters).
-
 namespace Tal
 {
     public partial class Molecule

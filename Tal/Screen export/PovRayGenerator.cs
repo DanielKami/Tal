@@ -4,64 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Screen capture / exafterrt: AftervRayGenerator.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// AftervRayGenerator — eksafterrtuje current stan molecule do skryptu POV-Ray.
-//
-// ⭐ ELIPSOIDY ADP:
-// Odtwarzamy transformation z Draw.DrawEllipsoidAtom:
-// atomMatrix = Scale(1) * Transformation * Un * Scale(p) * Translation(aftersition)
-//
-// ⭐ DYSKI ELIPSOID:
-// - Grubość STAŁA w Å: diskThickness / 3 (compensation via len_axis)
-// - Radius scales with the ellipsoid
-// - Kolejność: diskScale * shapeMatrix, then * rModel
-//
-// ⭐ WODÓR:
-// - ShowHydrogenIsoSpheres = false → mała izotroafterwa kula
-// - ShowHydrogenIsoSpheres = true → full ellipsoidsa (izosfera)
-//
-// ⭐ CAVITY:
-// - Per-vertex colors (texture_list) TYLKO for CavityColorMap
-//
-// ⭐ POLYHEDRALS (style 4):
-// - Atomy jak Balls & Sticks + przezroczyste faces afterliedrów
-//
-// ⭐ PŁASZCZYZNY (hkl + mean plane):
-// - Corners są w RAW Cartesian (without MoleculeShift)
-// - Przesuwamy o -MoleculeShift, so that trafić w przestrzeń atoms
-// - mesh2 (quad 2 triangles, dwustronny przez inside_vector)
-// - Krawędzie jako cienkie cylindry
-//
-// ⭐ TŁO:
-// - Screen-aligned quad DALEKO ZA sceną (quadDist=500, halfSize=400)
-// - Gradient color1 (top) / color2 (bottom)
-//
-// ⭐ KAMERA (KLUCZOWE):
-// - XNA fov = PEŁNY angle PIONOWY.
-// - POV-Ray `angle` = PEŁNY angle POZIOMY.
-// - `right <-1.0, 0, 0>` NA STAŁE — POV-Ray sam scalee obraz
-// z rozdzielczości renderu (+W / +H).
-// ⚠️ NIE setiać right = aspect! To ściska obraz.
-// - Przeliczenie: hFov = 2*atan(tan(vFov/2) * aspect)
-// - CAMERA_FOV_STRETCH = 1.0f (samo przeliczenie wystarcza).
-// - Rozdzielczość renderu (+W +H) MUSI have aspect = viewafterrt TAL,
-// inaczej POV-Ray zdeformuje obraz.
-//
-// ⭐ KONTRAST / NASYCENIE (dostrojone — mniej przepaleń):
-// - _globalBrightness 1.00 (światło -10%)
-// - _lightingContrast 0.80 (kontrast -25%)
-// - _emissionStrength 0.18 (emisja -20%)
-// - _phongBoost 2.7 (refleksy -15%)
-//
-// ⭐ GUARDY:
-// - IsValidSegment — chroni before "degenerate cylinder" w POV-Ray
-// - All cylindry checksją length > 1e-4 before zapisem
+// Screen capture / export: PovRayGenerator.
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -247,7 +190,7 @@ namespace Tal
         #region Aspect ratio
 
  /// <summary>
- /// ⭐ Returns current aspect viewafterrtu TAL. Used do:
+ /// ⭐ Returns current aspect viewportu TAL. Used do:
  /// - komentarza renderu (+W / +H) — so that POV-Ray nie rozciągał obrazu
  /// - przeliczenia fov pionew → levely
  /// ⚠️ NIE used w right (right jest stały = 1.0)!
@@ -328,7 +271,7 @@ namespace Tal
 
         private void WriteHeader()
         {
- // ⭐ Rozdzielczość renderu LICZONA Z ASPECTU viewafterrtu.
+ // ⭐ Rozdzielczość renderu LICZONA Z ASPECTU viewportu.
  // POV-Ray must renderować w tym samym aspekcie co right/up sceny,
  // inaczej deformuje obraz.
             float aspect = GetAspectRatio();
@@ -392,7 +335,7 @@ namespace Tal
  /// ⭐ XNA fov = PEŁNY angle PIONOWY (TAL: Matrix.CreatePerspectiveFieldOfView).
  /// ⭐ POV-Ray `angle` = PEŁNY angle POZIOMY.
  ///
- /// Afterprawne przeliczenie (nieliniowe przez tangens):
+ /// Poprawne przeliczenie (nieliniowe przez tangens):
  /// halfV = radians(fovVertical) / 2
  /// halfH = atan(tan(halfV) * aspect)
  /// angle = degrees(2 * halfH)

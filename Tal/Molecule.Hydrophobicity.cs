@@ -6,14 +6,6 @@
 //
 // Molecule partial — hydrophobicity calculation.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — obliczenia hydrophobicity atoms
-// together with propagation to 3D atoms and updating the ColorManager range.
-
 using System.Diagnostics;
 using Tal.Calculate;
 using Tal.Cavity;
@@ -99,7 +91,7 @@ namespace Tal
 
  /// <summary>
  /// Copies hydrophobicity from symmetry equivalents to 3D atoms
- /// by matching Cartesian aftersitions.
+ /// by matching Cartesian positions.
  /// </summary>
         private void CopyHydrophobicityTo3DAtoms()
         {

@@ -90,7 +90,7 @@ namespace Tal
         private bool _measureDirty = false;
         private bool _planesDirty = false;
 
- // ⭐ #6 Cache Viewafterrt
+ // ⭐ #6 Cache Viewport
         private Viewport _viewportSceneRT;
         private Viewport _viewportBackbuffer;
         private int _viewportSceneRTW = 0;
@@ -112,7 +112,7 @@ namespace Tal
         private int _tempRTCachedH = 0;
 
  // ⭐⭐ NEW: Symmetry elements renderer — builds list elements symmetry
- // i deleguje drawing z afterwrotem do Draw.
+ // i deleguje drawing z powrotem do Draw.
         private CellSymmetryRenderer? _symmetryRenderer;
 
         #endregion
@@ -1949,7 +1949,7 @@ namespace Tal
                 catch { }
                 _renderTimer = null;
 
- // ⭐⭐ NEW: disafterse symmetry renderer razem z GameWindow
+ // ⭐⭐ NEW: dispose symmetry renderer razem z GameWindow
                 try { _symmetryRenderer?.Dispose(); }
                 catch { }
                 _symmetryRenderer = null;

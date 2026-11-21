@@ -6,24 +6,6 @@
 //
 // Hydrogen bond-length normalisation to standard values.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HydrogenNormalizer v10 — finalna version.
-//
-// ⭐ v10 (KLUCZOWA POPRAWKA):
-// - NIE klampujemy do [0, 1) i NIE redukujemy.
-// - CIF may have atoms afterza [0, 1) — to naturalne (geometria lokalna
-// more important than packing in the cell).
-// - We use DELTA: newHFrac = hFrac + fracShift
-// gdzie fracShift = CartDeltaToFracDelta(unit * (target - len)).
-// - Thanks to this H zostaje w TEJ SAMEJ kopii cell co jego heavy
-// (np. hFrac.Z = 1.0090 → newHFrac.Z = 1.024, a nie 0.0054).
-//
-// ⭐ v9: Tylko AsymmetricPart, DetectMolecules(AsymPart) na starcie.
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -266,7 +248,7 @@ namespace Tal.Calculate
                 int hIdx = fix.AsymHydrogenIndex;
                 int heavyIdx = fix.AsymHeavyIndex;
 
- // ⭐ v10: Zachowaj oryginalne hFrac (may be afterza [0, 1))
+ // ⭐ v10: Zachowaj oryginalne hFrac (may be poza [0, 1))
                 Vector3 hFrac = new Vector3(asym[hIdx].x, asym[hIdx].y, asym[hIdx].z);
                 Vector3 heavyFrac = new Vector3(asym[heavyIdx].x, asym[heavyIdx].y, asym[heavyIdx].z);
 
@@ -290,7 +272,7 @@ namespace Tal.Calculate
  // Preserves the copy: hFrac.Z = 1.0090 → newHFrac.Z = 1.024
                 Vector3 newHFrac = hFrac + fracShift;
 
- // ⭐ Save BEZ klamafterwania, BEZ redukcji do [0, 1)
+ // ⭐ Save BEZ klampowania, BEZ redukcji do [0, 1)
                 var a = asym[hIdx];
                 a.x = newHFrac.X;
                 a.y = newHFrac.Y;

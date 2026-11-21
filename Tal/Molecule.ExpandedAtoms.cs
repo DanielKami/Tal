@@ -6,13 +6,7 @@
 //
 // Molecule partial — expanded / packing atoms tracking.
 
-﻿// Molecule.ExpandedAtoms.cs
-// Author: Daniel M. Kaminski
-// Year: 2026
-//
-// Molecule partial — selektywne usuwanie atoms z Expand Contacts.
-// Preserves the transitive closure from ExpandedSeedAtomIndices.
-
+// Molecule.ExpandedAtoms.cs
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -144,7 +138,7 @@ namespace Tal
         #region Remove Atoms Internal (shared by all methods)
 
  /// <summary>
- /// Fizycznie usuwa afterdane indexy z atom[], przemaafterwuje all
+ /// Fizycznie usuwa podane indexy z atom[], przemapowuje all
  /// index arrays and compacts them.
  /// </summary>
  /// <param name="toRemove">Set of indices to remove.</param>

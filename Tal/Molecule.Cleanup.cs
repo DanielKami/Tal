@@ -6,15 +6,6 @@
 //
 // Molecule partial — cleanup helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — resource cleanup:
-// - Clear3DAtomsOnly: resetuje only atoms 3D (nie rusza AsymmetricPart)
-// - CleanupBeforeNewLoad: full reset before loading a new structure
-
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 using Tal.Calculate;

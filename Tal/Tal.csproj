@@ -20,6 +20,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- unit tests live in their own project -->
+    <Compile Remove="Tal.Tests\**" />
+    <EmbeddedResource Remove="Tal.Tests\**" />
+    <None Remove="Tal.Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Resources\lasso.png" />
   </ItemGroup>
 

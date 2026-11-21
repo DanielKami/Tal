@@ -71,7 +71,7 @@ namespace Tal
             };
         }
 
-        private double[,] ToArray()
+        public double[,] ToMatrix()
         {
             return new double[,]
             {
@@ -87,7 +87,7 @@ namespace Tal
         /// </summary>
         public Cov3 Rotated(Matrix R)
         {
-            double[,] c = ToArray();
+            double[,] c = ToMatrix();
             double[,] rc = new double[3, 3];
             double[,] res = new double[3, 3];
 

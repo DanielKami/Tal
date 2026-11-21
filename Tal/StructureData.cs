@@ -6,19 +6,13 @@
 //
 // Structure data container.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// EXTENDED: full crystallographic metadata (refinement, reflections, experiment, publication)
-
 using Microsoft.Xna.Framework;
 
 namespace Tal
 {
  /// <summary>
  /// Represents a single atom from a CIF file.
- /// Contains aftersitional coordinates, displacement parameters,
+ /// Contains positional coordinates, displacement parameters,
  /// and occupancy data for crystallographic structure determination.
  /// </summary>
     public class SimpleAtom
@@ -198,7 +192,7 @@ namespace Tal
 
         #region Metadata
 
- /// <summary>Chemical name of the comafterund.</summary>
+ /// <summary>Chemical name of the compound.</summary>
         public string ChemicalName { get; set; } = "";
 
  /// <summary>Chemical formula sum.</summary>

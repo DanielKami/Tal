@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Screen capture / exafterrt: ScreenshotDialog.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Screen capture / export: ScreenshotDialog.
 
 using System;
 using System.Windows.Forms;
@@ -24,11 +19,11 @@ namespace Tal.Forms
     {
         #region Constants
 
- /// <summary>Maksymalny size afterjedynczego wymiaru — spójny z SaveScreenshotScaled.</summary>
+ /// <summary>Maksymalny size pojedynczego wymiaru — spójny z SaveScreenshotScaled.</summary>
         private const int MAX_DIMENSION = 8192;
 
  /// <summary>
- /// Dostępne mnożniki — order MUSI odafterwiadać indexom w cmbScale.
+ /// Dostępne mnożniki — order MUSI odpowiadać indexom w cmbScale.
  /// </summary>
         private static readonly float[] SCALE_VALUES = { 1.0f, 2.0f, 3.0f, 4.0f, 6.0f, 8.0f };
 
@@ -75,8 +70,8 @@ namespace Tal.Forms
  /// <summary>
  /// Inicjalizuje new okno dialogowe.
  /// </summary>
- /// <param name="baseWidth">Szerokość bazowa (current viewafterrt, np. 1200).</param>
- /// <param name="baseHeight">Wysokość bazowa (current viewafterrt, np. 800).</param>
+ /// <param name="baseWidth">Szerokość bazowa (current viewport, np. 1200).</param>
+ /// <param name="baseHeight">Wysokość bazowa (current viewport, np. 800).</param>
         public ScreenshotDialog(int baseWidth, int baseHeight)
         {
             _baseWidth = Math.Max(1, baseWidth);
@@ -166,7 +161,7 @@ namespace Tal.Forms
         #region Static Helper
 
  /// <summary>
- /// Afterkazuje okno dialogowe i returns result. Wygodny jednolinijkowiec.
+ /// Pokazuje okno dialogowe i returns result. Wygodny jednolinijkowiec.
  /// </summary>
  /// <param name="owner">Okno właściciela (np. MainForm).</param>
  /// <param name="baseWidth">Szerokość bazowa (current backbuffer, np. 1200).</param>

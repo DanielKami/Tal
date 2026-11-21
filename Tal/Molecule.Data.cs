@@ -6,17 +6,6 @@
 //
 // Molecule partial — atom data and core fields.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — loading input data:
-// - AsignXYZ: z StructureData (CIF)
-// - AsignXYZFromRes: z ResData (RES/INS)
-// - MapSfacTypeToAtomicNumber: fallback for RES without elementu
-// - SymbolToAtomicNumber: konversion symbol → atomic number
-
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
@@ -162,7 +151,7 @@ namespace Tal
  /// Loads atom data from a RES/INS file.
  ///
  /// KEY: Atomic number determined from ELEMENT SYMBOL (resAtom.element,
- /// setionego przez ResParser na afterdstawie maafterwania SFAC), a NIE z
+ /// setionego przez ResParser na podstawie mapowania SFAC), a NIE z
  /// sztywnej tabeli MapSfacTypeToAtomicNumber. Thanks to this plik z
  /// non-standard SFAC order (e.g. "C H O" instead of "C H N O")
  /// mapuje correctly.

@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Compile Update="GUI\AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\AtomColorWindow.Helpers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\AtomPropertiesWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\BondDisplayWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\CrystalCalculationsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\DebugWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\DepthCueWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\HydrogenNormalizationWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\LabelsWindow.Helpers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\AtomColorWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\AtomDisplayWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\AutoRotateWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\BackgroundColorWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\CavitySettingsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\DisplayOptionsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\HBondSettingsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\LabelsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\LightingWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Cavity.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Contacts.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.ContextMenu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Docking.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Events.Menu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Events.Picking.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Events.View.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.FileAssociations.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Handlers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Helpers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Hirshfeld.Sto.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Labels.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Lasso.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Logging.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Menu.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Planes.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.RecentFiles.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.RevealSymmetry.Helpers.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.StartupFile.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.StatusBar.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Structure.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Symmetry.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.Toolbars.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.VdWAnalysis.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MainForm.WindowGetters.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MonoGameDocument.Cavity.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MonoGameDocument.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MonoGameDocument.Screenshot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MonoGameDocument.Structure.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\MonoGameDocument.View.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\SceneQualityWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\SpaceGroupSettingDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\SplashForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\SymmetryElementsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\SymmetryReplicationWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\UnitCellDisplayWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Hirshfeld\HirshfeldDocument.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Hirshfeld\HirshfeldFingerprintWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Info\StructureInfoWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Morphology\MorphologyDocument.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Morphology\MorphologyWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Morphology\WulffPlotDocument.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Overlay\OverlayViewWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\PackingWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\StructureListWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="GUI\ShortContactsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Overlay\MoleculeOverlayWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Plane\PlanePropertiesWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Plane\PlanesWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Powder diffraction\BufferedPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Powder diffraction\PowderDiffractionWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Powder diffraction\PowderDiffractionWindow.Export.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Powder diffraction\PowderDiffractionWindow.Rendering.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Screen export\ScreenshotDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+</Project>

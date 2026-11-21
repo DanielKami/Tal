@@ -4,13 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Molecule core class — partial definition entry afterint.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// EXTENDED: refinement / experiment / publication metadata for crystallographic reafterrting
+// Molecule core class — partial definition entry point.
 
 using Microsoft.Xna.Framework;
 using Tal.Calculate;
@@ -39,14 +33,14 @@ namespace Tal
         #region Basic Metadata
  
 
- // ⭐ NOWE — aftertrzebne do reafterrtu CavitySingleRunReafterrt
+ // ⭐ NOWE — potrzebne do reportu CavitySingleRunReport
  /// <summary>Chemical formula sum (e.g. "C13 H18 O2").</summary>
         public string Formula = "";
 
  /// <summary>Formula weight (molecular mass, u).</summary>
         public float FormulaWeight;
 
- /// <summary>Chemical name of the comafterund.</summary>
+ /// <summary>Chemical name of the compound.</summary>
         public string ChemicalName = "";
 
         #endregion
@@ -151,7 +145,7 @@ namespace Tal
             => ShortContactsFinder.ClearAllContacts(this);
 
  /// <summary>
- /// Finds symmetry-related atoms near a given aftersition.
+ /// Finds symmetry-related atoms near a given position.
  /// Delegates to ShortContactsFinder.
  /// </summary>
         public List<AtomSimple> FindNearbyAtomsFromSymmetry(
@@ -275,6 +269,8 @@ namespace Tal
             public float occupancy;
             public Matrix Transformation;
             public int SymmetryEquivalentNumberInCell;
+            /// <summary>1 + index of the refined (asymmetric-unit) atom this atom was generated from; 0 = unknown. Symmetry images of one atom share it (their positions are correlated).</summary>
+            public int AsymmetricIndexPlusOne;
             public int disorder_group;
             public int IndividualMoleculeInCell;
             public float charge;
@@ -342,6 +338,8 @@ namespace Tal
             public float occupancy;
             public Matrix Transformation;
             public int SymmetryEquivalentNumberInCell;
+            /// <summary>See AtomSimple.AsymmetricIndexPlusOne.</summary>
+            public int AsymmetricIndexPlusOne;
             public int IndividualMoleculeInCell;
             public Matrix[] PrecomputedBondMatrix;
             public Matrix[] PrecomputedHBondMatrix;
@@ -432,7 +430,7 @@ namespace Tal
  /// <summary>Acceptor name (e.g. "O1").</summary>
             public string[] H_AccName;
 
- /// <summary>Acceptor Cartesian aftersition (shifted).</summary>
+ /// <summary>Acceptor Cartesian position (shifted).</summary>
             public Vector3[] H_AccCartPos;
 
  /// <summary>Acceptor atomic number.</summary>

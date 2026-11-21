@@ -6,12 +6,6 @@
 //
 // Distance / angle / torsion measurement state.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// FIXED: error propagation, single-digit crystallographic rounding
-
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -21,7 +15,7 @@ namespace Tal
 {
  /// <summary>
  /// Provides measurement functionality for molecular structures.
- /// Supafterrts distance, angle, and torsion angle measurements with
+ /// Supports distance, angle, and torsion angle measurements with
  /// crystallographic error propagation.
  /// </summary>
     public class Measure
@@ -216,14 +210,14 @@ namespace Tal
 
  /// <summary>
  /// Reduces the error to a SINGLE significant digit in [1..9] and returns
- /// the corresafternding number of decimal places for the value.
+ /// the corresponding number of decimal places for the value.
  ///
  /// error = 0.0034 -> decimals=3, digit=3 (value shown as X.XXX)
  /// error = 0.012 -> decimals=2, digit=1 (value shown as X.XX)
  /// error = 0.12 -> decimals=1, digit=1 (value shown as X.X)
  /// error = 0.9 -> decimals=0, digit=9
  /// error = 9.0 -> decimals=0, digit=9
- /// error = 12.0 -> decimals=0, digit=1 (value shown as integer)
+ /// error = 12.0 -> decimals=0, errDigit=10 (value shown as integer, "(10)")
  /// </summary>
         private static void NormalizeError(float error, out int decimals, out int errDigit)
         {
@@ -243,6 +237,10 @@ namespace Tal
             errDigit = digit;
             decimals = -exp;
             if (decimals < 0) decimals = 0;
+
+            // errors of 10 or more: the digit stands for digit·10^exp (error 12 -> "(10)", 25 -> "(30)"),
+            // otherwise "109(1)" would be read as an error of 1
+            if (exp > 0) errDigit = digit * (int)Math.Round(Math.Pow(10, exp));
         }
 
         #endregion
@@ -797,6 +795,10 @@ namespace Tal
         //     oblique cells, and C is rotated together with symmetry operations;
         //   * the geometric quantity q (d, theta, tau) is linearised:
         //         var(q) = sum_atoms  g_a^T C_a g_a      g_a = dq/dr_a
+        //   * atoms that are symmetry images of the SAME refined atom are correlated
+        //     (r_B = R r_A + t  =>  Cov(r_A, r_B) = Cov_A · R_A · R_Bᵀ); the cross terms
+        //     2 g_Aᵀ C_AB g_B are included, e.g. a bond across an inversion centre has
+        //     sigma = 2·sigma_atom instead of sqrt(2)·sigma_atom;
         //   * the unit-cell esds (a, b, c, alpha, beta, gamma) are propagated
         //     separately at fixed fractional coordinates and added in quadrature:
         //         var_cell(q) = sum_k ( dq/dp_k * sigma(p_k) )^2
@@ -810,11 +812,15 @@ namespace Tal
             public Cov3 Cov;
             /// <summary>True when Cov comes from real refined esds (not the fallback guess).</summary>
             public bool Real;
+            /// <summary>1 + asymmetric-unit index of the refined atom (0 = unknown).</summary>
+            public int Parent;
+            /// <summary>R_cart of the symmetry operation that generated this atom (orthogonal).</summary>
+            public Matrix R;
         }
 
         private PosErr MakePosErr(in Molecule.Atom a)
         {
-            var pe = new PosErr { Pos = a.Coordinate };
+            var pe = new PosErr { Pos = a.Coordinate, Parent = a.AsymmetricIndexPlusOne, R = a.Transformation };
 
             if (!a.Coordinate_cov.IsZero)
             {
@@ -846,6 +852,70 @@ namespace Tal
             return new Vector3(e, e, e);
         }
 
+        /// <summary>
+        /// Cross-covariance Cov(r_A, r_B) (Å²) of two symmetry images of the same refined atom:
+        /// r_A = R_A·x + t_A, r_B = R_B·x + t_B  =>  C_AB = R_A·C·R_Bᵀ = Cov_A · R_A · R_Bᵀ
+        /// (R orthogonal). Returns false when the atoms are not known to be correlated.
+        /// </summary>
+        private static bool TryCrossCovariance(in PosErr a, in PosErr b, out double[,] c)
+        {
+            c = null;
+            if (!a.Real || !b.Real) return false;
+            if (a.Parent <= 0 || a.Parent != b.Parent) return false;
+
+            // a valid R_cart is orthogonal (|det| = 1); anything else = no usable transformation
+            if (Math.Abs(a.R.Determinant() - (a.R.Determinant() < 0 ? -1f : 1f)) > 1e-2f) return false;
+            if (Math.Abs(b.R.Determinant() - (b.R.Determinant() < 0 ? -1f : 1f)) > 1e-2f) return false;
+
+            double[,] cov = a.Cov.ToMatrix();
+            double[,] m = new double[3, 3];          // R_A · R_Bᵀ
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                {
+                    double sum = 0;
+                    for (int k = 0; k < 3; k++) sum += (double)a.R[i, k] * b.R[j, k];
+                    m[i, j] = sum;
+                }
+
+            c = new double[3, 3];
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                {
+                    double sum = 0;
+                    for (int k = 0; k < 3; k++) sum += cov[i, k] * m[k, j];
+                    c[i, j] = sum;
+                }
+            return true;
+        }
+
+        /// <summary>
+        /// Variance of a quantity with gradients g_a (w.r.t. the atom positions):
+        ///   sum_a g_aᵀ C_a g_a  +  2 · sum_{a&lt;b} g_aᵀ C_ab g_b
+        /// where C_ab is non-zero only for symmetry images of the same refined atom.
+        /// </summary>
+        private static double PositionVariance(PosErr[] p, Vector3[] g)
+        {
+            double v = 0.0;
+            for (int a = 0; a < p.Length; a++)
+                v += p[a].Cov.Quadratic(g[a]);
+
+            for (int a = 0; a < p.Length; a++)
+                for (int b = a + 1; b < p.Length; b++)
+                {
+                    if (!TryCrossCovariance(p[a], p[b], out double[,] c)) continue;
+
+                    double ga0 = g[a].X, ga1 = g[a].Y, ga2 = g[a].Z;
+                    double gb0 = g[b].X, gb1 = g[b].Y, gb2 = g[b].Z;
+                    double cross =
+                        ga0 * (c[0, 0] * gb0 + c[0, 1] * gb1 + c[0, 2] * gb2) +
+                        ga1 * (c[1, 0] * gb0 + c[1, 1] * gb1 + c[1, 2] * gb2) +
+                        ga2 * (c[2, 0] * gb0 + c[2, 1] * gb1 + c[2, 2] * gb2);
+                    v += 2.0 * cross;
+                }
+
+            return Math.Max(v, 0.0);
+        }
+
         // ── public API (used by Measure itself and by StructureInfoWindow) ──
 
         /// <summary>Bond-length esd (Å) between two atoms.</summary>
@@ -869,7 +939,7 @@ namespace Tal
             if (d < 1e-4f) return 0.001f;
 
             Vector3 u = diff / d;
-            double var = p1.Cov.Quadratic(u) + p2.Cov.Quadratic(u);
+            double var = PositionVariance(new[] { p1, p2 }, new[] { u, -u });
 
             if (p1.Real && p2.Real)
             {
@@ -905,7 +975,7 @@ namespace Tal
                                 CalculateVectorError(p3.Cov.Sigma)) / 3.0f;
                 float avgDist = 0.5f * (lenA + lenB);
                 float errDeg_ = (avgErr / avgDist) * (180.0f / MathF.PI);
-                return Math.Clamp(errDeg_, 0.001f, 10.0f);
+                return Math.Clamp(errDeg_, 0.001f, 180.0f);
             }
 
             Vector3 gA = -(bHat - aHat * (float)cosTheta) / (lenA * (float)sinTheta);
@@ -920,10 +990,7 @@ namespace Tal
             grad2 = ClampVector(grad2, GRAD_CLAMP);
             grad3 = ClampVector(grad3, GRAD_CLAMP);
 
-            double errRadSq =
-                p1.Cov.Quadratic(grad1) +
-                p2.Cov.Quadratic(grad2) +
-                p3.Cov.Quadratic(grad3);
+            double errRadSq = PositionVariance(new[] { p1, p2, p3 }, new[] { grad1, grad2, grad3 });
 
             if (p1.Real && p2.Real && p3.Real)
             {
@@ -932,7 +999,7 @@ namespace Tal
             }
 
             double errDeg = Math.Sqrt(Math.Max(errRadSq, 0.0)) * (180.0 / Math.PI);
-            return (float)Math.Clamp(errDeg, 0.001, 10.0);
+            return (float)Math.Clamp(errDeg, 0.001, 180.0);
         }
 
         private float TorsionErrorCore(PosErr[] p)
@@ -945,7 +1012,7 @@ namespace Tal
             for (int i = 0; i < 4; i++)
                 x[i] = new double[] { p[i].Pos.X, p[i].Pos.Y, p[i].Pos.Z };
 
-            double errRadSq = 0.0;
+            Vector3[] gradients = new Vector3[4];
 
             for (int atom = 0; atom < 4; atom++)
             {
@@ -964,8 +1031,10 @@ namespace Tal
                     if (Math.Abs(deriv) > 1e3) deriv = Math.Sign(deriv) * 1e3;
                     g[coord] = deriv;
                 }
-                errRadSq += p[atom].Cov.Quadratic(new Vector3((float)g[0], (float)g[1], (float)g[2]));
+                gradients[atom] = new Vector3((float)g[0], (float)g[1], (float)g[2]);
             }
+
+            double errRadSq = PositionVariance(p, gradients);
 
             if (p[0].Real && p[1].Real && p[2].Real && p[3].Real)
             {
@@ -974,7 +1043,7 @@ namespace Tal
             }
 
             double errDeg = Math.Sqrt(Math.Max(errRadSq, 0.0)) * (180.0 / Math.PI);
-            return (float)Math.Clamp(errDeg, 0.001, 10.0);
+            return (float)Math.Clamp(errDeg, 0.001, 180.0);
         }
 
         // ── unit-cell contribution ──
@@ -1122,7 +1191,7 @@ namespace Tal
 
             const double EPS = 1e-4;
 
-            double Gradient(double[] target, Cov3 cov)
+            Vector3 Gradient(double[] target)
             {
                 double[] g = new double[3];
                 for (int k = 0; k < 3; k++)
@@ -1135,22 +1204,33 @@ namespace Tal
                     target[k] = saved;
                     g[k] = (dp - dm) / (2.0 * EPS);
                 }
-                return cov.Quadratic(new Vector3((float)g[0], (float)g[1], (float)g[2]));
+                return new Vector3((float)g[0], (float)g[1], (float)g[2]);
             }
 
-            double var = 0.0;
+            // entities with real esds (plane atoms + the measured atom, once if it is a member);
+            // symmetry images of one refined atom are correlated and handled in PositionVariance
+            var entities = new List<PosErr>();
+            var gradients = new List<Vector3>();
+
             for (int i = 0; i < members.Count; i++)
             {
                 PosErr pe = MakePosErr(_molecule.atom[members[i]]);
                 if (!pe.Real) continue;
-                var += Gradient(pts[i], pe.Cov);
+                entities.Add(pe);
+                gradients.Add(Gradient(pts[i]));
             }
 
             if (memberOfAtom < 0)
             {
                 PosErr pa = MakePosErr(_molecule.atom[atomIdx]);
-                if (pa.Real) var += Gradient(a, pa.Cov);
+                if (pa.Real)
+                {
+                    entities.Add(pa);
+                    gradients.Add(Gradient(a));
+                }
             }
+
+            double var = PositionVariance(entities.ToArray(), gradients.ToArray());
 
             if (failed || !(var > 0.0) || double.IsNaN(var)) return 0.0;
             ok = true;

@@ -6,19 +6,6 @@
 //
 // Molecule partial — short-contact cleanup.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — odznaczanie Short Contacts / H-Bonds.
-//
-// Unchecking the Short Contacts checkbox does EXACTLY the same,
-// co menu kontekstowe → "Remove hanging contacts":
-// - Physical removal of atoms from ExpandedAtomIndices (and orphans)
-// - Remapping of all indices (RemoveAtomsInternal)
-// - Recalculation of bonds / H-bonds / matrix
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using Tal.Calculate;   // ⭐ HBondFinder
@@ -88,7 +75,7 @@ namespace Tal
  /// Difference relative to TurnOffShortContacts:
  /// - clearExpandedLists: false → NIE ruszamy ExpandedAtomIndices
  /// (so that Short Contacts can be turned on after H-Bonds)
- /// - HBondNeighborAtomIndices.Clear() after remaafterwaniu
+ /// - HBondNeighborAtomIndices.Clear() after remapowaniu
  /// </summary>
         public void TurnOffHBonds()
         {

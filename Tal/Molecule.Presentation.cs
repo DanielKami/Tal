@@ -117,7 +117,7 @@ namespace Tal
             PrepareUnitCell();
             InitializeLabelOffsets();
 
- // Afterlyhedrals — detection after 3D atoms are generated
+ // Polyhedrals — detection after 3D atoms are generated
             if (style == 4)
             {
                 Polihedrals.CurrentMolecule = this;
@@ -284,6 +284,7 @@ atom[NumberOfAtoms].AtomicNumber = data[n].AtomicNumber;
                             atom[NumberOfAtoms].style = style;
                             atom[NumberOfAtoms].name = data[n].name;
                             atom[NumberOfAtoms].Transformation = data[n].Transformation;
+                            atom[NumberOfAtoms].AsymmetricIndexPlusOne = data[n].AsymmetricIndexPlusOne;
                             atom[NumberOfAtoms].disorder_group = data[n].disorder_group;
                             atom[NumberOfAtoms].charge = data[n].charge;
                             atom[NumberOfAtoms].Hydrophobicity = data[n].Hydrophobicity;
@@ -360,6 +361,7 @@ atom[NumberOfAtoms].AtomicNumber = data[n].AtomicNumber;
                             atom[NumberOfAtoms].style = style;
                             atom[NumberOfAtoms].name = data[n].name;
                             atom[NumberOfAtoms].Transformation = data[n].Transformation;
+                            atom[NumberOfAtoms].AsymmetricIndexPlusOne = data[n].AsymmetricIndexPlusOne;
                             atom[NumberOfAtoms].disorder_group = data[n].disorder_group;
                             atom[NumberOfAtoms].charge = data[n].charge;
                             atom[NumberOfAtoms].Hydrophobicity = data[n].Hydrophobicity;
@@ -437,6 +439,7 @@ atom[NumberOfAtoms].AtomicNumber = data[n].AtomicNumber;
                 atom[idx].Ue = na.Ue;
                 atom[idx].Un = na.Un;
                 atom[idx].Transformation = na.Transformation;
+                atom[idx].AsymmetricIndexPlusOne = na.AsymmetricIndexPlusOne;
 
                 atom[idx].disorder_group = na.disorder_group;
                 atom[idx].charge = na.charge;

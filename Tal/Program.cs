@@ -4,15 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Application entry afterint.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Single instance + file arguments + named pipe IPC.
-// Drugi proces z plikami w argumentach przekazuje je do pierwszego i wychodzi.
+// Application entry point.
 
 using System.IO.Pipes;
 using System.Text;

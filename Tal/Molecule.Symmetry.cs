@@ -412,6 +412,7 @@ namespace Tal
                     atom_local.occupancy = AsymmetricPart[j].occupancy;
                     atom_local.disorder_group = AsymmetricPart[j].disorder_group;
                     atom_local.SymmetryEquivalentNumberInCell = i;
+                    atom_local.AsymmetricIndexPlusOne = j + 1;
                     atom_local.charge = AsymmetricPart[j].charge;
                     atom_local.Hydrophobicity = AsymmetricPart[j].Hydrophobicity;
                     atom_local.IndividualMoleculeInCell = -1;

@@ -6,61 +6,6 @@
 //
 // Global application flags / settings singleton.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// Last update: 2026-02
-//
-// ═══════════════════════════════════════════════════════════════════════════
-// Flags — TAL application configuration singleton
-// ═══════════════════════════════════════════════════════════════════════════
-//
-// Stores all user preferences, display settings and runtime flags.
-// Persisted to a JSON file (tal_settings.json).
-// System limits (MAX_VOXELS, etc.) are STATIC readonly — NOT serialized.
-//
-// Sections:
-// [1] System Limits (static, not serialized)
-// [2] Singleton Implementation
-// [3] Static Constructor — system limit detection
-// [4] Win32 Interop
-// [5] Static Helpers (voxel safety, memory formatting)
-// [6] Runtime — Visual Revision (for Progressive AA reset)
-// [7] Runtime — Render State (not serialized)
-// [8] Rendering Quality / Anti-Aliasing
-// [9] Atom Color Overrides
-// [10] Background Colors
-// [11] Lighting Parameters (primary + secondary)
-// [12] Application Settings
-// [13] Bond and Atom Settings
-// [14] Balls & Sticks / Style
-// [15] Atom Display / Ellipsoid
-// [16] Coloring & Labels
-// [17] Drawing / View / Cell
-// [18] Display Options
-// [19] Unit Cell Line Settings
-// [20] Cell Repetition Settings
-// [21] Expand Repetition Settings
-// [22] Z-Clipping
-// [23] Depth Cue
-// [24] Selection Settings
-// [25] Hydrogen Bond Settings
-// [26] Short Contacts Settings
-// [27] Expand Contacts Settings
-// [28] SDF / Cavities
-// [29] Interaction / Measurements
-// [30] Interaction Mode (secondary window)
-// [31] Legacy Settings
-// [32] Hirshfeld d_norm color mapping
-// [33] File
-// [34] Symmetry Elements Display
-// [35] Serialization
-// [36] CopyFrom (JSON load merge)
-// [37] Reset methods
-//
-// ═══════════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -74,7 +19,7 @@ namespace Tal
  /// </summary>
     public sealed class Flags
     {
-        public static string VERSION = "3.7.2";
+        public const string VERSION = "3.71";
         public static string Friend = "Symmetry replication · directional packing · cavity visibility";
 
  // ─────────────────────────────────────────────────────────────────
@@ -996,6 +941,21 @@ namespace Tal
 
         public bool ShowCavities { get; set; } = false;
         public float Resolution { get; set; } = 0.10f;
+
+ /// <summary>
+ /// Voxel micro-tuning. When true, the nominal <see cref="Resolution"/> is only a target:
+ /// the number of voxels along a, b and c is chosen independently (nearest integer to |a|/Resolution, ...)
+ /// so that the actual voxel edges |a|/Na, |b|/Nb, |c|/Nc are as close as possible to the nominal value
+ /// and tile the unit cell exactly. When false, the legacy rule N = floor(|a|/Resolution) is used.
+ /// </summary>
+        public bool MicroTuneVoxelSize { get; set; } = false;
+
+ /// <summary>
+ /// Search range of the micro-tuning, in percent of the nominal voxel size (0 = only the nearest integer N).
+ /// Within +-range the number of voxels per axis is chosen jointly for a, b, c to minimise the deviation
+ /// from the nominal size AND the mismatch between the three voxel edges (isotropic voxel).
+ /// </summary>
+        public float MicroTuneRangePercent { get; set; } = 5.0f;
         public float VdWValue { get; set; } = 1.00f;
         public int CavityDrawMode { get; set; } = 0;
         public int CavityPropertyType { get; set; } = 1;
@@ -1493,6 +1453,8 @@ namespace Tal
             UseSDFCorrection = other.UseSDFCorrection;
             ShowCavities = other.ShowCavities;
             Resolution = other.Resolution;
+            MicroTuneVoxelSize = other.MicroTuneVoxelSize;
+            MicroTuneRangePercent = other.MicroTuneRangePercent;
             VdWValue = other.VdWValue;
             CavityDrawMode = other.CavityDrawMode;
             CavityPropertyType = other.CavityPropertyType;
@@ -1841,7 +1803,9 @@ namespace Tal
             UseThermalMotion = false;
             ForceSDFRecalculation = false;
             VdWValue = 1.0f;
-            Resolution = 0.15f;
+            Resolution = 0.10f;
+            MicroTuneVoxelSize = false;
+            MicroTuneRangePercent = 5.0f;
             CavityDrawMode = 0;
             CavityPropertyType = 0;
             SDFNeedsRebuild = false;

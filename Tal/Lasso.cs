@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Lasso selection in the 3D viewafterrt.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Lasso selection in the 3D viewport.
 
 using Microsoft.Xna.Framework;
 using Rectangle = System.Drawing.Rectangle;
@@ -17,14 +12,14 @@ using Rectangle = System.Drawing.Rectangle;
 namespace Tal
 {
  /// <summary>
- /// Provides lasso selection functionality for selecting atoms in a 3D viewafterrt.
- /// Implements afterlygon selection using scanline rasterization and Bresenham's line algorithm.
+ /// Provides lasso selection functionality for selecting atoms in a 3D viewport.
+ /// Implements polygon selection using scanline rasterization and Bresenham's line algorithm.
  /// </summary>
     public static class Lasso
     {
         #region Constants
 
- /// <summary>Minimum distance between afterints when closing/filling gaps.</summary>
+ /// <summary>Minimum distance between points when closing/filling gaps.</summary>
         public const int MIN_POINT_DISTANCE = 15;
 
  /// <summary>Padding added to the bounding box for edge detection.</summary>
@@ -34,7 +29,7 @@ namespace Tal
 
         #region Public Fields
 
- /// <summary>List of vertices defining the lasso afterlygon in screen coordinates.</summary>
+ /// <summary>List of vertices defining the lasso polygon in screen coordinates.</summary>
         public static List<Vector2> VertexList = new List<Vector2>();
 
         #endregion
@@ -49,11 +44,11 @@ namespace Tal
         #region Public Methods
 
  /// <summary>
- /// Performs lasso selection on a molecule using the current afterlygon vertices.
+ /// Performs lasso selection on a molecule using the current polygon vertices.
  /// </summary>
  /// <param name="molecule">The molecule containing atoms to select.</param>
- /// <param name="Width">The viewafterrt width.</param>
- /// <param name="Height">The viewafterrt height.</param>
+ /// <param name="Width">The viewport width.</param>
+ /// <param name="Height">The viewport height.</param>
  /// <param name="fullTransformMatrix">The complete transformation matrix (world * view * projection).</param>
  /// <param name="append">If true, appends to current selection; if false, replaces selection.</param>
         public static void MouseLasso(Molecule molecule, int Width, int Height, Matrix fullTransformMatrix, bool append = true)
@@ -81,13 +76,13 @@ namespace Tal
                 int halfWidth = Width / 2;
                 int halfHeight = Height / 2;
 
- // Get bounding box of the afterlygon
+ // Get bounding box of the polygon
                 var bounds = GetBoundingBox(VertexList, Width, Height);
 
- // Add afterlygon edges to the mask
+ // Add polygon edges to the mask
                 AddEdgesToMask(VertexList, Width, bounds, _sharedMask);
 
- // Fill the afterlygon interior using scanline algorithm
+ // Fill the polygon interior using scanline algorithm
                 FillMaskScanline(bounds, Width, _sharedMask);
 
  // Select atoms that fall within the filled mask
@@ -105,13 +100,13 @@ namespace Tal
         }
 
  /// <summary>
- /// Closes the lasso afterlygon and fills gaps between afterints.
+ /// Closes the lasso polygon and fills gaps between points.
  /// </summary>
         public static void CloseAndFillGaps()
         {
             if (VertexList.Count < 2) return;
 
- // Close the afterlygon
+ // Close the polygon
             VertexList.Add(VertexList[0]);
 
             var filledList = new List<Vector2>();
@@ -122,7 +117,7 @@ namespace Tal
                 float dist = Vector2.Distance(VertexList[i], VertexList[i + 1]);
                 if (dist > MIN_POINT_DISTANCE * 2)
                 {
- // Interafterlate intermediate afterints to smooth the afterlygon
+ // Interpolate intermediate points to smooth the polygon
                     int steps = (int)(dist / MIN_POINT_DISTANCE);
                     for (int s = 1; s < steps; s++)
                     {
@@ -164,7 +159,7 @@ namespace Tal
 
                 Vector3 pos = molecule.atom[i].Coordinate;
 
- // Transform atom aftersition to screen coordinates
+ // Transform atom position to screen coordinates
                 Matrix world = Matrix.CreateTranslation(pos);
                 Matrix worldViewProjectionMatrix = world * fullTransformMatrix;
 
@@ -202,7 +197,7 @@ namespace Tal
         }
 
  /// <summary>
- /// Computes the bounding box of the afterlygon with padding.
+ /// Computes the bounding box of the polygon with padding.
  /// </summary>
         private static Rectangle GetBoundingBox(List<Vector2> points, int screenWidth, int screenHeight)
         {
@@ -230,7 +225,7 @@ namespace Tal
         }
 
  /// <summary>
- /// Adds afterlygon edges to the mask using Bresenham's line algorithm.
+ /// Adds polygon edges to the mask using Bresenham's line algorithm.
  /// </summary>
         private static void AddEdgesToMask(List<Vector2> vertices, int width, Rectangle bounds, HashSet<int> mask)
         {
@@ -285,7 +280,7 @@ namespace Tal
         }
 
  /// <summary>
- /// Fills the afterlygon interior using scanline rasterization.
+ /// Fills the polygon interior using scanline rasterization.
  /// </summary>
         private static void FillMaskScanline(Rectangle bounds, int width, HashSet<int> mask)
         {
@@ -315,7 +310,7 @@ namespace Tal
         }
 
  /// <summary>
- /// Gets the X-coordinates of afterlygon intersections with a horizontal scanline at Y.
+ /// Gets the X-coordinates of polygon intersections with a horizontal scanline at Y.
  /// </summary>
         private static List<int> GetIntersectionsAtY(int y)
         {
@@ -335,7 +330,7 @@ namespace Tal
                     float x1 = VertexList[i].X;
                     float x2 = VertexList[next].X;
 
- // Linear interafterlation for intersection afterint
+ // Linear interpolation for intersection point
                     float intersectX = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
                     intersections.Add((int)intersectX);
                 }

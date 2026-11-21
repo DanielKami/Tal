@@ -6,14 +6,6 @@
 //
 // Molecule partial — partial charge assignment.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — obliczenia charges atomowych (SQE, Gasteiger/PEOE)
-// together with propagation to 3D atoms and updating the ColorManager range.
-
 using System.Diagnostics;
 using Tal.Calculate;
 using Tal.Cavity;
@@ -257,7 +249,7 @@ namespace Tal
 
  /// <summary>
  /// Copies charges from symmetry equivalents to 3D atoms
- /// by matching Cartesian aftersitions.
+ /// by matching Cartesian positions.
  /// </summary>
         private void CopyChargesTo3DAtoms()
         {

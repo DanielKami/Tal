@@ -1021,8 +1021,29 @@
                     <strong>Enable Cavity Display</strong> (<code>chkEnableCavity</code>) — master switch for cavity visualization.
                 </li>
                 <li>
-                    <strong>Resolution (Å)</strong> (<code>numResolution</code>, <code>Flags.Resolution</code>, default often 0.10–0.15 Å) —
+                    <strong>Resolution (Å)</strong> (<code>numResolution</code>, <code>Flags.Resolution</code>, default 0.10 Å) —
                     voxel size of the SDF grid. Smaller is more accurate and much more expensive (voxel count ~ 1/res³).
+                </li>
+                <li>
+                    <strong>Micro-tune voxel size (a, b, c)</strong> (<code>chkMicroTuneVoxel</code>, <code>Flags.MicroTuneVoxelSize</code>, default off) —
+                    treats <em>Resolution</em> as a nominal target and fits the voxel edge separately along a, b and c so that the
+                    unit cell is tiled by a whole number of voxels and the voxel is as cube-like as possible, while each edge stays
+                    within the allowed deviation from the nominal value. The actual edges (and deviations from nominal) are listed in the
+                    cavity reports. See <a href="#voxel-microtuning">section 6.3a</a>.
+                </li>
+                <li>
+                    <strong>Max deviation ± (%)</strong> (<code>numMicroTuneRange</code>, <code>Flags.MicroTuneRangePercent</code>, default 5 %,
+                    active only when micro-tuning is on) — hard limit on how far each voxel edge a, b, c may differ from the nominal
+                    <em>Resolution</em>. Within this limit the program chooses N<sub>a</sub>, N<sub>b</sub>, N<sub>c</sub> to make the voxel
+                    as cube-like as possible. 0 % means plain rounding. A wider limit can only help while a more cube-like combination exists
+                    just outside the current limit; once the best combination fits, widening it further changes nothing.
+                </li>
+                <li>
+                    <strong>Voxel edges (Å)</strong> (<code>lblVoxelEdges</code>, at the bottom of the window) — one line per axis with the actual voxel
+                    edge along a, b and c, the number of voxels N on that axis and the deviation from the nominal <em>Resolution</em>.
+                    With a structure loaded it is recalculated immediately whenever <em>Resolution</em>, the micro-tuning check box or
+                    <em>Max deviation</em> is changed (preview of what the next detection will use; also when micro-tuning is off, where
+                    the edges come from the legacy floor rule). Without a structure it shows the values of the last detection.
                 </li>
                 <li>
                     <strong>VdW Multiplier</strong> (<code>numVdwMultiplier</code>, <code>Flags.VdWValue</code>, default 1.00) —
@@ -1337,7 +1358,78 @@ R_cart = A · R_frac · A⁻¹</code></pre>
                 The memory footprint is roughly <code>4 bytes × N_voxels</code> for the density grid, plus
                 about the same again for the periodic copy, gradient arrays, and the voxel mask. A 512³
                 grid (≈ 134 M voxels) already needs ~1.5 GB of RAM, which is why the default resolution is
-                capped around 0.10–0.15 Å for typical organic crystals.
+                0.10 Å and rarely needs to go much finer for typical organic crystals.
+            </p>
+
+            <h3 id="voxel-microtuning">6.3a. Voxel grid fitting and micro-tuning</h3>
+            <div class="warning">
+                <strong>What was wrong before version 3.73 (volume from voxels).</strong>
+                Up to version 3.72 the periodic cell grid was built with <code>N + 1</code> points per axis
+                (<code>N = floor(|axis| / Resolution) + 1</code>) and a fractional step of <code>1 / (N − 1)</code>, so that the points
+                at fractional coordinate 0 and 1 were both part of the grid. In a periodic cell these two planes are the <em>same</em> physical plane,
+                so every voxel on a cell face was counted twice. The consequence was a small systematic over-estimate of the
+                void volume: the extra layer is one voxel thick per axis, i.e. about <code>1/N</code> per direction in which a cavity touches or crosses the
+                cell boundary (periodic cavities and channels; of the order of 1 % for a 10 Å axis at 0.10 Å). Cavities lying completely inside the
+                cell were not affected, and the cell volume itself was always taken from the cell parameters.
+                <br><br>
+                <strong>Why this did not change the scientific results.</strong>
+                Where a quantity was taken as a <em>difference</em> between two runs (for example thermal motion on/off or the VdW-scaling series,
+                section 15) both runs carried the same bias, which cancels in the difference; and the analyses that relied mainly on the
+                <em>shape</em> of the cavities (topology, channels, sphere fits, mesh) do not depend on the extra boundary layer.
+                Only <em>absolute</em> void volumes and void fill fractions of boundary-touching cavities from versions before 3.73 are slightly too large;
+                for those, re-run the detection with the current version.
+                <br><br>
+                <strong>How it is solved.</strong>
+                There are now two separate paths. <em>Calculation path:</em> the periodic grid holds exactly <code>N</code> voxels per axis with step
+                <code>1 / N</code> (fractional range [0, 1)), so no plane is duplicated, wrap-around in the flood fill is exact, and
+                <code>Σ voxel volumes = V<sub>cell</sub></code>. <em>Display path:</em> marching cubes needs the closing plane at fractional
+                coordinate 1, which the exact grid does not contain; the mesh generator therefore works on a display-only copy of the density grid and voxel mask
+                in which the plane at index N is filled periodically from index 0. The calculation data (volumes, channels, sphere fits) are never touched
+                by this copy, and the surface reaches the +a, +b and +c cell faces exactly as before.
+                <br><br>
+                <strong>Why micro-tuning.</strong>
+                With an exact periodic grid the voxel edge is <code>|axis| / N</code>, not the requested <em>Resolution</em>, because N must be an integer.
+                Micro-tuning keeps <em>Resolution</em> as the nominal value and picks N per axis so that the voxel is as close to a cube as possible
+                (similar edges along a, b and c) while no edge leaves the allowed <em>Max deviation</em> band around the nominal size.
+                It therefore removes the dependence of the grid on how the axis lengths happen to divide by the step
+                (an axis of 10.0 Å and one of 10.07 Å give nearly the same voxel size instead of one of them being up to 1/N too coarse).
+                On a cell whose axes are already exact multiples of the step the grid does not change.
+            </div>
+            <p>
+                The detection grid is <em>periodic</em>: along each cell axis it holds exactly <code>N</code> voxels covering the
+                fractional interval [0, 1). Consequently the voxel edge is not the nominal <em>Resolution</em> but
+            </p>
+            <pre><code>edge_a = |a| / N_a      edge_b = |b| / N_b      edge_c = |c| / N_c
+voxel volume = |(edge_a·â × edge_b·b̂ × edge_c·ĉ)| = V_cell / (N_a · N_b · N_c)</code></pre>
+            <p>
+                so the sum of all voxel volumes equals the cell volume exactly (no duplicated boundary plane).
+                The only freedom left is the choice of the integers <code>N_a, N_b, N_c</code>:
+            </p>
+            <ul>
+                <li>
+                    <strong>Micro-tuning OFF</strong> (default, legacy rule): <code>N = floor(|axis| / Resolution)</code>.
+                    The edge is always equal to or slightly larger than the nominal value (up to ~1/N larger).
+                </li>
+                <li>
+                    <strong>Micro-tuning ON</strong>: for each axis all N whose edge lies within <em>Max deviation ± (%)</em>
+                    of the nominal size (<code>Flags.MicroTuneRangePercent</code>, default 5 %) are candidates, together with the
+                    nearest integer <code>round(|axis| / Resolution)</code>, which is always allowed (0 % = plain rounding).
+                    The triple (N<sub>a</sub>, N<sub>b</sub>, N<sub>c</sub>) is chosen jointly to minimise
+                    <code>Σ<sub>i&lt;j</sub> ln²(e<sub>i</sub>/e<sub>j</sub>) + 0.02·Σ ln²(e<sub>i</sub>/nominal)</code>,
+                    i.e. mainly a cube-like voxel (similar edges along a, b and c), with only a weak pull towards the nominal size that
+                    decides ties. A minimum of 8 voxels per axis is always kept. A wider <em>Max deviation</em> lets the program find a more
+                    isotropic combination; the effect saturates once the best combination lies inside the limit (typically at about 1–2 %
+                    for 0.10 Å), so values above that give the same grid. The <em>Voxel edges</em> panel in the Cavity Settings window shows
+                    the result immediately.
+                </li>
+            </ul>
+            <p>
+                The cell volume and total cavity volume are exact in both modes; micro-tuning only makes the voxel shape
+                closer to a cube of the requested size, which improves the isotropy of the SDF, the gradient and the
+                surface mesh (non-uniform sampling is reduced for cells with very different axis lengths).
+                The actual voxel edges along a, b, c, the number of voxels per axis and the deviation from the nominal size are
+                written to the debug log and to the single-run and VdW analysis reports
+                (<em>Voxel edge a/b/c</em>, <em>Voxel micro-tuning</em>). Changing the checkbox requires re-running detection.
             </p>
 
             <!-- ============================================================ -->
@@ -1676,7 +1768,7 @@ R_cart = A · R_frac · A⁻¹</code></pre>
             <ul>
                 <li><strong>Header:</strong> timestamp, structure name, space group, and the full set of detection parameters (resolution, VdW multiplier, probe radius, thermal-motion flag, min cavity volume, scan margin, base SDF radius, smoothing level).</li>
                 <li><strong>Crystal data:</strong> unit cell (a, b, c, α, β, γ, volume), crystal system, symmetry count, atom count in asymmetric unit and in the cell, molecule count, density, formula, formula weight, F(000), and the charge/hydrophobicity ranges used for property mapping.</li>
-                <li><strong>Grid / SDF data:</strong> periodic cell resolution (ResX × ResY × ResZ), total voxels, margins, supercell resolution (with margin), total supercell voxels, estimated memory, voxel size, voxel volume, max SDF distance, and non-orthogonal flag.</li>
+                <li><strong>Grid / SDF data:</strong> periodic cell resolution (ResX × ResY × ResZ), total voxels, margins, supercell resolution (with margin), total supercell voxels, estimated memory, nominal voxel size, actual voxel edges a, b, c with the number of voxels N per axis, micro-tuning state and range, voxel volume, max SDF distance, and non-orthogonal flag. The VdW analysis reports list the same edges next to the voxel volume.</li>
                 <li><strong>Cavity summary:</strong> total count, primary/duplicate/periodic/closed splits, count with channels, with mesh, with sphere fits; total void volume and error; total void surface and error; volume-to-surface ratio; cell volume; void fill fraction; min/avg/max void volume; average sphericity; largest sphere radius and diameter.</li>
                 <li><strong>Per-cavity table:</strong> ID, volume, surface, sphericity, V/S ratio, wall count, voxel count, max sphere radius, effective diameter, channel directions.</li>
                 <li><strong>Crystal channels:</strong> per-cavity per-direction table (length, avg/min/max width, effective diameter, helicity, cell crossings), direction summary, network type (1D / 2D / 3D / isolated).</li>
@@ -3491,7 +3583,7 @@ H···H         412.5    30.9     16840
                 The <code>Powder Diffraction</code> window simulates the theoretical powder X-ray diffraction pattern for the loaded crystal structure. It is opened from <code>Calculate → Powder Pattern...</code>.
             </p>
             <p>
-                The underlying engine (<code>PowderDiffractionEngine</code>) enumerates allowed <em>hkl</em> reflections in the 2θ range, computes the structure factor <code>F(hkl)</code> from the full unit cell, applies Lorentz–polarization and Debye–Waller corrections, groups symmetry-equivalent reflections, and renders the resulting profile in a WinForms plot.
+                The underlying engine (<code>PowderDiffractionEngine</code>) enumerates allowed <em>hkl</em> reflections in the 2θ range, computes the structure factor <code>F(hkl)</code> from the full unit cell, applies Lorentz–polarization and Debye–Waller corrections, treats each symmetry-independent reflection once with its true multiplicity, and renders the resulting profile in a WinForms plot. If the structure contains an element without tabulated scattering factors, no pattern is calculated and the window says so (see 8.4, item 5).
             </p>
 
             <h3>8.1. Window Layout</h3>
@@ -3511,13 +3603,14 @@ H···H         412.5    30.9     16840
                 <tr><th>Control</th><th>Description</th></tr>
                 <tr><td><code>numericFWHM</code></td><td>Peak full-width at half-maximum (FWHM) in the units of the X axis. Range 0.01–10, default <strong>0.05</strong>.</td></tr>
                 <tr><td><code>comboProfile</code></td><td>Profile type: <code>Gaussian</code>, <code>Lorentzian</code>, <code>Pseudo-Voigt</code> (default).</td></tr>
-                <tr><td><code>numericResolution</code></td><td>Number of profile sample points per pixel (profile resolution). Range 1–10, default <strong>2</strong>.</td></tr>
+                <tr><td><code>numericResolution</code> (label <em>Points / pixel</em>)</td><td>Number of profile points calculated per screen pixel of the plot width. Range 1–10, default <strong>2</strong>. It only controls how smoothly the curve is drawn (higher = smoother, slower redraw); peak positions, intensities and FWHM are not affected, and it is <em>not</em> an instrumental resolution — use <code>numericFWHM</code> for the peak width.</td></tr>
             </table>
 
             <h4>Debye-Waller (groupBoxDebye)</h4>
             <table class="param-table">
                 <tr><th>Control</th><th>Description</th></tr>
-                <tr><td><code>numericDebyeWaller</code></td><td>Debye-Waller isotropic B factor in Å². Range 0–20, default <strong>0.5</strong>.</td></tr>
+                <tr><td><code>numericDebyeWaller</code> (label <em>Scale ×</em>)</td><td>Global multiplier of all atomic displacement parameters, range 0–10, default <strong>1.00</strong>: <code>U<sub>used</sub> = scale × U</code> (1 = values as given, 0 = no thermal damping). Atoms without U in the file use the reference B = 0.50 Å² (U = B / 8π² = 0.0063 Å²), also multiplied by the scale. The slider next to it controls the same value.</td></tr>
+                <tr><td><code>chkUseAtomicU</code> (<em>Use atomic U from file</em>)</td><td>On (default): each atom with U<sub>iso</sub> (or U<sub>eq</sub> for anisotropic atoms) in the file uses <code>exp(−8π²·scale·U·s²)</code>; atoms without U use the reference B times the scale. Off: all atoms use the reference B times the scale. Anisotropic ADPs enter only through U<sub>eq</sub>.</td></tr>
                 <tr><td><code>trackDebyeWaller</code></td><td>Slider linked to the numeric box (value = B × 10). Range 0–200, default 5.</td></tr>
             </table>
 
@@ -3562,13 +3655,13 @@ H···H         412.5    30.9     16840
                 <li><strong>Wheel:</strong> Zooms the 2θ range about the cursor position (factor 0.8 in, 1.25 out).</li>
                 <li><strong>Left drag:</strong> Rubber-band zoom. The selected pixel range is converted into a new 2θ range.</li>
                 <li><strong>Double-click:</strong> Resets the range to 0–90°.</li>
-                <li><strong>Hover:</strong> Updates the readout labels. The "closest peak" tolerance is 2% of the current 2θ span.</li>
+                <li><strong>Hover:</strong> Updates the readout labels. The "closest peak" tolerance is 2% of the current 2θ span. Distinct reflections that coincide in 2θ are all listed (strongest first, as <code>(h k l)×multiplicity</code>) and the intensity shown is their sum.</li>
             </ul>
 
             <h3>8.4. Algorithm and Formulas</h3>
             <ol>
                 <li>
-                    <strong>d-spacing:</strong> Computed from the metric tensor of the triclinic cell using the standard reciprocal-lattice formula.
+                    <strong>Reflection range (no fixed index limit):</strong> with the reciprocal metric tensor <code>Q = G⁻¹</code> (<code>G</code> = direct metric of the cell), <code>d*² = hᵀ·Q·h</code>. All lattice points inside the ellipsoid <code>d*² ≤ (2 sinθ<sub>max</sub> / λ)²</code> are visited exactly (the loop bounds for <em>k</em> and <em>l</em> are solved from the ellipsoid, the largest |h| is <code>a / d<sub>min</sub></code>). This is correct for every cell, including oblique ones, and replaces the former hard cap of 30 on each index.
                 </li>
                 <li>
                     <strong>Angle:</strong> 2θ = 2 · asin(λ / (2d)), rejected if sinθ &gt; 1.
@@ -3577,23 +3670,29 @@ H···H         412.5    30.9     16840
                     <strong>Centering prefilter:</strong> Determined from the first letter of the actual Hermann–Mauguin symbol (P/A/B/C/F/I/R), not from the space-group number. This is only a fast performance filter — systematic absences from screw axes and glide planes are handled naturally by F(hkl).
                 </li>
                 <li>
-                    <strong>Structure factor:</strong> F(hkl) = Σ<sub>j</sub> f<sub>j</sub>(s) · exp(−B·s²) · occ<sub>j</sub> · exp(2πi(h·x<sub>j</sub> + k·y<sub>j</sub> + l·z<sub>j</sub>)), summed over <em>all</em> atoms in the unit cell (using <code>SymetryEquivalents</code> if available). The atomic scattering factors f<sub>j</sub>(s) use the Cromer–Mann 4-Gaussian + constant approximation (International Tables Vol. C, Table 6.1.1.4).
+                    <strong>Structure factor:</strong> F(hkl) = Σ<sub>j</sub> f<sub>j</sub>(s) · exp(−B·s²) · occ<sub>j</sub> · exp(2πi(h·x<sub>j</sub> + k·y<sub>j</sub> + l·z<sub>j</sub>)), summed over <em>all</em> atoms of the unit cell. The cell is built from the asymmetric unit and <em>all</em> space-group operations, independently of the symmetry operations that are switched on or off in the 3D view; images that coincide on special positions (closer than 0.1 Å) are counted once.
+                </li>
+                <li>
+                    <strong>Scattering factors:</strong> f<sub>j</sub>(s) uses the Cromer–Mann 4-Gaussian + constant approximation, International Tables Vol. C, Table 6.1.1.4, for H to Cf (Z = 1–98). The table (<code>CromerMannTable</code>) was checked against the IUCr core CIF dictionary and by the sum rule Σa<sub>i</sub> + c = Z for every element. For elements without coefficients (Z &gt; 98, unknown Z) there is <strong>no silent fallback</strong>: <code>UnsupportedElementException</code> is thrown, the pattern is not calculated, and the window shows <em>No scattering factors: …</em> (details in the tooltip and a one-time message box). Neutral-atom factors are used; anomalous dispersion f′, f″ is not included.
                 </li>
                 <li>
                     <strong>Lorentz-polarization correction:</strong> L·P = (1 / (2 sin²θ cosθ)) · ((1 + cos²2θ) / 2).
                 </li>
                 <li>
-                    <strong>Intensity:</strong> I = |F|² · L·P.
+                    <strong>Symmetry-equivalent reflections:</strong> the Laue group is built from the rotation parts <code>R</code> of all space-group operations plus inversion (Friedel). Since <code>|F(h)| = |F(Rᵀh)|</code>, the equivalent indices are the row vectors <code>h·R</code>. Each orbit is processed exactly once (its lexicographically largest member is the representative) and the multiplicity <em>m</em> is the orbit size. Equivalence is decided by symmetry, <em>not</em> by rounding 2θ.
                 </li>
                 <li>
-                    <strong>Grouping:</strong> Reflections with the same rounded 2θ (4 decimal places) are merged; intensities are summed, multiplicities added. This is valid for every crystal system without hard-coded symmetry tables.
+                    <strong>Calculation thread:</strong> the peak list is computed on a worker thread; a newer request (e.g. while dragging the B slider) cancels the running one, so the window stays responsive. Before a very large calculation (estimated from the cell volume, the 2θ range and the number of atoms; more than about 15 s) a confirmation is asked once per 2θ range.
                 </li>
                 <li>
-                    <strong>Profile:</strong> The rendered profile is a sum of pseudo-Voigt profiles centered at each peak 2θ<sub>k</sub> with the chosen FWHM:
+                    <strong>Intensity:</strong> I = m · |F|² · L·P. Different reflections that merely overlap in 2θ remain separate entries of the peak list (and of the CSV export); they are added only when the profile is drawn.
+                </li>
+                <li>
+                    <strong>Profile:</strong> The rendered profile is a sum of profiles centered at each peak 2θ<sub>k</sub> with the chosen FWHM. Each peak is summed only within ±3·FWHM (Gaussian) or ±25·FWHM (profiles with a Lorentzian part), where it is still non-negligible (&lt; 4·10⁻⁴ of its height); the peak list is sorted and searched by bisection, which makes the redraw about two orders of magnitude faster:
                     <ul>
                         <li>Gaussian: <code>exp(−4 ln 2 · x²)</code> where x = (2θ − 2θ<sub>k</sub>) / FWHM.</li>
                         <li>Lorentzian: <code>1 / (1 + 4x²)</code>.</li>
-                        <li>Pseudo-Voigt: <code>η · G + (1 − η) · L</code> with η = <code>PseudoVoigtEta</code> (default 0.5).</li>
+                        <li>Pseudo-Voigt: <code>η · G + (1 − η) · L</code> with η = <code>PseudoVoigtEta</code> (default 0.5); η is now actually passed to the profile function.</li>
                     </ul>
                 </li>
             </ol>
@@ -4693,9 +4792,12 @@ p_new = P0_target + a · xt + b · yt + c · zt</code></pre>
                     <strong>Atomic position covariance.</strong> The refined fractional e.s.d.'s σ<sub>x</sub>, σ<sub>y</sub>, σ<sub>z</sub> are independent, but in a non-orthogonal cell the Cartesian errors are correlated. Each atom therefore stores a full 3×3 covariance <code>C = A · diag(σ²) · Aᵀ</code> (<code>A</code> = fractional→Cartesian matrix). For a symmetry-generated atom the covariance is rotated with the operation, <code>C' = R<sub>cart</sub> · C · R<sub>cart</sub>ᵀ</code>, with <code>R<sub>cart</sub> = A · R<sub>frac</sub> · A⁻¹</code>.
                 </li>
                 <li>
+                    <strong>Symmetry images of the same atom are correlated.</strong> For atoms generated from the same refined atom (<code>r<sub>B</sub> = R·r<sub>A</sub> + t</code>) the cross-covariance <code>C<sub>AB</sub> = Cov<sub>A</sub> · R<sub>A</sub> · R<sub>B</sub>ᵀ</code> enters the variance as <code>2 g<sub>A</sub>ᵀ C<sub>AB</sub> g<sub>B</sub></code>. A bond across an inversion centre therefore has σ = 2·σ<sub>atom</sub> (not √2·σ<sub>atom</sub>), and the bond between an atom and its own lattice translate has no positional error at all (only the cell contributes).
+                </li>
+                <li>
                     <strong>Linearised propagation</strong> to the measured quantity <code>q</code> (distance, angle, torsion):
                     <pre><code>σ_q² = Σ_atoms  g_aᵀ · C_a · g_a ,   g_a = ∂q/∂r_a</code></pre>
-                    For a bond <code>g = ±u</code> (unit vector along the bond); the angle uses the analytic gradients of arccos; the torsion uses numerical gradients. Angles are reported in degrees and clamped to [0.001°, 10°].
+                    For a bond <code>g = ±u</code> (unit vector along the bond); the angle uses the analytic gradients of arccos; the torsion uses numerical gradients. Angles are reported in degrees and clamped to [0.001°, 180°]. An error of 10 or more is displayed as a multiple of ten, e.g. <code>109(10)</code> (a single digit <code>(1)</code> would be read as 1).
                 </li>
                 <li>
                     <strong>Unit-cell e.s.d.'s.</strong> The cell parameters a, b, c, α, β, γ are propagated separately, with the fractional coordinates held fixed: <code>σ_cell² = Σ<sub>k</sub> (∂q/∂p<sub>k</sub> · σ(p<sub>k</sub>))²</code> (central difference at ±σ), and added in quadrature to the positional part. The cell parameters are treated as independent. The cell term is added only when all atoms carry refined e.s.d.'s.
