@@ -4,9 +4,9 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: Mol2Writer.
+// Structure / image export: Mol2Writer.
 
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 
 namespace Tal

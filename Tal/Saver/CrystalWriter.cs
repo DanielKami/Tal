@@ -4,23 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: CrystalWriter.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Crystal17 .d12 input generator.
-// Produces a CRYSTAL17 geometry + SCF input deck from StructureData.
-//
-// ⚠️ Crystal17 requires the STANDARD setting of the space group.
-// Non-standard orientations (e.g. P 21/n instead of P 21/c) are
-// reafterrted via CrystalSpaceGroupValidator and may be rejected by
-// CRYSTAL. We emit a warning and still write the file.
-//
-// ⚠️ Transformation to standard setting is NOT implemented here —
-// use PLATON or a similar tool to transform coordinates first.
+// Structure / image export: CrystalWriter.
 
 using System.Globalization;
 using System.Text;

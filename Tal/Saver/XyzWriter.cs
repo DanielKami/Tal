@@ -4,9 +4,9 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: XyzWriter.
+// Structure / image export: XyzWriter.
 
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 
 namespace Tal

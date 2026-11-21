@@ -4,17 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: SymmetryHelper.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Helpers to obtain a complete, reliable list of symmetry operation strings
-// for writing RES / CIF / MOL2 etc.
-//
-// ⭐ Jedno source prawdy: SymmetryElements (tabela + NormalizeSpaceGroupName).
+// Structure / image export: SymmetryHelper.
 
 namespace Tal.Saver
 {
@@ -137,7 +127,7 @@ namespace Tal.Saver
 
  /// <summary>
  /// Returns symmetry operations for the exact setting name (e.g. "P21/n").
- /// Szuka after nazwie — nie afterlega na orientation.
+ /// Szuka after nazwie — nie polega na orientation.
  /// </summary>
         public static List<string> GetOperationStringsByName(int group, string settingName)
         {

@@ -4,21 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: CrystalSpaceGroupValidator.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Walidacja space group for Crystal17.
-//
-// Crystal17 wymaga STANDARDOWEJ orientacji grupy (z Tables of Crystallography).
-// Non-standard settings (np. P 21/n instead of P 21/c) are rejected or
-// interpretowane incorrectly.
-//
-// ⭐ Comparison by NORMALISED NAME (single source of truth).
-// Nie uses already SymmetryHelper.GetOrientationSafe.
+// Structure / image export: CrystalSpaceGroupValidator.
 
 using Tal.Saver;
 

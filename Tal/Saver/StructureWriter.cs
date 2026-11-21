@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: StructureWriter.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Structure / image export: StructureWriter.
 
 using System.Globalization;
 using System.Text;
@@ -19,7 +14,7 @@ using Tal.Saver;
 namespace Tal
 {
  /// <summary>
- /// Central writer – saves StructureData to all supafterrted formats.
+ /// Central writer – saves StructureData to all supported formats.
  /// </summary>
     public static class StructureWriter
     {
@@ -53,7 +48,7 @@ namespace Tal
         }
 
  /// <summary>
- /// Zapisuje .d12 i afterkazuje warning (np. o niestandardowej grupie przestrzennej).
+ /// Zapisuje .d12 i pokazuje warning (np. o niestandardowej grupie przestrzennej).
  /// </summary>
         private static bool WriteD12WithWarnings(StructureData structure, string filePath)
         {

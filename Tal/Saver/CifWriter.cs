@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: CifWriter.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Structure / image export: CifWriter.
 
 using System.Globalization;
 using System.Text;

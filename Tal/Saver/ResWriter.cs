@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: ResWriter.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Structure / image export: ResWriter.
 
 using System.Globalization;
 using System.Text;
@@ -51,7 +46,7 @@ namespace Tal
             var ops = SymmetryHelper.GetOperationStrings(s);
 
  // SHELX: LATT > 0 → centrosymmetric (program will add inversion)
- // LATT < 0 → non-centrosymmetric (all operacje afterdajemy sami)
+ // LATT < 0 → non-centrosymmetric (all operacje podajemy sami)
  // Safest: always LATT -1 i we will write the full list (without identity).
             bool hasInversion = SymmetryHelper.ContainsInversion(ops);
             int latt = hasInversion ? 1 : -1;   // P-lattice; sign depends on inversion

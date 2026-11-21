@@ -4,9 +4,9 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: DiffractionPeak.
+// Powder diffraction module: DiffractionPeak.
 
-﻿namespace Tal.Core.PowderDiffraction
+namespace Tal.Core.PowderDiffraction
 {
     public class DiffractionPeak
     {

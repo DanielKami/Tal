@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: AfterwderDiffractionSettings.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Powder diffraction module: PowderDiffractionSettings.
 
 using Tal.Core.PowderDiffraction;
 
@@ -29,6 +24,7 @@ namespace Tal.Forms
         public const PeakBroadening.ProfileType DefaultProfileType = PeakBroadening.ProfileType.PseudoVoigt;
         public const double DefaultPseudoVoigtEta = 0.5;
         public const double DefaultDebyeWallerB = 0.5;
+        public const double DefaultDisplacementScale = 1.0;
         public const bool DefaultShowHKL = true;
         public const bool DefaultShowLabels = true;
         public const bool DefaultShowBackground = true;
@@ -36,6 +32,7 @@ namespace Tal.Forms
         public const XAxisMode DefaultXAxisMode = XAxisMode.TwoTheta;
         public const bool DefaultUseLPCorrection = true;
         public const bool DefaultUseDebyeWaller = true;
+        public const bool DefaultUseAtomicDisplacement = true;
         public const double DefaultMinIntensityFraction = 0.01;
         public const int DefaultMaxLabelsToShow = 25;
         public const int DefaultProfileResolution = 2;
@@ -61,7 +58,7 @@ namespace Tal.Forms
  /// Length fali w Ångströmach.
  /// 
  /// ⚠️ Setter is intentionally empty: wavelength is always computed
- /// z currentgo <see cref="Source"/> przez getter. Afterzwala to zachować
+ /// z currentgo <see cref="Source"/> przez getter. Pozwala to zachować
  /// kompatybilność z kodem, which robi <c>settings.Wavelength = ...</c>
  /// (np. w event handlerach), nie allowsjąc przypadkowo rozjechać
  /// values z wybranym źródłem.
@@ -76,7 +73,7 @@ namespace Tal.Forms
 
         #region Parametry pików
 
- /// <summary>Szerokość afterłówkowa peaku (FWHM) w jednostkach osi X.</summary>
+ /// <summary>Szerokość połówkowa peaku (FWHM) w jednostkach osi X.</summary>
         public double FWHM { get; set; } = DefaultFWHM;
 
  /// <summary>Typ profilu peaku.</summary>
@@ -90,19 +87,29 @@ namespace Tal.Forms
         #region Debye-Waller
 
  /// <summary>Czynnik Debye-Waller B w Å².</summary>
+        /// <summary>
+        /// Reference isotropic B (Å²) of atoms that have no displacement parameter in the file
+        /// (U = B / 8π²). Not shown in the UI; it is scaled by <see cref="DisplacementScale"/>.
+        /// </summary>
         public double DebyeWallerB { get; set; } = DefaultDebyeWallerB;
+
+        /// <summary>
+        /// Global multiplier of all atomic displacement parameters: U_eff = scale × U for atoms with U
+        /// in the file, and scale × (reference B / 8π²) for atoms without. 1.0 = values as given.
+        /// </summary>
+        public double DisplacementScale { get; set; } = DefaultDisplacementScale;
 
         #endregion
 
         #region Opcje wyświetlania
 
- /// <summary>Czy afterkazywać oznaczenia HKL after najechaniu na peak.</summary>
+ /// <summary>Czy pokazywać oznaczenia HKL after najechaniu na peak.</summary>
         public bool ShowHKL { get; set; } = DefaultShowHKL;
 
- /// <summary>Czy afterkazywać etykiety przy peakach.</summary>
+ /// <summary>Czy pokazywać etykiety przy peakach.</summary>
         public bool ShowLabels { get; set; } = DefaultShowLabels;
 
- /// <summary>Czy afterkazywać wypełnienie afterd krzywą.</summary>
+ /// <summary>Czy pokazywać wypełnienie pod krzywą.</summary>
         public bool ShowBackground { get; set; } = DefaultShowBackground;
 
  /// <summary>Czy normalizować intensity do zakresu 0-1.</summary>
@@ -115,11 +122,17 @@ namespace Tal.Forms
 
         #region Zaawansowane opcje obliczeniowe
 
- /// <summary>Czy uwzględniać afterprawkę Lorentza-afterlaryzacji.</summary>
+ /// <summary>Czy uwzględniać poprawkę Lorentza-polaryzacji.</summary>
         public bool UseLPCorrection { get; set; } = DefaultUseLPCorrection;
 
  /// <summary>Czy uwzględniać czynnik Debye-Waller.</summary>
         public bool UseDebyeWaller { get; set; } = DefaultUseDebyeWaller;
+
+ /// <summary>
+ /// Use the isotropic / equivalent displacement U (Å²) of each atom from the structure file
+ /// (exp(−8π²U·s²)); atoms without U use the global B.
+ /// </summary>
+        public bool UseAtomicDisplacement { get; set; } = DefaultUseAtomicDisplacement;
 
  /// <summary>Minimalna intensity peaku do display (jako ułamek maksimum).</summary>
         public double MinIntensityFraction { get; set; } = DefaultMinIntensityFraction;
@@ -150,6 +163,7 @@ namespace Tal.Forms
                 ProfileType = ProfileType,
                 PseudoVoigtEta = PseudoVoigtEta,
                 DebyeWallerB = DebyeWallerB,
+                DisplacementScale = DisplacementScale,
                 ShowHKL = ShowHKL,
                 ShowLabels = ShowLabels,
                 ShowBackground = ShowBackground,
@@ -157,6 +171,7 @@ namespace Tal.Forms
                 XAxisMode = XAxisMode,
                 UseLPCorrection = UseLPCorrection,
                 UseDebyeWaller = UseDebyeWaller,
+                UseAtomicDisplacement = UseAtomicDisplacement,
                 MinIntensityFraction = MinIntensityFraction,
                 MaxLabelsToShow = MaxLabelsToShow,
                 ProfileResolution = ProfileResolution
@@ -173,6 +188,7 @@ namespace Tal.Forms
             ProfileType = DefaultProfileType;
             PseudoVoigtEta = DefaultPseudoVoigtEta;
             DebyeWallerB = DefaultDebyeWallerB;
+            DisplacementScale = DefaultDisplacementScale;
             ShowHKL = DefaultShowHKL;
             ShowLabels = DefaultShowLabels;
             ShowBackground = DefaultShowBackground;
@@ -180,6 +196,7 @@ namespace Tal.Forms
             XAxisMode = DefaultXAxisMode;
             UseLPCorrection = DefaultUseLPCorrection;
             UseDebyeWaller = DefaultUseDebyeWaller;
+            UseAtomicDisplacement = DefaultUseAtomicDisplacement;
             MinIntensityFraction = DefaultMinIntensityFraction;
             MaxLabelsToShow = DefaultMaxLabelsToShow;
             ProfileResolution = DefaultProfileResolution;
@@ -214,10 +231,10 @@ namespace Tal.Forms
 
     #region Helpers
 
- /// <summary>Aftermocnicze metody for źródeł promieniowania X.</summary>
+ /// <summary>Pomocnicze metody for źródeł promieniowania X.</summary>
     public static class XRaySourceHelper
     {
- /// <summary>Afterbiera length fali for danego source w Ångströmach.</summary>
+ /// <summary>Pobiera length fali for danego source w Ångströmach.</summary>
         public static double GetWavelength(XRaySource source)
         {
             return source switch
@@ -232,7 +249,7 @@ namespace Tal.Forms
             };
         }
 
- /// <summary>Afterbiera name wyświetlaną for danego source.</summary>
+ /// <summary>Pobiera name wyświetlaną for danego source.</summary>
         public static string GetDisplayName(XRaySource source)
         {
             return source switch
@@ -247,7 +264,7 @@ namespace Tal.Forms
             };
         }
 
- /// <summary>Afterbiera skróconą name source.</summary>
+ /// <summary>Pobiera skróconą name source.</summary>
         public static string GetShortName(XRaySource source)
         {
             return source switch
@@ -262,14 +279,14 @@ namespace Tal.Forms
             };
         }
 
- /// <summary>Afterbiera energię source w keV.</summary>
+ /// <summary>Pobiera energię source w keV.</summary>
         public static double GetEnergy(XRaySource source)
         {
             double wavelength = GetWavelength(source);
             return 12.398 / wavelength; // E = hc/λ w keV
         }
 
- /// <summary>Afterbiera all source jako list nazw wyświetlanych.</summary>
+ /// <summary>Pobiera all source jako list nazw wyświetlanych.</summary>
         public static string[] GetAllDisplayNames()
         {
             return Enum.GetValues(typeof(XRaySource))

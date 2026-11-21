@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Tal.Core;
 
 namespace Tal.Core.PowderDiffraction
@@ -37,6 +38,7 @@ namespace Tal.Core.PowderDiffraction
             _structureFactor = new StructureFactorCalculator(molecule);
         }
 
+        /// <exception cref="OperationCanceledException">The token was cancelled.</exception>
         /// <exception cref="UnsupportedElementException">
         /// The structure contains an element without tabulated X-ray scattering factors.
         /// </exception>
@@ -45,7 +47,10 @@ namespace Tal.Core.PowderDiffraction
             double maxTwoTheta,
             double wavelength = 1.5406,
             double debyeWallerB = 0.5,
-            bool useLPCorrection = true)
+            bool useLPCorrection = true,
+            bool useAtomicDisplacement = false,
+            double displacementScale = 1.0,
+            CancellationToken cancellationToken = default)
         {
             _wavelength = wavelength;
             var peaks = new List<DiffractionPeak>();
@@ -57,7 +62,9 @@ namespace Tal.Core.PowderDiffraction
             _structureFactor.PrepareCell();
 
             // Reciprocal metric tensor Q = G⁻¹:  d*² = hᵀ Q h
-            if (!TryBuildReciprocalMetric(out double[,] q))
+            if (!ReflectionGeometry.TryBuildReciprocalMetric(
+                    _molecule.a, _molecule.b, _molecule.c,
+                    _molecule.alpha, _molecule.beta, _molecule.gamma, out double[,] q))
                 return peaks;
 
             double maxTT = Math.Min(maxTwoTheta, 180.0);
@@ -68,168 +75,115 @@ namespace Tal.Core.PowderDiffraction
             // d* = 1/d = 2 sinθ / λ
             double dStarMax = 2.0 * Math.Sin(maxTT / 2.0 * Math.PI / 180.0) / wavelength;
             double dStarMin = 2.0 * Math.Sin(minTT / 2.0 * Math.PI / 180.0) / wavelength;
-            double r2Max = dStarMax * dStarMax;
-            double r2Min = dStarMin * dStarMin;
 
             int[][] laue = BuildLaueOperations();
             char centering = GetCenteringSymbol();
 
-            // The hkl range follows from the metric, not from a fixed box: all lattice points inside
-            // the ellipsoid  hᵀ Q h ≤ d*max²  are visited (no arbitrary index limit, correct for any cell).
-            double q11 = q[0, 0], q12 = q[0, 1], q13 = q[0, 2];
-            double q22 = q[1, 1], q23 = q[1, 2], q33 = q[2, 2];
+            int visited = 0;
 
-            double q11p = q11 - q13 * q13 / q33;
-            double q12p = q12 - q13 * q23 / q33;
-            double q22p = q22 - q23 * q23 / q33;
-            double q11pp = q11p - q12p * q12p / q22p;
-            if (!(q33 > 0) || !(q22p > 0) || !(q11pp > 0))
-                return peaks;
-
-            const double eps = 1e-9;
-            int hMax = (int)Math.Floor(Math.Sqrt(r2Max / q11pp) + eps);   // = a / d_min
-
-            for (int h = -hMax; h <= hMax; h++)
+            // All lattice points of the 2θ shell, from the metric (no fixed index box or limit).
+            foreach (var (h, k, l) in ReflectionGeometry.EnumerateLatticePoints(q, dStarMin, dStarMax))
             {
-                double discK = (q12p * h) * (q12p * h) - q22p * (q11p * h * h - r2Max);
-                if (discK < 0) continue;
-                double kc = -q12p * h / q22p;
-                double kd = Math.Sqrt(discK) / q22p;
-                int kLo = (int)Math.Ceiling(kc - kd - eps);
-                int kHi = (int)Math.Floor(kc + kd + eps);
+                if ((++visited & 0x3FF) == 0)
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                for (int k = kLo; k <= kHi; k++)
+                double dStar2 = ReflectionGeometry.DStarSquared(q, h, k, l);
+
+                double d = 1.0 / Math.Sqrt(dStar2);
+                double sinTheta = 0.5 * wavelength / d;
+                if (sinTheta > 1.0)
                 {
-                    double b = q13 * h + q23 * k;
-                    double c0 = q11 * h * h + q22 * k * k + 2.0 * q12 * h * k - r2Max;
-                    double discL = b * b - q33 * c0;
-                    if (discL < 0) continue;
-                    double lc = -b / q33;
-                    double ld = Math.Sqrt(discL) / q33;
-                    int lLo = (int)Math.Ceiling(lc - ld - eps);
-                    int lHi = (int)Math.Floor(lc + ld + eps);
-
-                    for (int l = lLo; l <= lHi; l++)
-                    {
-                        if (h == 0 && k == 0 && l == 0)
-                            continue;
-
-                        double dStar2 = q11 * h * h + q22 * k * k + q33 * l * l +
-                                        2.0 * (q12 * h * k + q13 * h * l + q23 * k * l);
-
-                        if (dStar2 <= 0.0) continue;
-                        if (dStar2 > r2Max * (1.0 + 1e-12) || dStar2 < r2Min * (1.0 - 1e-12)) continue;
-
-                        double d = 1.0 / Math.Sqrt(dStar2);
-                        double sinTheta = 0.5 * wavelength / d;
-                        if (sinTheta > 1.0)
-                        {
-                            if (sinTheta > 1.0 + 1e-9) continue;
-                            sinTheta = 1.0;
-                        }
-
-                        double theta = Math.Asin(sinTheta) * 180.0 / Math.PI;
-                        double twoTheta = 2.0 * theta;
-                        if (twoTheta < minTwoTheta || twoTheta > maxTwoTheta)
-                            continue;
-
-                        // Fast pre-filter from the real centring symbol; the true extinctions
-                        // (screw axes, glide planes) come out of F(hkl) over the full cell.
-                        if (!PassesCenteringPrefilter(centering, h, k, l))
-                            continue;
-
-                        // One entry per symmetry orbit. Every other member of the orbit has the same
-                        // d and the same |F|, so it is represented by this one through the multiplicity.
-                        if (!TryGetOrbitRepresentative(laue, h, k, l, out int multiplicity))
-                            continue;
-
-                        double F = _structureFactor.Calculate(h, k, l, theta, wavelength, debyeWallerB);
-                        double lp = useLPCorrection ? LorentzPolarizationCorrection(theta) : 1.0;
-
-                        // I = m · |F|² · LP   (F already contains the Debye-Waller factor)
-                        double intensity = multiplicity * F * F * lp;
-                        if (intensity < 1e-10)
-                            continue;
-
-                        peaks.Add(new DiffractionPeak
-                        {
-                            H = h,
-                            K = k,
-                            L = l,
-                            TwoTheta = twoTheta,
-                            DSpacing = d,
-                            Intensity = intensity,
-                            Multiplicity = multiplicity,
-                            StructureFactor = F,
-                            Q = 4.0 * Math.PI * sinTheta / wavelength,
-                            ReciprocalD = dStar2 > 0 ? Math.Sqrt(dStar2) : 0.0
-                        });
-                    }
+                    if (sinTheta > 1.0 + 1e-9) continue;
+                    sinTheta = 1.0;
                 }
+
+                double theta = Math.Asin(sinTheta) * 180.0 / Math.PI;
+                double twoTheta = 2.0 * theta;
+                if (twoTheta < minTwoTheta || twoTheta > maxTwoTheta)
+                    continue;
+
+                // Fast pre-filter from the real centring symbol; the true extinctions
+                // (screw axes, glide planes) come out of F(hkl) over the full cell.
+                if (!PassesCenteringPrefilter(centering, h, k, l))
+                    continue;
+
+                // One entry per symmetry orbit. Every other member of the orbit has the same
+                // d and the same |F|, so it is represented by this one through the multiplicity.
+                if (!ReflectionGeometry.TryGetOrbitRepresentative(laue, h, k, l, out int multiplicity))
+                    continue;
+
+                double F = _structureFactor.Calculate(h, k, l, theta, wavelength, debyeWallerB, useAtomicDisplacement, displacementScale);
+                double lp = useLPCorrection ? LorentzPolarizationCorrection(theta) : 1.0;
+
+                // I = m · |F|² · LP   (F already contains the Debye-Waller factor)
+                double intensity = multiplicity * F * F * lp;
+                if (intensity < 1e-10)
+                    continue;
+
+                peaks.Add(new DiffractionPeak
+                {
+                    H = h,
+                    K = k,
+                    L = l,
+                    TwoTheta = twoTheta,
+                    DSpacing = d,
+                    Intensity = intensity,
+                    Multiplicity = multiplicity,
+                    StructureFactor = F,
+                    Q = 4.0 * Math.PI * sinTheta / wavelength,
+                    ReciprocalD = Math.Sqrt(dStar2)
+                });
             }
 
             return peaks.OrderBy(p => p.TwoTheta).ThenByDescending(p => p.Intensity).ToList();
         }
 
-        #region Lattice metric
-
-        /// <summary>Q = G⁻¹ where G is the direct metric tensor (cell angles in radians).</summary>
-        private bool TryBuildReciprocalMetric(out double[,] q)
+        /// <summary>
+        /// Rough size of a calculation, to warn before a huge cell freezes the program:
+        /// LatticePoints = lattice points inside the 2θ shell, (4π/3)(d*max³ − d*min³)·V;
+        /// StructureFactorTerms = symmetry-independent reflections × atoms in the cell (each term = one sin/cos pair).
+        /// </summary>
+        public (double LatticePoints, double StructureFactorTerms) EstimateWork(
+            double minTwoTheta, double maxTwoTheta, double wavelength)
         {
-            q = new double[3, 3];
+            if (wavelength <= 0 || _molecule.AsymmetricPart.Count == 0 ||
+                !ReflectionGeometry.TryBuildReciprocalMetric(
+                    _molecule.a, _molecule.b, _molecule.c,
+                    _molecule.alpha, _molecule.beta, _molecule.gamma, out double[,] q))
+                return (0, 0);
 
-            double a = _molecule.a, b = _molecule.b, c = _molecule.c;
-            if (a <= 0 || b <= 0 || c <= 0) return false;
+            double maxTT = Math.Min(maxTwoTheta, 180.0);
+            double minTT = Math.Max(minTwoTheta, 0.0);
+            if (maxTT <= minTT) return (0, 0);
 
-            double ca = Math.Cos(_molecule.alpha);
-            double cb = Math.Cos(_molecule.beta);
-            double cg = Math.Cos(_molecule.gamma);
+            double dMax = 2.0 * Math.Sin(maxTT / 2.0 * Math.PI / 180.0) / wavelength;
+            double dMin = 2.0 * Math.Sin(minTT / 2.0 * Math.PI / 180.0) / wavelength;
 
-            double g11 = a * a, g22 = b * b, g33 = c * c;
-            double g12 = a * b * cg, g13 = a * c * cb, g23 = b * c * ca;
+            double detQ = q[0, 0] * (q[1, 1] * q[2, 2] - q[1, 2] * q[2, 1])
+                        - q[0, 1] * (q[1, 0] * q[2, 2] - q[1, 2] * q[2, 0])
+                        + q[0, 2] * (q[1, 0] * q[2, 1] - q[1, 1] * q[2, 0]);
+            if (!(detQ > 0)) return (0, 0);
 
-            double det = g11 * (g22 * g33 - g23 * g23)
-                       - g12 * (g12 * g33 - g23 * g13)
-                       + g13 * (g12 * g23 - g22 * g13);
-            if (!(det > 1e-12)) return false;
+            double volume = 1.0 / Math.Sqrt(detQ);
+            double latticePoints = 4.0 * Math.PI / 3.0 * (dMax * dMax * dMax - dMin * dMin * dMin) * volume;
 
-            q[0, 0] = (g22 * g33 - g23 * g23) / det;
-            q[0, 1] = q[1, 0] = (g13 * g23 - g12 * g33) / det;
-            q[0, 2] = q[2, 0] = (g12 * g23 - g13 * g22) / det;
-            q[1, 1] = (g11 * g33 - g13 * g13) / det;
-            q[1, 2] = q[2, 1] = (g12 * g13 - g11 * g23) / det;
-            q[2, 2] = (g11 * g22 - g12 * g12) / det;
-            return true;
+            int laueOrder = Math.Max(1, BuildLaueOperations().Length);
+            int nOps = Math.Max(1, _molecule.SymmetryOperations?.Count ?? 0);
+            double atomsInCell = (double)_molecule.AsymmetricPart.Count * nOps;   // upper bound
+
+            return (latticePoints, latticePoints / laueOrder * atomsInCell);
         }
 
-        #endregion
 
         #region Symmetry equivalence of reflections
 
         /// <summary>
-        /// Rotation parts (3×3 integer matrices, row-major) of ALL space-group operations plus their
-        /// inversion partners (Friedel's law): the Laue group of the diffraction pattern.
-        /// Independent of the symmetry operations that are switched on or off in the 3D view.
+        /// Laue group of the pattern from the rotation parts of ALL space-group operations (plus
+        /// inversion, Friedel). Independent of the symmetry operations switched on or off in the 3D view.
         /// </summary>
         private int[][] BuildLaueOperations()
         {
-            var list = new List<int[]>();
-
-            void Add(int[] r)
-            {
-                foreach (var m in list)
-                {
-                    bool same = true;
-                    for (int i = 0; i < 9; i++)
-                        if (m[i] != r[i]) { same = false; break; }
-                    if (same) return;
-                }
-                list.Add(r);
-            }
-
-            int[] identity = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
-            Add(identity);
-            Add(Negate(identity));
+            var rotations = new List<int[]>();
 
             var ops = _molecule.SymmetryOperations;
             if (ops != null)
@@ -245,51 +199,11 @@ namespace Tal.Core.PowderDiffraction
                         int p2 = op.pos2[axis], s2 = op.sign2[axis];
                         if (s2 != 0 && p2 >= 0 && p2 < 3) r[axis * 3 + p2] += s2;
                     }
-                    Add(r);
-                    Add(Negate(r));
+                    rotations.Add(r);
                 }
             }
 
-            return list.ToArray();
-        }
-
-        private static int[] Negate(int[] r)
-        {
-            int[] n = new int[9];
-            for (int i = 0; i < 9; i++) n[i] = -r[i];
-            return n;
-        }
-
-        /// <summary>
-        /// Under the real-space operation x' = R x + t the structure factor obeys
-        /// |F(h)| = |F(Rᵀh)|, i.e. the equivalent indices are the row vector h·R.
-        /// Returns true only for the lexicographically largest member of the orbit (so every
-        /// orbit is processed exactly once) and gives the orbit size = multiplicity.
-        /// </summary>
-        private static bool TryGetOrbitRepresentative(int[][] ops, int h, int k, int l, out int multiplicity)
-        {
-            multiplicity = 0;
-
-            foreach (var r in ops)
-            {
-                int h2 = h * r[0] + k * r[3] + l * r[6];
-                int k2 = h * r[1] + k * r[4] + l * r[7];
-                int l2 = h * r[2] + k * r[5] + l * r[8];
-
-                if (h2 > h || (h2 == h && (k2 > k || (k2 == k && l2 > l))))
-                    return false;   // a larger equivalent reflection exists, it will carry this orbit
-            }
-
-            var orbit = new HashSet<(int, int, int)>();
-            foreach (var r in ops)
-            {
-                orbit.Add((h * r[0] + k * r[3] + l * r[6],
-                           h * r[1] + k * r[4] + l * r[7],
-                           h * r[2] + k * r[5] + l * r[8]));
-            }
-
-            multiplicity = orbit.Count;
-            return true;
+            return ReflectionGeometry.BuildLaueGroup(rotations);
         }
 
         #endregion

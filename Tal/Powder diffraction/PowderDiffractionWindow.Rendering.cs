@@ -4,15 +4,9 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: AfterwderDiffractionWindow.Rendering.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Powder diffraction module: PowderDiffractionWindow.Rendering.
 
 using Tal.Core.PowderDiffraction;
-using System.Threading.Tasks;
 using GdiBitmap = System.Drawing.Bitmap;
 using GdiColor = System.Drawing.Color;
 using GdiDashStyle = System.Drawing.Drawing2D.DashStyle;
@@ -29,8 +23,8 @@ using GdiTextRenderingHint = System.Drawing.Text.TextRenderingHint;
 namespace Tal.Forms
 {
  /// <summary>
- /// Rendering warstwa for <see cref="AfterwderDiffractionWindow"/> — drawing
- /// tła, mesh, osi, wzorca dyfractionalgo i afterdafterwiedzi myszy.
+ /// Rendering warstwa for <see cref="PowderDiffractionWindow"/> — drawing
+ /// tła, mesh, osi, wzorca dyfractionalgo i podpowiedzi myszy.
  /// </summary>
     public partial class PowderDiffractionWindow
     {
@@ -214,32 +208,44 @@ namespace Tal.Forms
             double[] twoThetaValues = new double[points];
             double[] yValues = new double[points];
 
-            // Precalculate for speed: peaks are already sorted by TwoTheta
-            double fwhm = _settings.FWHM;
-            double cutoff = 8.0 * fwhm;
-            double[] peakThetas = _peaks.Select(p => p.TwoTheta).ToArray();
-            double[] peakIntensities = _peaks.Select(p => p.Intensity * scale).ToArray();
+            double fwhm = Math.Max(_settings.FWHM, 1e-6);
+            double eta = Math.Clamp(_settings.PseudoVoigtEta, 0.0, 1.0);
 
-            Parallel.For(0, points, i =>
+            // Peaks are sorted by 2θ. A peak is summed only where it is not yet negligible:
+            // Gaussian: exp(-4 ln2 x²) < 3e-7 beyond 2.3 FWHM -> 3 FWHM;
+            // Lorentzian tails fall as 1/(4x²): 25 FWHM leaves < 4e-4 of the peak height.
+            // (Pure Gaussian profiles use the short window, everything with a Lorentzian part the long one.)
+            bool gaussianOnly = _settings.ProfileType == PeakBroadening.ProfileType.Gaussian ||
+                                (_settings.ProfileType == PeakBroadening.ProfileType.PseudoVoigt && eta >= 1.0);
+            double halfWindow = (gaussianOnly ? 3.0 : 25.0) * fwhm;
+
+            int nPeaks = _peaks.Count;
+            double[] centers = new double[nPeaks];
+            double[] heights = new double[nPeaks];
+            for (int p = 0; p < nPeaks; p++)
+            {
+                centers[p] = _peaks[p].TwoTheta;
+                heights[p] = _peaks[p].Intensity * scale;
+            }
+
+            for (int i = 0; i < points; i++)
             {
                 double fraction = i / (double)(points - 1);
                 double twoTheta = _settings.MinTwoTheta + fraction * (_settings.MaxTwoTheta - _settings.MinTwoTheta);
                 twoThetaValues[i] = twoTheta;
 
-                // Binary search the range of peaks within cutoff
-                int left = Array.BinarySearch(peakThetas, twoTheta - cutoff);
-                if (left < 0) left = ~left;
-                int right = Array.BinarySearch(peakThetas, twoTheta + cutoff);
-                if (right < 0) right = ~right;
+                // first peak with centre >= twoTheta - halfWindow (binary search)
+                int idx = Array.BinarySearch(centers, twoTheta - halfWindow - 1e-9);
+                if (idx < 0) idx = ~idx;
 
-                double sum = 0;
-                for (int j = left; j < right && j < _peaks.Count; j++)
+                double y = 0;
+                for (int p = idx; p < nPeaks && centers[p] <= twoTheta + halfWindow; p++)
                 {
-                    sum += peakIntensities[j] *
-                           PeakBroadening.ProfileFunction(twoTheta, peakThetas[j], fwhm, _settings.ProfileType);
+                    y += heights[p] *
+                        PeakBroadening.ProfileFunction(twoTheta, centers[p], fwhm, _settings.ProfileType, eta);
                 }
-                yValues[i] = sum;
-            });
+                yValues[i] = y;
+            }
 
             double maxY = yValues.Max();
             if (maxY <= 0) return;
@@ -354,7 +360,8 @@ namespace Tal.Forms
                     .OrderByDescending(p => p.Intensity)
                     .ToList();
 
-                string hklText = string.Join(", ", overlapping.Select(p => $"{p.HKL}×{p.Multiplicity}"));
+                string hklText = string.Join(", ", overlapping.Take(3).Select(p => $"{p.HKL}×{p.Multiplicity}"));
+                if (overlapping.Count > 3) hklText += $" +{overlapping.Count - 3}";
                 double totalIntensity = overlapping.Sum(p => p.Intensity);
 
                 labelHoverDetail.Text = $"2θ: {closestPeak.TwoTheta:F2}° | d: {closestPeak.DSpacing:F3} Å | hkl×m: {hklText} | I: {totalIntensity:F0}";

@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: BufferedPanel.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Powder diffraction module: BufferedPanel.
 
 namespace Tal.Forms
 {

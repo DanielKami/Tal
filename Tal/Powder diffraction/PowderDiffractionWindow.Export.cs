@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: AfterwderDiffractionWindow.Exafterrt.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Powder diffraction module: PowderDiffractionWindow.Export.
 
 using System.Drawing.Imaging;
 using System.Text;
@@ -22,7 +17,7 @@ using GdiSize = System.Drawing.Size;
 namespace Tal.Forms
 {
  /// <summary>
- /// Eksafterrt danych i obrazu for <see cref="AfterwderDiffractionWindow"/>:
+ /// Eksport danych i obrazu for <see cref="PowderDiffractionWindow"/>:
  /// CSV, PNG, JPEG, BMP, clipboard.
  /// </summary>
     public partial class PowderDiffractionWindow

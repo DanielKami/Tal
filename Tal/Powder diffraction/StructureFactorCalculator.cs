@@ -38,6 +38,7 @@ namespace Tal.Core.PowderDiffraction
             public int ElementIndex;   // index into _elementZ / _f0
             public double X, Y, Z;     // fractional, folded into [0,1)
             public double Occupancy;
+            public double U;           // isotropic / equivalent U (Å²) from the file, 0 = unknown
         }
 
         private readonly Molecule _molecule;
@@ -139,7 +140,8 @@ namespace Tal.Core.PowderDiffraction
                         X = f[0],
                         Y = f[1],
                         Z = f[2],
-                        Occupancy = atom.occupancy
+                        Occupancy = atom.occupancy,
+                        U = atom.iso > 0f ? atom.iso : 0.0
                     });
                 }
             }
@@ -151,16 +153,22 @@ namespace Tal.Core.PowderDiffraction
         }
 
         /// <summary>
-        /// |F(hkl)| = | sum_j f_j(s) * occ_j * exp(-B s^2) * exp(2 pi i (h x_j + k y_j + l z_j)) |
-        /// summed over the whole unit cell. s = sin(theta)/lambda, B = overall isotropic displacement.
+        /// |F(hkl)| = | sum_j f_j(s) * occ_j * T_j(s) * exp(2 pi i (h x_j + k y_j + l z_j)) |
+        /// summed over the whole unit cell, s = sin(theta)/lambda.
+        /// T_j = exp(-8 pi^2 U_j s^2 · scale) with the atom's own U(iso/eq) when useAtomicU is set and
+        /// the atom has one; every other atom uses the reference B: T_j = exp(-B s^2 · scale).
+        /// 'scale' multiplies all displacement parameters (1 = as given).
+        /// Anisotropic ADPs enter through their equivalent U only.
         /// </summary>
-        public double Calculate(int h, int k, int l, double theta, double wavelength, double debyeWallerB)
+        public double Calculate(int h, int k, int l, double theta, double wavelength, double debyeWallerB,
+                                bool useAtomicU = false, double displacementScale = 1.0)
         {
             if (_cell == null) PrepareCell();
 
             double s = Math.Sin(theta * Math.PI / 180.0) / wavelength;
             double s2 = s * s;
-            double dw = Math.Exp(-debyeWallerB * s2);
+            double dwGlobal = Math.Exp(-debyeWallerB * displacementScale * s2);
+            const double eightPiSq = 8.0 * Math.PI * Math.PI;
 
             for (int e = 0; e < _elementZ.Length; e++)
                 _f0[e] = CromerMannTable.FormFactor(_elementZ[e], s2);
@@ -171,6 +179,7 @@ namespace Tal.Core.PowderDiffraction
             for (int i = 0; i < _cell.Length; i++)
             {
                 var a = _cell[i];
+                double dw = (useAtomicU && a.U > 0.0) ? Math.Exp(-eightPiSq * a.U * displacementScale * s2) : dwGlobal;
                 double w = _f0[a.ElementIndex] * dw * a.Occupancy;
                 double phase = twoPi * (h * a.X + k * a.Y + l * a.Z);
                 re += w * Math.Cos(phase);

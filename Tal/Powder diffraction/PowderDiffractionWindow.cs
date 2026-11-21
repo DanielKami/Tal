@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: AfterwderDiffractionWindow.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Powder diffraction module: PowderDiffractionWindow.
 
 using Tal.Core.PowderDiffraction;
 using WeifenLuo.WinFormsUI.Docking;
@@ -26,13 +21,16 @@ namespace Tal.Forms
         #region Private Fields
 
         private readonly Molecule _molecule;
-        private PowderDiffractionEngine _engine;
         private List<DiffractionPeak> _peaks;
         private PowderDiffractionSettings _settings;
 
         private GdiBitmap _plotBitmap;
         private bool _needsRedraw = true;
-        private bool _isCalculating = false;
+        // Calculation runs on a worker thread; a newer request cancels the running one.
+        private CancellationTokenSource _calcCts;
+        private int _calcVersion;
+        /// <summary>Range/wavelength the user already confirmed for a very large calculation.</summary>
+        private string _largeCalcApprovedKey;
 
         private bool _isZooming = false;
         private GdiPoint _zoomStartPoint;
@@ -60,9 +58,8 @@ namespace Tal.Forms
             _molecule = molecule ?? throw new ArgumentNullException(nameof(molecule));
             _settings = new PowderDiffractionSettings();
             _peaks = new List<DiffractionPeak>();
-            _engine = new PowderDiffractionEngine(molecule);
 
- // Afterbierz name pliku z molecule
+ // Pobierz name pliku z molecule
             string fileName = !string.IsNullOrEmpty(_molecule.Name)
                 ? Path.GetFileNameWithoutExtension(_molecule.Name)
                 : "Untitled";
@@ -83,6 +80,20 @@ namespace Tal.Forms
                 "It is not the instrumental resolution (use FWHM for peak width).";
             toolTip.SetToolTip(labelResolution, pointsTip);
             toolTip.SetToolTip(numericResolution, pointsTip);
+
+            const string scaleTip =
+                "Global multiplier of the atomic displacement parameters (Debye-Waller factor):\n" +
+                "U(used) = scale × U, so 1.00 = values as given and 0 = no thermal damping.\n" +
+                "Atoms without U in the file use the reference B = 0.50 Å² (U = 0.0063 Å²), also times the scale.";
+            toolTip.SetToolTip(labelDebyeWaller, scaleTip);
+            toolTip.SetToolTip(numericDebyeWaller, scaleTip);
+            toolTip.SetToolTip(trackDebyeWaller, scaleTip);
+
+            const string atomicUTip =
+                "Take U (Uiso, or Ueq for anisotropic atoms) of each atom from the structure file.\n" +
+                "Factor exp(-8π²·scale·U·s²). Atoms without U use the reference B scaled the same way.\n" +
+                "Off = every atom uses the reference B = 0.50 Å², times the scale.";
+            toolTip.SetToolTip(chkUseAtomicU, atomicUTip);
 
             WireEvents();
             LoadSettingsToUI();
@@ -153,6 +164,12 @@ namespace Tal.Forms
                 CalculatePattern();
             };
 
+            chkUseAtomicU.CheckedChanged += (s, e) =>
+            {
+                _settings.UseAtomicDisplacement = chkUseAtomicU.Checked;
+                CalculatePattern();
+            };
+
  // Mysz
             panelPlot.MouseDown += PanelPlot_MouseDown;
             panelPlot.MouseMove += PanelPlot_MouseMove;
@@ -175,14 +192,15 @@ namespace Tal.Forms
             numericMinTheta.Value = (decimal)_settings.MinTwoTheta;
             numericMaxTheta.Value = (decimal)_settings.MaxTwoTheta;
             numericFWHM.Value = (decimal)_settings.FWHM;
-            numericDebyeWaller.Value = (decimal)_settings.DebyeWallerB;
+            numericDebyeWaller.Value = (decimal)Math.Clamp(_settings.DisplacementScale, 0.0, 10.0);
             numericResolution.Value = _settings.ProfileResolution;
-            trackDebyeWaller.Value = (int)(_settings.DebyeWallerB * 10);
+            trackDebyeWaller.Value = (int)Math.Clamp(Math.Round(_settings.DisplacementScale * 10), 0, 100);
             comboProfile.SelectedIndex = (int)_settings.ProfileType;
             comboSource.SelectedIndex = (int)_settings.Source;
             chkShowDScale.Checked = _settings.XAxisMode == XAxisMode.DSpacing;
             chkShowBackground.Checked = _settings.ShowBackground;
             chkLPCorrection.Checked = _settings.UseLPCorrection;
+            chkUseAtomicU.Checked = _settings.UseAtomicDisplacement;
         }
 
         private void SaveUIToSettings()
@@ -190,7 +208,7 @@ namespace Tal.Forms
             _settings.MinTwoTheta = (double)numericMinTheta.Value;
             _settings.MaxTwoTheta = (double)numericMaxTheta.Value;
             _settings.FWHM = (double)numericFWHM.Value;
-            _settings.DebyeWallerB = (double)numericDebyeWaller.Value;
+            _settings.DisplacementScale = (double)numericDebyeWaller.Value;
             _settings.ProfileResolution = (int)numericResolution.Value;
             _settings.ProfileType = (PeakBroadening.ProfileType)comboProfile.SelectedIndex;
             _settings.Source = (XRaySource)comboSource.SelectedIndex;
@@ -198,6 +216,7 @@ namespace Tal.Forms
             _settings.XAxisMode = chkShowDScale.Checked ? XAxisMode.DSpacing : XAxisMode.TwoTheta;
             _settings.ShowBackground = chkShowBackground.Checked;
             _settings.UseLPCorrection = chkLPCorrection.Checked;
+            _settings.UseAtomicDisplacement = chkUseAtomicU.Checked;
         }
 
         #endregion
@@ -206,8 +225,8 @@ namespace Tal.Forms
 
         private void NumericDebyeWaller_ValueChanged(object sender, EventArgs e)
         {
-            _settings.DebyeWallerB = (double)numericDebyeWaller.Value;
-            trackDebyeWaller.Value = (int)(_settings.DebyeWallerB * 10);
+            _settings.DisplacementScale = (double)numericDebyeWaller.Value;
+            trackDebyeWaller.Value = (int)Math.Clamp(Math.Round(_settings.DisplacementScale * 10), 0, 100);
             CalculatePattern();
         }
 
@@ -218,6 +237,7 @@ namespace Tal.Forms
 
         private void PowderDiffractionWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
+            _calcCts?.Cancel();
             _plotBitmap?.Dispose();
         }
 
@@ -386,9 +406,14 @@ namespace Tal.Forms
         /// <summary>Elements for which the unsupported-element dialog was already shown.</summary>
         private string _unsupportedWarningShownFor;
 
-        private void CalculatePattern()
+        /// <summary>
+        /// Starts a (re)calculation of the peak list on a worker thread. A newer request cancels the
+        /// running one, so dragging a slider never queues up stale calculations and the window stays
+        /// responsive even for large cells.
+        /// </summary>
+        private async void CalculatePattern()
         {
-            if (_isCalculating || _isUpdatingUI) return;
+            if (_isUpdatingUI) return;
             if (_molecule == null || _molecule.AsymmetricPart.Count == 0)
             {
                 labelStatus.Text = "No atoms in structure";
@@ -396,26 +421,57 @@ namespace Tal.Forms
                 return;
             }
 
+            SaveUIToSettings();
+
+            double minTT = _settings.MinTwoTheta, maxTT = _settings.MaxTwoTheta;
+            double wavelength = _settings.Wavelength;
+            double debyeB = _settings.DebyeWallerB;
+            double dispScale = _settings.DisplacementScale;
+            bool useLP = _settings.UseLPCorrection;
+            bool useU = _settings.UseAtomicDisplacement;
+
+            // A fresh engine per run: the engines of cancelled runs may still be finishing.
+            var engine = new PowderDiffractionEngine(_molecule);
+
+            // Warn before a huge calculation (large cell, high 2θ, many atoms).
+            var work = engine.EstimateWork(minTT, maxTT, wavelength);
+            double estimatedSeconds = work.StructureFactorTerms * 4e-8;   // ≈ 40 ns per sin/cos term
+            string rangeKey = $"{minTT:F3}|{maxTT:F3}|{wavelength:F5}";
+            if (estimatedSeconds > 15.0 && _largeCalcApprovedKey != rangeKey)
+            {
+                var answer = MessageBox.Show(this,
+                    $"This calculation covers about {work.LatticePoints:N0} reflections and may take " +
+                    $"roughly {FormatDuration(estimatedSeconds)}.\n\nReduce the 2θ range or the cell size to speed it up.\n\nContinue?",
+                    "Powder diffraction", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (answer != DialogResult.Yes)
+                {
+                    _calcCts?.Cancel();
+                    labelStatus.Text = "Cancelled (large calculation)";
+                    labelStatus.ForeColor = GdiColor.Orange;
+                    return;
+                }
+                _largeCalcApprovedKey = rangeKey;
+            }
+
+            _calcCts?.Cancel();
+            var cts = new CancellationTokenSource();
+            _calcCts = cts;
+            int version = ++_calcVersion;
+
+            labelStatus.Text = "Calculating...";
+            labelStatus.ForeColor = GdiColor.Orange;
+            toolTip.SetToolTip(labelStatus, string.Empty);
+
             try
             {
-                _isCalculating = true;
-                SaveUIToSettings();
+                var token = cts.Token;
+                List<DiffractionPeak> peaks = await Task.Run(
+                    () => engine.CalculatePeaks(minTT, maxTT, wavelength, debyeB, useLP, useU, dispScale, token), token);
 
-                labelStatus.Text = "Calculating...";
-                labelStatus.ForeColor = GdiColor.Orange;
-                this.Cursor = Cursors.WaitCursor;
-                Application.DoEvents();
+                if (version != _calcVersion || IsDisposed) return;   // superseded by a newer request
 
-                _peaks = _engine.CalculatePeaks(
-                    _settings.MinTwoTheta,
-                    _settings.MaxTwoTheta,
-                    _settings.Wavelength,
-                    _settings.DebyeWallerB,
-                    _settings.UseLPCorrection
-                );
-
-                _engine.ApplyCorrections(_peaks);
-                _peaks = _peaks.OrderBy(p => p.TwoTheta).ToList();
+                engine.ApplyCorrections(peaks);
+                _peaks = peaks.OrderBy(p => p.TwoTheta).ToList();
 
                 toolTip.SetToolTip(labelStatus, string.Empty);
                 _unsupportedWarningShownFor = null;
@@ -429,8 +485,14 @@ namespace Tal.Forms
                 _needsRedraw = true;
                 panelPlot.Invalidate();
             }
+            catch (OperationCanceledException)
+            {
+                // a newer calculation replaced this one - nothing to show
+            }
             catch (UnsupportedElementException ex)
             {
+                if (version != _calcVersion || IsDisposed) return;
+
                 // Never show a pattern from an incomplete structure factor.
                 _peaks = new List<DiffractionPeak>();
                 labelPeakCount.Text = "Peaks: 0";
@@ -452,15 +514,18 @@ namespace Tal.Forms
             }
             catch (Exception ex)
             {
+                if (version != _calcVersion || IsDisposed) return;
                 labelStatus.Text = $"Error: {ex.Message}";
                 labelStatus.ForeColor = GdiColor.Red;
-                System.Diagnostics.Debug.WriteLine($"[PowderDiffraction] Error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[PowderDiffraction] Error: {ex}");
             }
-            finally
-            {
-                _isCalculating = false;
-                this.Cursor = Cursors.Default;
-            }
+        }
+
+        private static string FormatDuration(double seconds)
+        {
+            if (seconds < 90) return $"{seconds:F0} s";
+            if (seconds < 5400) return $"{seconds / 60.0:F0} min";
+            return $"{seconds / 3600.0:F1} h";
         }
 
         #endregion

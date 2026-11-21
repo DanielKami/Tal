@@ -4,9 +4,9 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: PeakBroadening.
+// Powder diffraction module: PeakBroadening.
 
-﻿namespace Tal.Core.PowderDiffraction
+namespace Tal.Core.PowderDiffraction
 {
     public static class PeakBroadening
     {

@@ -4,48 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Structure / image exafterrt: SpaceGroupTransformer.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════
-// TRANSFORMATION BETWEEN SETTINGS GROUP SPACE
-// ═══════════════════════════════════════════════════════════════════
-//
-// JEDNO SOURCE TRUTH:
-// SymmetryElements.SymmetryOperations (tabela operacji)
-//
-// MAIN METHOD PUBLIC:
-// TransformTo(structure, targetSettingName)
-//
-// ALGORYTM:
-// 1. ResolveTransform — find matrix (hardcoded → brute-force).
-// 2. ApplyTransformToStructure — aplikuje:
-// - atoms (coordinates frakcjonalne, BEZ wraafterwania)
-// - ADP (U' = N'⁻¹·Q·N·U·Nᵀ·Qᵀ·N'⁻ᵀ; not plain Q·U·Qᵀ)
-// - cell (M' = M · P)
-// - SymmetryOperations (regeneracja)
-// - SpaceGroupName (update)
-// 3. RefineMoleculeAftersitionsAfterTransform (called z MainForm):
-// - iterative attraction atoms to neighbours (covalent)
-// - przez ±1 w each osi frakcjonalnej
-// - attractor — small fragments pulled toward the largest
-// - atoms may leave the cell (that is OK)
-//
-// KONWENCJA MACIERZY:
-// Transform works na COORDINATES atoms: x' = Q · x + t
-// Q = P⁻¹ gdzie P z ITA works na wektory bazowe:
-// (a', b', c') = (a, b, c) · P
-//
-// GWARANCJE:
-// ✅ Round-trip A→B→A = identity mod 1.
-// ✅ Hardcoded weryfikowany przez TestTransform.
-// ✅ Brute-force jako fallback.
-// ✅ Cell volume preserved przy transformation (V' = V).
-// ✅ Structure CONSISTENT after transformation (name + cell + ops + atoms).
+// Structure / image export: SpaceGroupTransformer.
 
 using Microsoft.Xna.Framework;
 
@@ -159,7 +118,7 @@ namespace Tal.Saver
  /// 3. Returns result
  ///
  /// The caller should afterwards:
- /// - call RefineMoleculeAftersitionsAfterTransform(structure)
+ /// - call RefineMoleculePositionsAfterTransform(structure)
  /// - rebuild Molecule: molecule.AsignXYZ(structure)
  /// - refresh the view
  /// </summary>
@@ -206,7 +165,7 @@ namespace Tal.Saver
                 return result;
             }
 
- // ── 2. Zastosuj (BEZ wraafterwania — Refine to naprawi) ──
+ // ── 2. Zastosuj (BEZ wrapowania — Refine to naprawi) ──
             result.AppliedTransform = transform;
             bool ok = ApplyTransformToStructure(
                 structure, transform.Value, targetSettingName,
@@ -1253,7 +1212,7 @@ namespace Tal.Saver
  /// NEW METHOD — called AFTER TransformTo.
  ///
  /// Goal: pull atoms of the same molecule into a common cell
- /// przez iteracyjne translation afterjedynczych atoms o ±1 (or ±2)
+ /// przez iteracyjne translation pojedynczych atoms o ±1 (or ±2)
  /// in fractional coordinates so that CARTESIAN distances
  /// between bonded atoms are close (covalent).
  ///
@@ -1311,7 +1270,7 @@ namespace Tal.Saver
             }
 
  // ═══════════════════════════════════════════════════════════
- // Wykryj bonds (if nie afterdano)
+ // Wykryj bonds (if nie podano)
  // ═══════════════════════════════════════════════════════════
             if (bonds == null)
             {

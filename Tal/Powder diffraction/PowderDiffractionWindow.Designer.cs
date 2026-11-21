@@ -4,9 +4,9 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Afterwder diffraction module: AfterwderDiffractionWindow.Designer.
+// Powder diffraction module: PowderDiffractionWindow.Designer.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class PowderDiffractionWindow
     {
@@ -52,6 +52,7 @@
             chkShowDScale = new CheckBox();
             chkShowBackground = new CheckBox();
             chkLPCorrection = new CheckBox();
+            chkUseAtomicU = new CheckBox();
             groupBoxHover = new GroupBox();
             labelStatus = new Label();
             labelPeakCount = new Label();
@@ -228,6 +229,7 @@
             groupBoxDebye.Controls.Add(labelDebyeWaller);
             groupBoxDebye.Controls.Add(numericDebyeWaller);
             groupBoxDebye.Controls.Add(trackDebyeWaller);
+            groupBoxDebye.Controls.Add(chkUseAtomicU);
             groupBoxDebye.Location = new Point(547, 8);
             groupBoxDebye.Margin = new Padding(3, 4, 3, 4);
             groupBoxDebye.Name = "groupBoxDebye";
@@ -235,7 +237,7 @@
             groupBoxDebye.Size = new Size(210, 135);
             groupBoxDebye.TabIndex = 2;
             groupBoxDebye.TabStop = false;
-            groupBoxDebye.Text = "Debye-Waller (B)";
+            groupBoxDebye.Text = "Displacement (Debye-Waller)";
  // 
  // labelDebyeWaller
  // 
@@ -243,7 +245,7 @@
             labelDebyeWaller.Name = "labelDebyeWaller";
             labelDebyeWaller.Size = new Size(55, 25);
             labelDebyeWaller.TabIndex = 0;
-            labelDebyeWaller.Text = "B (Å²):";
+            labelDebyeWaller.Text = "Scale ×:";
  // 
  // numericDebyeWaller
  // 
@@ -251,24 +253,37 @@
             numericDebyeWaller.Increment = new decimal(new int[] { 1, 0, 0, 131072 });
             numericDebyeWaller.Location = new Point(69, 33);
             numericDebyeWaller.Margin = new Padding(3, 4, 3, 4);
-            numericDebyeWaller.Maximum = new decimal(new int[] { 20, 0, 0, 0 });
+            numericDebyeWaller.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
             numericDebyeWaller.Name = "numericDebyeWaller";
             numericDebyeWaller.Size = new Size(76, 27);
             numericDebyeWaller.TabIndex = 1;
-            numericDebyeWaller.Value = new decimal(new int[] { 5, 0, 0, 65536 });
+            numericDebyeWaller.Value = new decimal(new int[] { 100, 0, 0, 131072 });
             numericDebyeWaller.ValueChanged += NumericDebyeWaller_ValueChanged;
  // 
  // trackDebyeWaller
  // 
-            trackDebyeWaller.Location = new Point(8, 68);
+            trackDebyeWaller.Location = new Point(8, 58);
             trackDebyeWaller.Margin = new Padding(3, 4, 3, 4);
-            trackDebyeWaller.Maximum = 200;
+            trackDebyeWaller.Maximum = 100;
             trackDebyeWaller.Name = "trackDebyeWaller";
             trackDebyeWaller.Size = new Size(190, 56);
             trackDebyeWaller.TabIndex = 2;
             trackDebyeWaller.TickFrequency = 10;
-            trackDebyeWaller.Value = 5;
+            trackDebyeWaller.Value = 10;
             trackDebyeWaller.Scroll += TrackDebyeWaller_Scroll;
+ // 
+ // chkUseAtomicU
+ // 
+            chkUseAtomicU.AutoSize = true;
+            chkUseAtomicU.Checked = true;
+            chkUseAtomicU.CheckState = CheckState.Checked;
+            chkUseAtomicU.Location = new Point(11, 106);
+            chkUseAtomicU.Margin = new Padding(3, 4, 3, 4);
+            chkUseAtomicU.Name = "chkUseAtomicU";
+            chkUseAtomicU.Size = new Size(160, 24);
+            chkUseAtomicU.TabIndex = 3;
+            chkUseAtomicU.Text = "Use atomic U from file";
+            chkUseAtomicU.UseVisualStyleBackColor = true;
  // 
  // groupBoxSource
  // 
@@ -385,7 +400,7 @@
             labelPeakCount.TabIndex = 1;
             labelPeakCount.Text = "Peaks: 0";
  // 
- // btnExafterrt
+ // btnExport
  // 
             btnExport.BackColor = Color.FromArgb(60, 60, 70);
             btnExport.FlatStyle = FlatStyle.Flat;
@@ -451,7 +466,7 @@
             labelHoverInfo.TabIndex = 1;
             labelHoverInfo.Text = "2θ: -";
  // 
- // AfterwderDiffractionWindow
+ // PowderDiffractionWindow
  // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -524,5 +539,6 @@
         private System.Windows.Forms.Label labelHoverInfo;
         private System.Windows.Forms.Label labelHoverDetail;
         private System.Windows.Forms.ToolTip toolTip;
+        private System.Windows.Forms.CheckBox chkUseAtomicU;
     }
 }

@@ -15,9 +15,12 @@ namespace Tal.Core.PowderDiffraction
     /// Table 6.1.1.4 (reprint of Int. Tables for X-ray Crystallography Vol. IV, 1974, Table 2.2B),
     /// elements H (Z = 1) to Cf (Z = 98). Layout: { a1, b1, a2, b2, a3, b3, a4, b4, c }.
     ///
-    /// The values were checked against the IUCr core CIF dictionary
-    /// (_atom_type_scat_Cromer_Mann_a1..a4, b1..b4, c) and by the sum rule
-    /// sum(a_i) + c = Z (f0 at s = 0) for every element.
+    /// The values come from the IUCr core CIF dictionary (_atom_type_scat_Cromer_Mann_a1..a4, b1..b4, c)
+    /// and were checked by the sum rule sum(a_i) + c = Z (f0 at s = 0) for every element, by the
+    /// monotonic decrease of f0(s) and by the smoothness of f0 over Z.
+    /// Two entries deliberately differ from the dictionary page, which contains misprints:
+    /// Ar a2 = 6.7723 (the page's 6.6623 breaks the sum rule: 17.89 instead of 18) and
+    /// Ne b4 = 21.7184 (digit transposition on the page: 21.7814; effect on f0 below 1e-4).
     /// There is NO silent fallback: an element without coefficients is reported to the caller
     /// (see StructureFactorCalculator.GetUnsupportedElements) instead of contributing zero.
     /// </summary>
@@ -42,7 +45,7 @@ namespace Tal.Core.PowderDiffraction
             [7] = new double[] { 12.2126, 0.0057, 3.1322, 9.8933, 2.0125, 28.9975, 1.1663, 0.5826, -11.529 }, // N
             [8] = new double[] { 3.0485, 13.2771, 2.2868, 5.7011, 1.5463, 0.3239, 0.867, 32.9089, 0.2508 }, // O
             [9] = new double[] { 3.5392, 10.2825, 2.6412, 4.2944, 1.517, 0.2615, 1.0243, 26.1476, 0.2776 }, // F
-            [10] = new double[] { 3.9553, 8.4042, 3.1125, 3.4262, 1.4546, 0.2306, 1.1251, 21.7814, 0.3515 }, // Ne
+            [10] = new double[] { 3.9553, 8.4042, 3.1125, 3.4262, 1.4546, 0.2306, 1.1251, 21.7184, 0.3515 }, // Ne
             [11] = new double[] { 4.7626, 3.285, 3.1736, 8.8422, 1.2674, 0.3136, 1.1128, 129.424, 0.676 }, // Na
             [12] = new double[] { 5.4204, 2.8275, 2.1735, 79.2611, 1.2269, 0.3808, 2.3073, 7.1937, 0.8584 }, // Mg
             [13] = new double[] { 6.4202, 3.0387, 1.9002, 0.7426, 1.5936, 31.5472, 1.9646, 85.0886, 1.1151 }, // Al
@@ -50,7 +53,7 @@ namespace Tal.Core.PowderDiffraction
             [15] = new double[] { 6.4345, 1.9067, 4.1791, 27.157, 1.78, 0.526, 1.4908, 68.1645, 1.1149 }, // P
             [16] = new double[] { 6.9053, 1.4679, 5.2034, 22.2151, 1.4379, 0.2536, 1.5863, 56.172, 0.8669 }, // S
             [17] = new double[] { 11.4604, 0.0104, 7.1964, 1.1662, 6.2556, 18.5194, 1.6455, 47.7784, -9.5574 }, // Cl
-            [18] = new double[] { 7.4845, 0.9072, 6.6623, 14.8407, 0.6539, 43.8983, 1.6442, 33.3929, 1.4445 }, // Ar
+            [18] = new double[] { 7.4845, 0.9072, 6.7723, 14.8407, 0.6539, 43.8983, 1.6442, 33.3929, 1.4445 }, // Ar (a2 = 6.7723: sum rule; the IUCr dictionary page prints 6.6623, a typo)
             [19] = new double[] { 8.2186, 12.7949, 7.4398, 0.7748, 1.0519, 213.187, 0.8659, 41.6841, 1.4228 }, // K
             [20] = new double[] { 8.6266, 10.4421, 7.3873, 0.6599, 1.5899, 85.7484, 1.0211, 178.437, 1.3751 }, // Ca
             [21] = new double[] { 9.189, 9.0213, 7.3679, 0.5729, 1.6409, 136.108, 1.468, 51.3531, 1.3329 }, // Sc
