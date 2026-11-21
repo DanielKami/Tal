@@ -6,11 +6,6 @@
 //
 // Calculation module: PEOEChargeCalculator.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -843,7 +838,7 @@ namespace Tal.Calculate
         }
 
  /// <summary>
- /// Finds the corresafternding asymmetric atom index for a symmetry equivalent.
+ /// Finds the corresponding asymmetric atom index for a symmetry equivalent.
  /// </summary>
         private int FindAsymmetricAtomIndex(Molecule.AtomSimple symAtom)
         {

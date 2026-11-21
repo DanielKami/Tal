@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: Cavity.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using static Tal.Cavity.VoxelScanner;
 using SysVector3 = System.Numerics.Vector3;
@@ -20,7 +15,7 @@ namespace Tal.Cavity
 {
  /// <summary>
  /// Represents a single cavity (void) detected in the crystal structure.
- /// Stores all geometric, toafterlogscal, density, and analytical data.
+ /// Stores all geometric, topologscal, density, and analytical data.
  /// </summary>
     public class Cavity : IDisposable
     {
@@ -46,7 +41,7 @@ namespace Tal.Cavity
  /// </summary>
  /// <param name="id">The cavity identifier.</param>
  /// <param name="volume">The cavity volume in cubic angstroms.</param>
- /// <param name="center">The cavity center aftersition.</param>
+ /// <param name="center">The cavity center position.</param>
  /// <param name="color">The base color for rendering.</param>
         public Cavity(int id, float volume, SysVector3 center, XnaVector4? color = null)
         {
@@ -162,7 +157,7 @@ namespace Tal.Cavity
         public List<SysVector3> Voxels { get; set; }
 
  /// <summary>
- /// Gets or sets the cavity center aftersition.
+ /// Gets or sets the cavity center position.
  /// </summary>
         public SysVector3 Center { get; set; }
 
@@ -206,17 +201,17 @@ namespace Tal.Cavity
         public float[,,] DensityGrid { get; set; }
 
  /// <summary>
- /// Gets or sets the number of grid afterints in the X direction.
+ /// Gets or sets the number of grid points in the X direction.
  /// </summary>
         public int DensityNx { get; set; }
 
  /// <summary>
- /// Gets or sets the number of grid afterints in the Y direction.
+ /// Gets or sets the number of grid points in the Y direction.
  /// </summary>
         public int DensityNy { get; set; }
 
  /// <summary>
- /// Gets or sets the number of grid afterints in the Z direction.
+ /// Gets or sets the number of grid points in the Z direction.
  /// </summary>
         public int DensityNz { get; set; }
 
@@ -284,17 +279,17 @@ namespace Tal.Cavity
         #region Gradient Data
 
  /// <summary>
- /// Gets or sets the X-comafternent of the supercell gradient.
+ /// Gets or sets the X-component of the supercell gradient.
  /// </summary>
         public float[,,] SupercellGradientX { get; set; }
 
  /// <summary>
- /// Gets or sets the Y-comafternent of the supercell gradient.
+ /// Gets or sets the Y-component of the supercell gradient.
  /// </summary>
         public float[,,] SupercellGradientY { get; set; }
 
  /// <summary>
- /// Gets or sets the Z-comafternent of the supercell gradient.
+ /// Gets or sets the Z-component of the supercell gradient.
  /// </summary>
         public float[,,] SupercellGradientZ { get; set; }
 
@@ -368,7 +363,7 @@ namespace Tal.Cavity
         public int WallConnections => WallXMin + WallXMax + WallYMin + WallYMax + WallZMin + WallZMax;
 
  /// <summary>
- /// Gets the toafterlogy type based on wall connections.
+ /// Gets the topology type based on wall connections.
  /// </summary>
         public int TopologyType => WallConnections;
 
@@ -1121,7 +1116,7 @@ namespace Tal.Cavity
         #region IDisposable Implementation
 
  /// <summary>
- /// Disafterses the cavity and releases all resources.
+ /// Disposes the cavity and releases all resources.
  /// </summary>
         public void Dispose()
         {
@@ -1130,9 +1125,9 @@ namespace Tal.Cavity
         }
 
  /// <summary>
- /// Protected disafterse implementation.
+ /// Protected dispose implementation.
  /// </summary>
- /// <param name="disaftersing">Whether to disafterse managed resources.</param>
+ /// <param name="disposing">Whether to dispose managed resources.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
@@ -1277,7 +1272,7 @@ namespace Tal.Cavity
  /// </summary>
  /// <param name="id">The cavity identifier.</param>
  /// <param name="volume">The cavity volume.</param>
- /// <param name="center">The cavity center aftersition.</param>
+ /// <param name="center">The cavity center position.</param>
  /// <param name="color">The base color for rendering.</param>
  /// <returns>A new Cavity instance.</returns>
         public static Cavity CreateBasic(int id, float volume, SysVector3 center, XnaVector4? color = null)
@@ -1301,7 +1296,7 @@ namespace Tal.Cavity
  /// </summary>
  /// <param name="id">The cavity identifier.</param>
  /// <param name="volume">The cavity volume.</param>
- /// <param name="center">The cavity center aftersition.</param>
+ /// <param name="center">The cavity center position.</param>
  /// <param name="color">The base color for rendering.</param>
  /// <returns>A new Cavity instance.</returns>
         public static Cavity CreateBasic(int id, float volume, SysVector3 center, Microsoft.Xna.Framework.Color color)

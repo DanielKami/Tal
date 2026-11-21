@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: CavityDetectorBase.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace Tal.Cavity

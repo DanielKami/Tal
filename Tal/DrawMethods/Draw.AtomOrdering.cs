@@ -6,30 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.AtomOrdering.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.AtomOrdering — depth sort for correct back-to-front rendering
-// ═══════════════════════════════════════════════════════════════════════
-//
-// (file header unchanged)
-//
-// ⭐ TIER 2.1 OPTIMIZATION APPLIED:
-// OrderAtoms3D now additionally fills _visibleAtomIndices[0..N) —
-// a compact list of visible atom indices in back-to-front order.
-//
-// Both _zDepthCache and _visibleAtomIndices are filled in one pass.
-// The DrawScene and DrawCPKImafterstors loops iterate _visibleAtomIndices
-// instead of the full atomCount range, eliminating:
-// - the `orderedZ < 0` check
-// - the `_molecule.atom[orderedZ].show` check
-// per iteration per pass.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 

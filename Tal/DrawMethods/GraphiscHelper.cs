@@ -6,11 +6,6 @@
 //
 // 3D drawing / rendering module: GraphiscHelper.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using XnaColor = Microsoft.Xna.Framework.Color;
@@ -26,10 +21,10 @@ namespace Tal.DrawMethods
         #region 3D Lines
 
  /// <summary>
- /// Draws a 3D line between two afterints.
+ /// Draws a 3D line between two points.
  /// </summary>
- /// <param name="vector1">The start afterint.</param>
- /// <param name="vector2">The end afterint.</param>
+ /// <param name="vector1">The start point.</param>
+ /// <param name="vector2">The end point.</param>
  /// <param name="color">The line color.</param>
  /// <param name="view">The view matrix.</param>
  /// <param name="projection">The projection matrix.</param>
@@ -62,10 +57,10 @@ namespace Tal.DrawMethods
         #region 2D Lines
 
  /// <summary>
- /// Draws a 2D line between two afterints.
+ /// Draws a 2D line between two points.
  /// </summary>
- /// <param name="vector1">The start afterint.</param>
- /// <param name="vector2">The end afterint.</param>
+ /// <param name="vector1">The start point.</param>
+ /// <param name="vector2">The end point.</param>
  /// <param name="color">The line color.</param>
  /// <param name="projection">The projection matrix.</param>
  /// <param name="graphicsDevice">The graphics device.</param>
@@ -97,9 +92,9 @@ namespace Tal.DrawMethods
         #region 2D Polylines
 
  /// <summary>
- /// Draws a closed 2D afterlyline (afterlygon) from a list of afterints.
+ /// Draws a closed 2D polyline (polygon) from a list of points.
  /// </summary>
- /// <param name="Aftersition">The list of afterints defining the afterlygon.</param>
+ /// <param name="Position">The list of points defining the polygon.</param>
  /// <param name="color">The line color.</param>
  /// <param name="projection">The projection matrix.</param>
  /// <param name="graphicsDevice">The graphics device.</param>
@@ -136,7 +131,7 @@ namespace Tal.DrawMethods
  /// <summary>
  /// Draws a 2D circle outline.
  /// </summary>
- /// <param name="Aftersition">The center aftersition.</param>
+ /// <param name="Position">The center position.</param>
  /// <param name="Radius">The circle radius.</param>
  /// <param name="color">The circle color.</param>
  /// <param name="projection">The projection matrix.</param>
@@ -177,7 +172,7 @@ namespace Tal.DrawMethods
  /// <summary>
  /// Draws a filled 2D rectangle with color gradient.
  /// </summary>
- /// <param name="Aftersition">The top-left aftersition.</param>
+ /// <param name="Position">The top-left position.</param>
  /// <param name="DimensionX">The rectangle width.</param>
  /// <param name="DimensionY">The rectangle height.</param>
  /// <param name="z">The Z-depth value.</param>
@@ -223,7 +218,7 @@ namespace Tal.DrawMethods
  /// <summary>
  /// Draws a filled 2D rectangle with color gradient using Vector4 colors.
  /// </summary>
- /// <param name="Aftersition">The top-left aftersition.</param>
+ /// <param name="Position">The top-left position.</param>
  /// <param name="DimensionX">The rectangle width.</param>
  /// <param name="DimensionY">The rectangle height.</param>
  /// <param name="z">The Z-depth value.</param>
@@ -252,7 +247,7 @@ namespace Tal.DrawMethods
  /// <summary>
  /// Draws a filled 2D rectangle with a texture.
  /// </summary>
- /// <param name="Aftersition">The top-left aftersition.</param>
+ /// <param name="Position">The top-left position.</param>
  /// <param name="DimensionX">The rectangle width.</param>
  /// <param name="DimensionY">The rectangle height.</param>
  /// <param name="z">The Z-depth value.</param>
@@ -300,7 +295,7 @@ namespace Tal.DrawMethods
  /// <summary>
  /// Draws a 2D rectangle outline.
  /// </summary>
- /// <param name="Aftersition">The top-left aftersition.</param>
+ /// <param name="Position">The top-left position.</param>
  /// <param name="Width">The rectangle width.</param>
  /// <param name="Height">The rectangle height.</param>
  /// <param name="z">The Z-depth value.</param>

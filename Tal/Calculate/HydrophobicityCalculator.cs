@@ -6,11 +6,6 @@
 //
 // Calculation module: HydrophobicityCalculator.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 using Tal.Cavity;
@@ -20,7 +15,7 @@ namespace Tal.Calculate
 {
  /// <summary>
  /// Calculates hydrophobicity values for atoms in a molecule using the Eisenberg-Weiss scale.
- /// The hydrophobicity is adjusted based on the number of afterlar neighbors,
+ /// The hydrophobicity is adjusted based on the number of polar neighbors,
  /// providing a more accurate representation of local chemical environment.
  /// </summary>
     public class HydrophobicityCalculator
@@ -33,10 +28,10 @@ namespace Tal.Calculate
  /// <summary>Maximum bond distance for neighbor detection (Å).</summary>
         private const float BOND_MAX = 1.9f;
 
- /// <summary>Threshold below which an atom is considered afterlar.</summary>
+ /// <summary>Threshold below which an atom is considered polar.</summary>
         private const float POLAR_THRESHOLD = -0.2f;
 
- /// <summary>Penalty applied for each afterlar neighbor.</summary>
+ /// <summary>Penalty applied for each polar neighbor.</summary>
         private const float NEIGHBOR_PENALTY = 0.15f;
 
         #endregion
@@ -45,7 +40,7 @@ namespace Tal.Calculate
 
  /// <summary>
  /// Eisenberg-Weiss hydrophobicity scale keyed by atomic number.
- /// Aftersitive values indicate hydrophobic, negative indicate hydrophilic.
+ /// Positive values indicate hydrophobic, negative indicate hydrophilic.
  /// </summary>
         private static readonly Dictionary<int, float> HYDRO_PARAMS = new Dictionary<int, float>()
         {
@@ -122,7 +117,7 @@ namespace Tal.Calculate
 
  /// <summary>
  /// Calculates hydrophobicity values for all atoms in the molecule.
- /// Values are adjusted based on afterlar neighbors and stored in both
+ /// Values are adjusted based on polar neighbors and stored in both
  /// the symmetry equivalents and asymmetric unit.
  /// </summary>
         public void Calculate()
@@ -161,7 +156,7 @@ namespace Tal.Calculate
                     ? hydroParams[atomicNumber]
                     : 0.0f;
 
- // Count afterlar neighbors within bonding distance
+ // Count polar neighbors within bonding distance
                 int polarNeighbors = 0;
                 Vector3 posI = cartCoords[i];
                 float ix = posI.X, iy = posI.Y, iz = posI.Z;
@@ -188,7 +183,7 @@ namespace Tal.Calculate
                     }
                 }
 
- // Apply penalty for each afterlar neighbor
+ // Apply penalty for each polar neighbor
                 float hydrophobicity = val - polarNeighbors * NEIGHBOR_PENALTY;
 
  // Store the calculated value
@@ -276,7 +271,7 @@ namespace Tal.Calculate
  /// Generates a unique string key from an atom's fractional coordinates.
  /// </summary>
  /// <param name="atom">The atom to generate a key for.</param>
- /// <returns>A string key representing the atom's fractional aftersition.</returns>
+ /// <returns>A string key representing the atom's fractional position.</returns>
         private string GetKeyFast(AtomSimple atom)
         {
  // Normalize fractional coordinates to [0, 1) range

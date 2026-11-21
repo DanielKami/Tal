@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: VoxelScanner.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -40,7 +35,7 @@ namespace Tal.Cavity
  /// <summary>Van der Waals radius multiplier.</summary>
         public float RadiusMultiplier { get; set; } = 1.1f;
 
- /// <summary>Probe radius for surface afterint detection.</summary>
+ /// <summary>Probe radius for surface point detection.</summary>
         public float ProbeRadius { get; set; } = 0.0f;
 
  /// <summary>Whether to use crystallographic symmetry.</summary>
@@ -53,7 +48,7 @@ namespace Tal.Cavity
         public float ScanMargin { get; set; } = 2.0f;
 
  /// <summary>Voxel size in Angstroms.</summary>
-        public float VoxelSize { get; set; } = 0.15f;
+        public float VoxelSize { get; set; } = 0.10f;
 
  /// <summary>Indicates whether voxel size has changed and needs rebuilding.</summary>
         public bool IsVoxelSizeDirty { get; set; } = false;
@@ -188,7 +183,7 @@ namespace Tal.Cavity
         #region Voxel Grid Class
 
  /// <summary>
- /// Represents a 3D voxel grid with fractional coordinates and aftersitions.
+ /// Represents a 3D voxel grid with fractional coordinates and positions.
  /// </summary>
         public class VoxelGrid
         {
@@ -419,7 +414,7 @@ namespace Tal.Cavity
                 ProbeRadius = 0.0f;
                 UseSymmetry = true;
                 ScanMargin = 2.0f;
-                VoxelSize = 0.15f;
+                VoxelSize = 0.10f;
 
  // ⭐ Reset cell
                 _minCorner = new FastVec3(SysVector3.Zero);
@@ -527,7 +522,7 @@ namespace Tal.Cavity
                 float effRadius = radius * RadiusMultiplier + probeRad;
                 float effRadiusSq = effRadius * effRadius;
 
- // ── Afterprawka: jednoznaczne przypisanie ──
+ // ── Poprawka: jednoznaczne przypisanie ──
  // Molecule.Atom.Un = matrix after Eigen.main (wektory own × semi-axes w wierszach)
  // Molecule.Atom.Ue = same as Un (Eigen.main(ref Ue) overwrote Ue)
  //
@@ -592,7 +587,7 @@ namespace Tal.Cavity
                     }
                     tz += sym.shift[2];
 
- // PATCH: atom is already a symmetry equivalent - keep its own (wrapped) aftersition and its own Un
+ // PATCH: atom is already a symmetry equivalent - keep its own (wrapped) position and its own Un
                     if (!ReExpandSymmetry) { tx = nx; ty = ny; tz = nz; }
 
                     tx = tx - (float)Math.Floor(tx);
@@ -1368,7 +1363,7 @@ namespace Tal.Cavity
                 _spatialDataReady = true;
 
  // ⭐ OPT: Publish the lock-free snapshot atomically (volatile write).
- // From this afterint on, FindAtomsGradualFast can read all spatial data
+ // From this point on, FindAtomsGradualFast can read all spatial data
  // without acquiring any lock.
                 _spatialSnapshot = new SpatialSnapshot
                 {
@@ -1465,9 +1460,9 @@ namespace Tal.Cavity
             int totalResY = resY + 2 * marginY;
             int totalResZ = resZ + 2 * marginZ;
 
-            float stepFracX = 1.0f / (resX - 1);
-            float stepFracY = 1.0f / (resY - 1);
-            float stepFracZ = 1.0f / (resZ - 1);
+            float stepFracX = 1.0f / resX; // exact periodic spacing: N points cover [0,1)
+            float stepFracY = 1.0f / resY; // exact periodic spacing: N points cover [0,1)
+            float stepFracZ = 1.0f / resZ; // exact periodic spacing: N points cover [0,1)
 
             float startFracX = -marginX * stepFracX;
             float startFracY = -marginY * stepFracY;

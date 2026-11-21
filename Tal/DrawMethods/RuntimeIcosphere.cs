@@ -6,25 +6,6 @@
 //
 // 3D drawing / rendering module: RuntimeIcosphere.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Runtime generator kul icosphere for MonoGame 3.8.
-// Nie wymaga files .X — creates Model w memory przy starcie.
-//
-// Usage:
-// var ball = RuntimeIcosphere.Create(graphicsDevice, subdivisionLevel: 3, radius: 3.937008f);
-//
-// Levely subdywizji:
-// 0 → 12 verts, 20 tris.
-// 1 → 42 verts, 80 tris.
-// 2 → 162 verts, 320 tris.
-// 3 → 642 verts, 1280 tris.
-// 4 → 2562 verts, 5120 tris.
-// 5 → 10242 verts, 20480 tris.
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -166,7 +147,7 @@ namespace Tal.DrawMethods
 
             model.Root = rootBone;
 
- // Opcjonalnie, ale zalecane — afterbond mesha z bone
+ // Opcjonalnie, ale zalecane — pobond mesha z bone
             rootBone.AddMesh(mesh);
 
             return model;

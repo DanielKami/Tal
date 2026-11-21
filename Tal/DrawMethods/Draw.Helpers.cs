@@ -6,30 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.Helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Helpers — small utility methods
-// ═══════════════════════════════════════════════════════════════════════
-//
-// This file contains small helper methods used across the rendering pipeline:
-//
-// GetAtomColor() — atom color depending on ColorMode flag
-// GetSymmetryColor() — palette for symmetry equivalent index
-// GetMoleculeColor() — palette for molecule index
-// GetSymmetryMoleculeColor() — hash-based color for (sym, mol) pair
-// IsMetal() — atomic number → metal classification
-// GetBackgroundColorVector() — Flags.color2 → Vector3
-// GetLabelFont() — font selection (SpriteFont / Arial / Times)
-//
-// ⚠️ GetAtomColor is called per-atom in PrepareAtomColors (slow path).
-// Others are called on demand — not in the hot per-atom loop.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Tal.Cavity;
@@ -173,13 +149,13 @@ namespace Tal.DrawMethods
         #region IsMetal — atomic number classification
 
  /// <summary>
- /// Returns true if the atomic number corresafternds to a metal.
+ /// Returns true if the atomic number corresponds to a metal.
  ///
  /// Used to pick BallRadiusMetal vs BallRadiusNonMetal.
  ///
  /// Groups included:
  /// - Alkali + alkaline earth: 3-4, 11-12
- /// - Transition + afterst-transition: 19-31, 37-50, 55-83
+ /// - Transition + post-transition: 19-31, 37-50, 55-83
  /// - Actinides up to Z=112
  ///
  /// Note: includes metalloids like B (5) are NOT included, but

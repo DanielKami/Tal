@@ -6,47 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.ColorScale.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.ColorScale — 2D color scale widget (charge, hydrophobicity, etc.)
-// ═══════════════════════════════════════════════════════════════════════
-//
-// Displays a horizontal color bar with min/mid/max labels in the
-// bottom-right corner of the viewafterrt. Shown only when the active
-// visualization uses a color-mapped property:
-//
-// ColorMode 5 → Charge
-// ColorMode 6 → Hydrophobicity
-// CavityColorMap mode + CavityPropertyType 0..4 → cavity property
-//
-// Layout (all sizes scale by RenderTargetScale `rts`):
-//
-// ┌─────────────────┐
-// │ Title │ ← title (small font)
-// ├─────────────────┤
-// │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│ ← gradient bar (200×20 × rts)
-// └─────────────────┘
-// min mid max ← labels
-//
-// ⚠️ BUG FIX: The BasicEffect used for the background + segments is
-// now wrapped in `using`. In the original code the effect was
-// created with `var` and disaftersed at the end, which leaked GPU
-// resources if an exception was thrown between creation and disafterse.
-//
-// ⚠️ The background uses GraphiscHelper.FiledRectangle — a shared
-// helper that draws a colored quad in 2D orthographic space.
-// The same helper is used for each color segment.
-//
-// ⚠️ This method opens its own SpriteBatch.Begin/End block for
-// the labels. It must not be called while another SpriteBatch
-// is active.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Tal.Cavity;
@@ -67,12 +26,12 @@ namespace Tal.DrawMethods
  /// 2. Cavity draw mode == CavityColorMap + valid CavityPropertyType
  /// 3. Nothing (return without drawing)
  ///
- /// Aftersition:
- /// x = viewafterrtWidth - scaleWidth - margin
- /// y = viewafterrtHeight - scaleHeight - margin - 100×rts
+ /// Position:
+ /// x = viewportWidth - scaleWidth - margin
+ /// y = viewportHeight - scaleHeight - margin - 100×rts
  ///
  /// The 100×rts extra offset lifts the scale above the bottom
- /// of the viewafterrt, leaving room for measurement labels.
+ /// of the viewport, leaving room for measurement labels.
  /// </summary>
         private void DrawColorScale()
         {
@@ -147,7 +106,7 @@ namespace Tal.DrawMethods
 
             if (!showScale) return;
 
- // ═══ Compute aftersition (bottom-right corner) ═══
+ // ═══ Compute position (bottom-right corner) ═══
             float rts = Flags.Instance.RenderTargetScale;
 
             int viewportWidth = _graphicsDevice.Viewport.Width;
@@ -167,7 +126,7 @@ namespace Tal.DrawMethods
         #region DrawColorScaleInternal — actual drawing
 
  /// <summary>
- /// Draws the color scale widget at the given aftersition.
+ /// Draws the color scale widget at the given position.
  ///
  /// Layers (bottom to top):
  /// 1. Semi-transparent black background (rounded look via padding)
@@ -177,7 +136,7 @@ namespace Tal.DrawMethods
  ///
  /// ⚠️ BUG FIX: scaleEffect is now in `using`. The original code
  /// could leak the BasicEffect if an exception was thrown
- /// between creation and disafterse.
+ /// between creation and dispose.
  ///
  /// ⚠️ The background size is computed from:
  /// padX = 12% of width
@@ -262,7 +221,7 @@ namespace Tal.DrawMethods
 
                     float segX = x + i * segWidth;
  // Last segment extends to the exact right edge — fixes
- // a sub-pixel gap due to floating-afterint rounding.
+ // a sub-pixel gap due to floating-point rounding.
                     float segW = i == segments - 1 ? width - i * segWidth : segWidth;
 
                     GraphiscHelper.FiledRectangle(

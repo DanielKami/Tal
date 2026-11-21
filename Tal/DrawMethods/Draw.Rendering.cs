@@ -6,25 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.Rendering.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Rendering — per-atom rendering
-// ═══════════════════════════════════════════════════════════════════════
-//
-// (file header unchanged)
-//
-// ⭐ TIER 1: inline transform in DrawCPKImafterstors (Vector3.Transform → mul)
-// ⭐ TIER 2.1: DrawCPKImafterstors iterates _visibleAtomIndices instead of
-// the full atomCount loop. Removes per-iteration checks for:
-// - `_zDepthCache[i].index < 0`
-// - `_molecule.atom[idx].show`
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Tal.Cavity;
@@ -442,13 +423,13 @@ namespace Tal.DrawMethods
         #region DrawCPKImpostors — ⭐ TIER 1 + TIER 2.1
 
  /// <summary>
- /// Draws all visible CPK atoms as screen-space quad imafterstors.
+ /// Draws all visible CPK atoms as screen-space quad impostors.
  ///
  /// ⭐ TIER 2.1: iterates _visibleAtomIndices[0.._visibleAtomCount)
  /// instead of the full atomCount range. Removes per-iteration
  /// checks for `_zDepthCache[i].index < 0` and `atom.show`.
  ///
- /// ⭐ TIER 1: inline matrix multiply for the aftersition transform.
+ /// ⭐ TIER 1: inline matrix multiply for the position transform.
  /// </summary>
         private void DrawCPKImpostors(
             in AtomRenderCache atomCache,
@@ -496,7 +477,7 @@ namespace Tal.DrawMethods
                 if (isTransparent ? occ >= 0.999f : occ < 0.999f)
                     continue;
 
- // ⭐ TIER 1: inline Vector3.Transform(atomCache.AftersitionCache[idx], rotTrans)
+ // ⭐ TIER 1: inline Vector3.Transform(atomCache.PositionCache[idx], rotTrans)
                 Vector3 posIn = atomCache.PositionCache[idx];
                 Vector3 pos = new Vector3(
                     posIn.X * m11 + posIn.Y * m21 + posIn.Z * m31 + m41,

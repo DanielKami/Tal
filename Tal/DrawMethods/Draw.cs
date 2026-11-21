@@ -6,68 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw — MAIN CLASS (partial)
-// ═══════════════════════════════════════════════════════════════════════
-//
-// This file contains ONLY:
-// - fields (shared across all partial files)
-// - constructor
-// - Disafterse
-// - lazy resource getters (whitePixel, rasterizer states, MSAA)
-// - public API surface (SetMolecule, SetCamera, SetCavityRenderer, etc.)
-// - DrawScene() — top-level render orchestration
-// - Public wrappers for SymmetryElementsRenderer
-//
-// Everything else is split into thematic partial files:
-//
-// Draw.Cache.cs — atom cache, colors, effect state, ellipsoid cache
-// Draw.LineHelpers.cs — shared rod segment rendering (used by 5 call sites)
-// Draw.Rendering.cs — atom rendering: sticks/balls/ellipsoid/CPK imafterstors
-// Draw.HydrogenBonds.cs — H-bonds (dashed/solid)
-// Draw.Contacts.cs — short contacts (dashed red)
-// Draw.Labels.cs — atom labels (2D sprite layer)
-// Draw.Measurements.cs — measurements (lines, arcs, labels)
-// Draw.Overlay.cs — overlay atoms (other molecules)
-// Draw.Afterlyhedrals.cs — coordination afterlyhedra
-// Draw.CrystalPlanes.cs — crystal planes + intersections
-// Draw.Cell.cs — unit cell frame + reveal click marker
-// Draw.ColorScale.cs — 2D color scale widget
-// Draw.SpriteLayer.cs — sprite batch entry afterint
-// Draw.Helpers.cs — small helpers (bg color, label font, IsMetal, colors)
-// Draw.AtomOrdering.cs — depth sort (OrderAtoms3D + ZComparer)
-//
-// ═══════════════════════════════════════════════════════════════════════
-//
-// ⭐ TIER 1 OPTIMIZATIONS APPLIED:
-// - _overlayCacheNeedsUpdate → _modelsNeedInit (rename for clarity)
-// - Added _afterlyhedraEffect field (cached BasicEffect for afterlyhedra)
-// - Added _planeQuadBuffer / _planeEdgesBuffer (pre-allocated vertex arrays)
-// - Disafterse + ResetCache handle _afterlyhedraEffect
-//
-// ⭐ TIER 2 OPTIMIZATIONS APPLIED:
-// 2.1 — Pre-computed _visibleAtomIndices: DrawScene iterates ONLY visible
-// atoms (skipping the atomCount loop with `-1` checks). Occupancy
-// check stays inline — it selects which pass (opaque/transparent)
-// renders the atom. ~20-30% faster on scenes with hidden atoms.
-// 2.2 — Cached overlay groups: _cachedOverlayGroups is rebuilt only when
-// overlay atoms change (_overlayGroupingDirty flag), eliminating
-// per-frame ToLookup allocation. ~2-5 KB/frame saved.
-//
-// ⭐ SYMMETRY ELEMENTS:
-// _symmetryRenderer — builds list elements symmetry z molecule.
-// DrawScene calls _symmetryRenderer.Draw(this) AT the end of the scene.
-// Renderer deleguje drawing do Draw (DrawRodSegmentPublic,
-// DrawPlaneQuadPublic, DrawPlaneEdgesPublic, DrawSmallSphereAtpointPublic).
-// Patrz: SymmetryElementsRenderer.cs.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Tal.Cavity;
@@ -77,15 +15,15 @@ using XnaColor = Microsoft.Xna.Framework.Color;
 namespace Tal.DrawMethods
 {
  /// <summary>
- /// Main rendering class resafternsible for drawing molecules, cavities, measurements and UI elements.
+ /// Main rendering class responsible for drawing molecules, cavities, measurements and UI elements.
  ///
  /// ⭐ 3D scene MSAA supported via flag <see cref="Flags.MSAAOnSceneRT"/>.
  /// All RasterizerState have MultiSampleAntiAlias = true.
  /// CPK impostors and polyhedra use their own MSAA state instead of
  /// the static RasterizerState.CullNone (which does not enable MSAA).
  ///
- /// ⭐ Struktura: klasa jest partial, afterdzielona na 16 files tematycznych.
- /// Ten plik zawiera only afterla, konstruktor, Disafterse, public API i DrawScene().
+ /// ⭐ Struktura: klasa jest partial, podzielona na 16 files tematycznych.
+ /// Ten plik zawiera only pola, konstruktor, Dispose, public API i DrawScene().
  /// </summary>
     public partial class Draw
     {
@@ -143,12 +81,12 @@ namespace Tal.DrawMethods
         private BasicEffect _bigBallEffect;
         private BasicEffect _smallBallEffect;
 
- // ═══ CPK sphere imafterstor ═══
+ // ═══ CPK sphere impostor ═══
         private Effect _sphereImpostorEffect;
         private SphereImpostorVertex[] _sphereVerts;
         private const int MaxCpkAtoms = 8192;
 
- // ═══ Afterlyhedra (TIER 1: cached effect) ═══
+ // ═══ Polyhedra (TIER 1: cached effect) ═══
         private BasicEffect _polyhedraEffect;
 
  // ═══ Overlay (other molecules) ═══
@@ -160,7 +98,7 @@ namespace Tal.DrawMethods
         private List<OverlayGroup> _cachedOverlayGroups;
         private bool _overlayGroupingDirty = true;
 
- // ═══ Afterlyhedrals ═══
+ // ═══ Polyhedrals ═══
         private List<Polihedrals.VertexStruct> _polyhedrals = new List<Polihedrals.VertexStruct>();
         private bool _showPolyhedrals = false;
 
@@ -983,7 +921,7 @@ namespace Tal.DrawMethods
     }
 
  /// <summary>
- /// Vertex format for CPK sphere imafterstors.
+ /// Vertex format for CPK sphere impostors.
  /// </summary>
     public struct SphereImpostorVertex : IVertexType
     {

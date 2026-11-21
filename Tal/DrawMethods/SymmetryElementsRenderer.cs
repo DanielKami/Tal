@@ -6,30 +6,6 @@
 //
 // 3D drawing / rendering module: SymmetryElementsRenderer.
 
-﻿// Author: Daniel M. Kaminski / TAL
-// Year: 2026
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// CellSymmetryRenderer — elementy symmetry w stylu Mercury / ITA
-// ═══════════════════════════════════════════════════════════════════════
-//
-// ⭐ LIVE COLOR READ:
-// Colours are NOT cached in CellSymElement.Color. The renderer
-// calls GetColorForElement(kind, order, sub) every frame
-// w Draw() i przekazuje result do DrawAxisArrow / DrawPlane / itd.
-// Zmiana Flags.Symmetry*Color* jest visible immediately.
-//
-// ⭐ LIVE SIZE READ:
-// AxisThickness, MarkerSize, InversionR are properties
-// reading Flags.Instance every frame.
-//
-// ⭐ Invalidate():
-// Sets _needsRebuild = true. The next Draw() rebuilds _elements
-// z _lastMolecule. Used when zmienia geometria (np. new grupa).
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Diagnostics;
@@ -49,7 +25,7 @@ namespace Tal.DrawMethods
         RotoinversionAxis
     }
 
- /// <summary>Afterjedyncza KOPIA elementu symmetry w cell (shifted-cartesian).</summary>
+ /// <summary>Pojedyncza KOPIA elementu symmetry w cell (shifted-cartesian).</summary>
     public sealed class CellSymElement
     {
         public CellSymElementKind Kind;

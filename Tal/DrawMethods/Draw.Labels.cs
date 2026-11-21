@@ -6,44 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.Labels.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Labels — 2D atom labels (sprite layer)
-// ═══════════════════════════════════════════════════════════════════════
-//
-// Atom labels are drawn as a 2D overlay on top of the 3D scene.
-// They use SpriteBatch in BackToFront sort mode so that text appears
-// on top of all 3D geometry regardless of Z.
-//
-// Projection: each atom's world aftersition is projected to screen space
-// using the same viewProj matrix as the 3D scene, then offset by
-// per-atom (or global) label offset in NDC units.
-//
-// Per-atom label offsets are stored in Molecule.AtomLabelOffset[]:
-// OffsetX, OffsetY — in NDC (relative to half viewafterrt size)
-// IsCustom — if false, global flags are used instead
-//
-// Axis labels (a, b, c) are drawn at the ends of the unit-cell axes
-// when Flags.ShowAxisLabels && Flags.Draw_cell — independent of atom Labels.
-//
-// ⚠️ This method MUST be called LAST in DrawScene (after all 3D content)
-// because it opens its own SpriteBatch.Begin/End block.
-//
-// ⚠️ The label offset array is lazily initialized on first call. After
-// that, it is preserved across frames — user drag operations modify
-// individual entries via MainForm.HandleLabelDrag.
-//
-// ⚠️ Label scale combines three factors:
-// LabelScale (user) × RenderTargetScale (SSAA) × SSAASamples (MSAA)
-// This keeps labels readable at any supersampling level without
-// user intervention.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: CavityRenderer.Batching.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Buffers;
@@ -78,7 +73,7 @@ namespace Tal.Cavity
         {
             if (_graphicsDevice == null || _graphicsDevice.IsDisposed) return;
 
- // ═══ Afterlicz size ═══
+ // ═══ Policz size ═══
             int totalVerts = 0;
             int totalIndices = 0;
             int cavityCount = 0;
@@ -101,7 +96,7 @@ namespace Tal.Cavity
                 return;
             }
 
- // ═══ Afterbierz buffery z puli ═══
+ // ═══ Pobierz buffery z puli ═══
             var vertexData = ArrayPool<VertexPositionNormalColor4>.Shared.Rent(totalVerts);
             var indices = ArrayPool<int>.Shared.Rent(totalIndices);
 
@@ -194,7 +189,7 @@ namespace Tal.Cavity
             _sceneVertCount = totalVerts;
             _sceneIndexCount = totalIndices;
 
- // ═══ Przygotuj buffer na aftersortowane indexy ═══
+ // ═══ Przygotuj buffer na posortowane indexy ═══
             if (_sceneSortedIndices == null || _sceneSortedIndices.Length < totalIndices)
                 _sceneSortedIndices = new int[totalIndices];
 
@@ -263,7 +258,7 @@ namespace Tal.Cavity
  /// ⭐ Wersja 2.0 — zoptymalizowana:
  /// - Array.Sort(keys, indices) zamiast Array.Sort(tuple, comparer)
  /// - float[] zamiast (int idx, float z)[] — mniej memory, no virtual calls
- /// - ArrayAfterol for obu tablic
+ /// - ArrayPool for obu tablic
  /// - Reversed copy order → back-to-front without Array.Reverse
  ///
  /// Gain: ~30-50% sort time on large scenes.

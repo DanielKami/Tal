@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// 3D drawing / rendering module: Afterlihedrals.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// 3D drawing / rendering module: Polihedrals.
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,13 +12,13 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Tal.DrawMethods
 {
  /// <summary>
- /// Provides functionality for detecting and rendering coordination afterlyhedra
+ /// Provides functionality for detecting and rendering coordination polyhedra
  /// around metal centers in molecular structures.
  ///
  /// ⭐ Nowa version:
- /// - Rozafterznaje ligandy N, O, F, S, Cl, Br, I
+ /// - Rozpoznaje ligandy N, O, F, S, Cl, Br, I
  /// - Uses convex hull (QuickHull 3D) to triangulate an arbitrary polyhedron
- /// - Afterprawne normalne (outward from center)
+ /// - Poprawne normalne (outward from center)
  /// - Klasyfikuje typ polyhedron (tetraedr, oktaedr, piramida, pryzma...)
  /// - Fallback do starej triangulacji (fan) when convex hull zawiedzie
  /// </summary>
@@ -49,7 +44,7 @@ namespace Tal.DrawMethods
         }
 
  /// <summary>
- /// Rozafterznany typ polyhedron (do reafterrtu / debug).
+ /// Rozpoznany typ polyhedron (do reportu / debug).
  /// </summary>
         public enum PolyhedronType
         {
@@ -158,7 +153,7 @@ namespace Tal.DrawMethods
                 primitive.position = vertices.Center;
                 primitive.LigandCount = vertices.PolichedralAtoms.Count;
 
- // ⭐ Rozafterznaj typ
+ // ⭐ Rozpoznaj typ
                 primitive.Type = ClassifyPolyhedron(vertices);
 
  // ⭐ Buduj mesh (convex hull or fallback)
@@ -200,7 +195,7 @@ namespace Tal.DrawMethods
         }
 
  /// <summary>
- /// ⭐ Rozafterznaje typ polyhedron na based on liczby i geometrii ligands.
+ /// ⭐ Rozpoznaje typ polyhedron na based on liczby i geometrii ligands.
  /// </summary>
         private static PolyhedronType ClassifyPolyhedron(PolihedralsStruct vertices)
         {

@@ -6,41 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.Contacts.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Contacts — short contacts rendering
-// ═══════════════════════════════════════════════════════════════════════
-//
-// Short contacts (red dashed lines) are drawn after the atom passes
-// and measurements, before the cavity renderer.
-//
-// Contact data comes from Molecule.Atom.Contact* fields:
-// ContactCount — number of contacts
-// ContactAtom[j] — index of j-th contact partner
-// Only atoms with UseForShortContacts == true are considered; contacts
-// to non-participating atoms are skipped.
-//
-// ⚠️ Both endafterints must be visible (show == true) AND both must be
-// marked UseForShortContacts. Otherwise the line is skipped —
-// this avoids orphaned lines when one endafterint was hidden/removed.
-//
-// ⚠️ This file uses DrawDashedRodSegment from Draw.LineHelpers.cs.
-// The original had its own segment loop — now shared with H-bonds
-// and measurements, saving ~40 lines of duplicated code.
-//
-// ⚠️ Contact lines are drawn for EVERY atom with contacts. If a bond
-// A↔B is registered on both A and B (usual case), the line will be
-// drawn twice (once from each endafterint). This is intentional —
-// each atom owns its own half of the contact line and each half
-// inherits the atom's visibility state. Verified: same behavior
-// as the original Draw.cs.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -58,7 +23,7 @@ namespace Tal.DrawMethods
  /// preserved after the method returns.
  ///
  /// ⚠️ Called once per frame from DrawScene. Cost is O(total contacts × 2)
- /// because each bond is drawn twice (once per endafterint).
+ /// because each bond is drawn twice (once per endpoint).
  /// </summary>
         private void DrawContacts(Matrix scaleRotate)
         {

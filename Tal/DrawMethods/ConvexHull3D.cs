@@ -6,11 +6,6 @@
 //
 // 3D drawing / rendering module: ConvexHull3D.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 
 namespace Tal.DrawMethods
@@ -147,7 +142,7 @@ namespace Tal.DrawMethods
 
             while (outsidePoints.Count > 0)
             {
- // Find punkt afterza hull
+ // Find punkt poza hull
                 int bestPt = -1;
                 int bestFace = -1;
                 float maxDist = 1e-6f;
@@ -244,7 +239,7 @@ namespace Tal.DrawMethods
         }
 
  /// <summary>
- /// Builds 4 tetrahedron faces z afterprawnymi normalnymi (outward).
+ /// Builds 4 tetrahedron faces z poprawnymi normalnymi (outward).
  /// </summary>
         private static void AddTetrahedron(List<Face> faces, List<Vector3> pts,
                                             int i0, int i1, int i2, int i3)

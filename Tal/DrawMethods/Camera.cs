@@ -6,11 +6,6 @@
 //
 // 3D drawing / rendering module: Camera.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -101,34 +96,34 @@ namespace Tal.DrawMethods
  /// <summary>Flag indicating mouse release for lasso selection.</summary>
         public bool flag_release;
 
- /// <summary>The camera aftersition in world space.</summary>
+ /// <summary>The camera position in world space.</summary>
         public Vector3 g_cameraPos;
 
- /// <summary>The target aftersition the camera is looking at.</summary>
+ /// <summary>The target position the camera is looking at.</summary>
         public Vector3 g_targetPos;
 
  /// <summary>The system translation offset.</summary>
         public Vector3 g_system_translate;
 
- /// <summary>The current mouse aftersition.</summary>
+ /// <summary>The current mouse position.</summary>
         public Vector2 ptMouseCurrent;
 
- /// <summary>The previous mouse aftersition.</summary>
+ /// <summary>The previous mouse position.</summary>
         public Vector2 ptMousePrevious;
 
- /// <summary>The mouse aftersition for double tap detection.</summary>
+ /// <summary>The mouse position for double tap detection.</summary>
         public Vector2 ptMouseDoubleTap;
 
- /// <summary>The current mouse aftersition.</summary>
+ /// <summary>The current mouse position.</summary>
         public Vector2 ptMousePosition;
 
- /// <summary>The mouse aftersition for zoom drag operations.</summary>
+ /// <summary>The mouse position for zoom drag operations.</summary>
         public Vector2 ptMouseZoomDrag;
 
- /// <summary>Temafterrary mouse aftersition storage.</summary>
+ /// <summary>Temporary mouse position storage.</summary>
         public Vector2 ptTempPosition;
 
- /// <summary>The mouse aftersition for selection operations.</summary>
+ /// <summary>The mouse position for selection operations.</summary>
         public Vector2 ptMouseSelect;
 
         #endregion
@@ -159,7 +154,7 @@ namespace Tal.DrawMethods
 
         #region Public Properties
 
- /// <summary>Afterzycja camera w world space (alias g_cameraAfters).</summary>
+ /// <summary>Pozycja camera w world space (alias g_cameraPos).</summary>
         public Vector3 Position
         {
             get => g_cameraPos;
@@ -761,7 +756,7 @@ namespace Tal.DrawMethods
 
  /// <summary>
  /// ⭐ Updates rotation based on mouse deltas.
- /// KEY: skip when nic nie zmienia — zaafterbiega dryfowi Rotate *= Identity.
+ /// KEY: skip when nic nie zmienia — zapobiega dryfowi Rotate *= Identity.
  ///
  /// This method is called from ApplyEffects() EVERY FRAME — therefore
  /// Must NOT call MarkChanged().

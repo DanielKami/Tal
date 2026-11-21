@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: MarchingCubesMeshGenerator.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -186,7 +181,7 @@ namespace Tal.Cavity
         #region Safe UI Access
  //
  // ⭐ REFACTOR: SafeSetStatus / SafeSetStatusWithDetails delegate to
- // MainForm.Instance.AfterstStatus, which ZAWSZE marshalluje przez
+ // MainForm.Instance.PostStatus, which ZAWSZE marshalluje przez
  // BeginInvoke (fire-and-forget) — safe z threads roboczych.
  //
 
@@ -372,14 +367,20 @@ namespace Tal.Cavity
 
                         try
                         {
+                            // DISPLAY path: the exact (N-point, spacing 1/N) calculation grid lacks the
+                            // plane at frac = 1 (faces 100 / 010 / 001). Build display copies closed
+                            // periodically so Marching Cubes reaches those faces like the old N+1 grid did.
+                            // The calculation data (DensityGrid / VoxelMask) is left untouched.
+                            BuildPeriodicDisplayData(cavity, out var displayDensity, out var displayMask);
+
                             var (rawMesh, smoothedMesh) = GenerateMeshForSingleCavity(
-                                cavity.DensityGrid,
+                                displayDensity,
                                 cavity.Grid,
                                 cavity.MinCorner,
                                 cavity.InvFracToCart,
                                 parameters,
                                 cavity.Center,
-                                cavity.VoxelMask,
+                                displayMask,
                                 cavity.Id,
                                 false,
                                 cancellationToken
@@ -462,7 +463,7 @@ namespace Tal.Cavity
  // ⭐ SafeDebugLogger — without Application.OpenForms, queue 1 Hz
                             LogProgress($"MC progress: {current}/{total} cavities done", percent);
 
- // ⭐ AfterstStatus — ZAWSZE BeginInvoke (fire-and-forget)
+ // ⭐ PostStatus — ZAWSZE BeginInvoke (fire-and-forget)
                             MainForm.Instance?.PostStatus(
                                 $"Generating mesh: {current}/{total} cavities", "", "⏳");
                             MainForm.Instance?.PostProgress(percent);
@@ -570,6 +571,57 @@ namespace Tal.Cavity
         #endregion
 
         #region Single Cavity Mesh Generation
+
+        /// <summary>
+        /// Builds display-only copies of the density grid and voxel mask, closed periodically:
+        /// the planes at index N (frac = 1) on each axis are filled from index 0 (wrap).
+        /// The exact calculation grid has N points with spacing 1/N, so without this the
+        /// marching-cubes surface would end one voxel before the +A/+B/+C faces of the cell.
+        /// Calculation data is never modified.
+        /// </summary>
+        private static void BuildPeriodicDisplayData(Cavity cavity, out float[,,] density, out bool[,,] mask)
+        {
+            density = cavity.DensityGrid;
+            mask = cavity.VoxelMask;
+
+            var pg = cavity.PeriodicGrid;
+            if (density == null || pg == null) return;
+
+            int ox = cavity.OffsetX, oy = cavity.OffsetY, oz = cavity.OffsetZ;
+            int rx = pg.ResX, ry = pg.ResY, rz = pg.ResZ;
+            int nx = density.GetLength(0), ny = density.GetLength(1), nz = density.GetLength(2);
+
+            // closing plane (index ox + rx) must exist inside the supercell grid
+            if (rx <= 0 || ry <= 0 || rz <= 0) return;
+            if (ox + rx >= nx || oy + ry >= ny || oz + rz >= nz) return;
+
+            var d = (float[,,])density.Clone();
+            bool[,,] m = mask != null ? (bool[,,])mask.Clone() : null;
+
+            for (int x = 0; x <= rx; x++)
+            {
+                int sx = ox + (x % rx);
+                int dx = ox + x;
+                for (int y = 0; y <= ry; y++)
+                {
+                    int sy = oy + (y % ry);
+                    int dy = oy + y;
+
+                    // inside the cell only the closing z-plane is new; on closing x/y planes the whole z-line is new
+                    int zStart = (x < rx && y < ry) ? rz : 0;
+                    for (int z = zStart; z <= rz; z++)
+                    {
+                        int sz = oz + (z % rz);
+                        int dz = oz + z;
+                        d[dx, dy, dz] = density[sx, sy, sz];
+                        if (m != null) m[dx, dy, dz] = mask[sx, sy, sz];
+                    }
+                }
+            }
+
+            density = d;
+            mask = m;
+        }
 
         public static (MeshData rawMesh, MeshData smoothedMesh) GenerateMeshForSingleCavity(
              float[,,] density,

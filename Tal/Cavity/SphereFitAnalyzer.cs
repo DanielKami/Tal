@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: SphereFitAnalyzer.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;

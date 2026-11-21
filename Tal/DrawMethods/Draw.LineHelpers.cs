@@ -6,47 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.LineHelpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.LineHelpers — shared rod segment rendering
-// ═══════════════════════════════════════════════════════════════════════
-//
-// Refactored from 5 nearly-identical methods:
-//
-// DrawSingleLineSegment3D (measurements — dashed lines)
-// DrawSingleHBondSegment (H-bonds)
-// DrawSingleContactSegment (short contacts)
-// DrawSingleArcSegment3D (angle arc)
-// DrawIntersectionSegment (crystal plane intersections)
-//
-// All five built the same matrix:
-//
-// Matrix.CreateScale(0.0127f * length, thickness, thickness)
-// * Matrix.CreateRotationY(angleZ)
-// * Matrix.CreateRotationZ(angleXY)
-// * Matrix.CreateTranslation(p1)
-// * scaleRotate;
-//
-// and drew it with the same rod mesh loop.
-//
-// Now they all call DrawRodSegment(p1, p2, scaleRotate, thickness).
-//
-// ⚠️ The magic constant 0.0127f is the model-specific scale that maps
-// a rod of length 1 in model space to 1 Å in world space. If the
-// rod model changes, this constant must change too.
-//
-// ⚠️ The angle formula:
-// angleZ = asin(clamp(dir.Z, -1, 1))
-// angleXY = -(180° - atan2(dir.Y, dir.X))
-// is the inverse of how PrecomputedBondMatrix is built for atoms.
-// Do not change without verifying bond rendering visually.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -60,7 +19,7 @@ namespace Tal.DrawMethods
  /// Scale factor that maps a unit-length rod (in model space)
  /// to 1 Å (in world space). Tuned for Small_rod.xnb.
  ///
- /// ⚠️ If the rod model is re-exafterrted at a different base length,
+ /// ⚠️ If the rod model is re-exported at a different base length,
  /// this constant must be updated.
  /// </summary>
         private const float ROD_MODEL_SCALE = 0.0127f;
@@ -81,13 +40,13 @@ namespace Tal.DrawMethods
  /// - Crystal plane intersections
  /// - Short contact dashed lines (per dash)
  ///
- /// The rod is oriented along (p2 - p1). p1 is the pivot afterint.
+ /// The rod is oriented along (p2 - p1). p1 is the pivot point.
  ///
  /// ⚠️ HOT PATH — called many times per frame for measurements /
  /// contacts with many segments. Keep allocation-free.
  /// </summary>
- /// <param name="p1">Start afterint in world space.</param>
- /// <param name="p2">End afterint in world space.</param>
+ /// <param name="p1">Start point in world space.</param>
+ /// <param name="p2">End point in world space.</param>
  /// <param name="scaleRotate">Camera scale-rotate-translate matrix.</param>
  /// <param name="thickness">Rod radius (in Å).</param>
         private void DrawRodSegment(Vector3 p1, Vector3 p2, Matrix scaleRotate, float thickness)
@@ -102,7 +61,7 @@ namespace Tal.DrawMethods
             dir.Normalize();
 
  // ═══ Orientation: inverse of PrecomputedBondMatrix construction ═══
- // Rod model afterints along +X by default (length = 1 unit).
+ // Rod model points along +X by default (length = 1 unit).
  // - Rotation Y by angleZ tilts out of XY plane (up/down)
  // - Rotation Z by angleXY rotates within XY plane (compass direction)
  //
@@ -153,11 +112,11 @@ namespace Tal.DrawMethods
  /// - Short contact lines (DrawDashedContactLine)
  /// - Measurement dashed lines (DrawDashedLine3D)
  ///
- /// ⚠️ The caller is resafternsible for setting _effectCache material
+ /// ⚠️ The caller is responsible for setting _effectCache material
  /// (color, alpha, specular) before calling this method.
  /// </summary>
- /// <param name="start">Start afterint in world space.</param>
- /// <param name="end">End afterint in world space.</param>
+ /// <param name="start">Start point in world space.</param>
+ /// <param name="end">End point in world space.</param>
  /// <param name="scaleRotate">Camera scale-rotate-translate matrix.</param>
  /// <param name="thickness">Rod radius (in Å).</param>
  /// <param name="dashLength">Length of each dash (in Å). Must be > 0.01.</param>

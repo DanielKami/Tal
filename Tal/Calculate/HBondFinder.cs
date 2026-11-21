@@ -6,11 +6,6 @@
 //
 // Calculation module: HBondFinder.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -29,11 +24,11 @@ namespace Tal.Calculate
  ///
  /// ⭐ NOWE (2026): filtrowanie donors i acceptors after listch
  /// Flags.HBondAllowedDonors / Flags.HBondAllowedAcceptors.
- /// Atomowy Z must be na odafterwiedniej list, so that uczestniczyć
+ /// Atomowy Z must be na odpowiedniej list, so that uczestniczyć
  /// w wiązaniu wodorowym.
  ///
  /// Logika:
- /// 1. Zeruje flag UseForHBonds na atomach, which SAM dodał w afterbeforenim
+ /// 1. Zeruje flag UseForHBonds na atomach, which SAM dodał w poprzednim
  /// wywołaniu (rejestrowane w Molecule.HBondNeighborAtomIndices).
  /// NIE rusza atoms structure (nawet z CellShift != 0).
  ///
@@ -50,7 +45,7 @@ namespace Tal.Calculate
  // Tolerancja for wykrywania duplikatów (w Å²)
         private const float DUPLICATE_TOLERANCE_SQ = 0.01f;
 
- // Twarde limity withoutpieczeństwa — żaden H-bond must not be dłuższy
+ // Twarde limity bezpieczeństwa — żaden H-bond must not be dłuższy
         private const float MAX_H_BOND_DISTANCE = 5.0f;
         private const float MIN_H_BOND_DISTANCE = 0.5f;
 
@@ -83,8 +78,8 @@ namespace Tal.Calculate
 
  // ═══════════════════════════════════════════════════════════
  // KROK 1: Wyzeruj flag UseForHBonds na atomach, which
- // HBondFinder sam dodał w afterbeforenim wywołaniu.
- // NIE usuwamy ich z atom[] — indexy afterzostają stabilne.
+ // HBondFinder sam dodał w poprzednim wywołaniu.
+ // NIE usuwamy ich z atom[] — indexy pozostają stabilne.
  // ═══════════════════════════════════════════════════════════
             if (molecule.HBondNeighborAtomIndices != null &&
                 molecule.HBondNeighborAtomIndices.Count > 0)
@@ -973,7 +968,7 @@ namespace Tal.Calculate
  /// <summary>
  /// ⭐ ZMIENIONE: NIE usuwa atoms. Tylko zeruje flag UseForHBonds
  /// na atomach zarejestrowanych w HBondNeighborAtomIndices.
- /// Thanks to this indexy w atom[] afterzostają stabilne, a stare atoms
+ /// Thanks to this indexy w atom[] pozostają stabilne, a stare atoms
  /// (z flagą = false) są after prostu invisible for kolejnych obliczeń.
  ///
  /// NIE rusza atoms structure (nawet z CellShift != 0).
@@ -1074,7 +1069,7 @@ namespace Tal.Calculate
             int style = Flags.Instance.Presentation;
             int oldCount = molecule.NumberOfAtoms;
 
- // Afterlicz ile faktycznie dodamy (without duplikatów activech)
+ // Policz ile faktycznie dodamy (without duplikatów activech)
             var toAdd = new List<AcceptorEntry>();
             foreach (var acc in acceptors)
             {

@@ -6,7 +6,7 @@
 //
 // Cavity detection / analysis module: MarchingCubesTables.
 
-﻿namespace Tal.Cavity
+namespace Tal.Cavity
 {
     public static class MarchingCubesTables
     {

@@ -6,38 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.Measurements.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Measurements — distance / angle / torsion / atom-plane measurements
-// ═══════════════════════════════════════════════════════════════════════
-//
-// Measurement types (Molecule.Measure.Measurement.type):
-// 1 — distance : 1 line between 2 afterints
-// 2 — angle : 2 lines + arc at vertex
-// 3 — torsion : 4 lines (chain through 4 afterints)
-// 4 — atom-to-plane : dashed line + endafterint dot
-//
-// Drawing pipeline:
-// DrawMeasurementLines() — 3D geometry (lines, arcs, dots)
-// DrawMeasurementLabels() — 2D sprite labels (projected to screen)
-//
-// ⚠️ All measurements use the shared DrawRodSegment helper via
-// DrawDashedLine3D. No per-type segment loop duplication.
-//
-// ⚠️ DrawSmallSphereAtpoint uses _smallBallTransforms[mesh.ParentBone.Index],
-// NOT mesh.ParentBone.Transform[mesh.ParentBone.Index]. Both work
-// coincidentally (because CopyAbsoluteBoneTransformsTo populates the
-// same array), but _smallBallTransforms is the cached, correct reference.
-//
-// ⚠️ Distance line is dashed (green). Dots on atom-to-plane are pink.
-// Colors are hard-coded here (not from flags) — preserved from original.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using XnaColor = Microsoft.Xna.Framework.Color;
@@ -96,7 +64,7 @@ namespace Tal.DrawMethods
         #region Per-type line drawing
 
  /// <summary>
- /// Type 1: distance — single dashed green line between two afterints.
+ /// Type 1: distance — single dashed green line between two points.
  /// </summary>
         private void DrawDistanceLine3D(Measure.Measurement m, Matrix scaleRotate)
         {
@@ -135,7 +103,7 @@ namespace Tal.DrawMethods
 
  /// <summary>
  /// Type 4: atom-to-plane — dashed pink line + small pink dot at the
- /// plane intersection afterint (aftersition2).
+ /// plane intersection point (position2).
  /// </summary>
         private void DrawAtomToPlaneLine3D(Measure.Measurement m, Matrix scaleRotate)
         {
@@ -153,7 +121,7 @@ namespace Tal.DrawMethods
         #region DrawSmallSphereAtPoint — endpoint marker
 
  /// <summary>
- /// Draws a small sphere at a world aftersition — used as an endafterint
+ /// Draws a small sphere at a world position — used as an endpoint
  /// marker on atom-to-plane measurements (pink dot).
  ///
  /// ⚠️ BUG FIX: original used <c>mesh.ParentBone.Transform[mesh.ParentBone.Index]</c>
@@ -206,7 +174,7 @@ namespace Tal.DrawMethods
         #region DrawDashedLine3D — dashed line wrapper
 
  /// <summary>
- /// Draws a dashed line between two world-space afterints using the
+ /// Draws a dashed line between two world-space points using the
  /// shared <see cref="DrawDashedRodSegment"/> helper.
  ///
  /// Sets up the material (color, no specular) before delegating,
@@ -263,7 +231,7 @@ namespace Tal.DrawMethods
  /// Draws an arc from p1 toward p3, centered at p2, at a radius of
  /// 40% of the shorter edge length.
  ///
- /// The arc is drawn as a afterlyline of segments — each segment is a
+ /// The arc is drawn as a polyline of segments — each segment is a
  /// thin rod (call to DrawRodSegment via DrawSingleArcSegment3D).
  ///
  /// ⚠️ Segment count scales with the angle (larger angle → more segments),
@@ -313,7 +281,7 @@ namespace Tal.DrawMethods
             _effectCache.SpecularColor = Vector3.Zero;
             _effectCache.LightSpecularColor = Vector3.Zero;
 
- // ═══ Draw afterlyline ═══
+ // ═══ Draw polyline ═══
             Vector3 prevPoint = p2 + v1 * arcRadius;
 
             for (int i = 1; i <= segments; i++)
@@ -342,17 +310,17 @@ namespace Tal.DrawMethods
         #region DrawMeasurementLabels — 2D sprite labels
 
  /// <summary>
- /// Projects each measurement label aftersition to screen and draws
+ /// Projects each measurement label position to screen and draws
  /// the formatted value.
  ///
- /// The label aftersition depends on the measurement type:
- /// distance — midafterint
+ /// The label position depends on the measurement type:
+ /// distance — midpoint
  /// angle — on the bisector at 60% of arc radius
- /// torsion — midafterint of the middle bond
- /// atom-plane — midafterint (same as distance)
+ /// torsion — midpoint of the middle bond
+ /// atom-plane — midpoint (same as distance)
  ///
  /// User drag offsets are read from Measure.MeasurementLabelOffsets
- /// and applied in NDC units (scaled by half viewafterrt).
+ /// and applied in NDC units (scaled by half viewport).
  /// </summary>
         private void DrawMeasurementLabels(Matrix scaleRotate)
         {
@@ -394,12 +362,12 @@ namespace Tal.DrawMethods
         #region Label positioning helpers
 
  /// <summary>
- /// Base label aftersition for a measurement (before user offset).
+ /// Base label position for a measurement (before user offset).
  ///
- /// distance → midafterint
- /// angle → on the bisector (see GetAngleLabelAftersition)
- /// torsion → midafterint of middle bond (p2, p3)
- /// atom-plane → midafterint
+ /// distance → midpoint
+ /// angle → on the bisector (see GetAngleLabelPosition)
+ /// torsion → midpoint of middle bond (p2, p3)
+ /// atom-plane → midpoint
  /// </summary>
         private Vector3 GetMeasurementLabelPosition(Measure.Measurement m)
         {
@@ -414,9 +382,9 @@ namespace Tal.DrawMethods
         }
 
  /// <summary>
- /// Computes the label aftersition for an angle measurement.
+ /// Computes the label position for an angle measurement.
  ///
- /// Aftersition: p2 + (bisector direction) × (arc radius × 0.6)
+ /// Position: p2 + (bisector direction) × (arc radius × 0.6)
  /// - bisector = v1 rotated by half the angle around the plane normal
  /// - arc radius = 40% of shorter edge, min 0.1
  /// - label radius = 60% of arc radius (inside the arc)
@@ -453,8 +421,8 @@ namespace Tal.DrawMethods
         #region Screen projection helpers
 
  /// <summary>
- /// Projects a world aftersition to screen coordinates using the
- /// given viewProj matrix and half viewafterrt size.
+ /// Projects a world position to screen coordinates using the
+ /// given viewProj matrix and half viewport size.
  ///
  /// Returns (screenX, screenY, ndcZ) or (0, 0, -1) if behind camera.
  /// </summary>
@@ -501,9 +469,9 @@ namespace Tal.DrawMethods
         }
 
  /// <summary>
- /// Draws a measurement label at a 2D screen aftersition with optional shadow.
+ /// Draws a measurement label at a 2D screen position with optional shadow.
  ///
- /// The label is centered horizontally on <paramref name="aftersition"/>.
+ /// The label is centered horizontally on <paramref name="position"/>.
  /// </summary>
         private void DrawMeasurementLabel2D(string text, Vector3 position, XnaColor color)
         {

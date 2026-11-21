@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: CavityRenderer.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Diagnostics;
@@ -29,7 +24,7 @@ namespace Tal.Cavity
  /// - One shared VB/IB for the entire scene (all cavities together)
  /// - Jedno sortowanie back-to-front for entire sceny
  /// - One draw call per scene
- /// - Klasa afterdzielona na partial: Drawing, Fallback, Data, Batching
+ /// - Klasa podzielona na partial: Drawing, Fallback, Data, Batching
  /// </summary>
     public partial class CavityRenderer
     {

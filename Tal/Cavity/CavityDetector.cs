@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: CavityDetector.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -26,7 +21,7 @@ namespace Tal.Cavity
 {
  /// <summary>
  /// Main cavity detection engine using SDF (Signed Distance Function) and flood fill.
- /// Supafterrts all crystal systems including triclinic (skewed cells) with proper fractional coordinate handling.
+ /// Supports all crystal systems including triclinic (skewed cells) with proper fractional coordinate handling.
  /// Optimized for performance with parallel processing and minimal memory allocations.
  /// The SDF is computed directly for the requested VdW multiplier: every atom contributes
  /// d_i - (r_i * multiplier + probe). Changing the multiplier moves each element's surface by a
@@ -51,10 +46,10 @@ namespace Tal.Cavity
 
         #region Control Parameters
 
- /// <summary>Probe radius for surface afterint detection.</summary>
+ /// <summary>Probe radius for surface point detection.</summary>
         public float ProbeRadius { get; set; } = 0.0f;
 
- /// <summary>Minimum volume for a cavity to be reafterrted (in A³).</summary>
+ /// <summary>Minimum volume for a cavity to be reported (in A³).</summary>
         public static float MinCavityVolume { get; set; } = 0.1f;
 
  /// <summary>Van der Waals radius multiplier for non-hydrogen atoms.</summary>
@@ -69,7 +64,7 @@ namespace Tal.Cavity
  /// <summary>Voxel scanner instance.</summary>
         public VoxelScanner Scanner { get; private set; }
 
- /// <summary>Whether to generate isosurface afterints.</summary>
+ /// <summary>Whether to generate isosurface points.</summary>
         public bool GenerateIsoSurfacePoints { get; set; } = true;
 
         #endregion
@@ -84,7 +79,7 @@ namespace Tal.Cavity
 
         #region State Tracking
 
-        private float _lastAppliedResolution = 0.15f;
+        private float _lastAppliedResolution = 0.10f;
         private bool _lastUseThermalMotion = false;
         private float _lastAppliedVdw = BASE_SDF_RADIUS;
         private float _lastAppliedProbe = 0f;
@@ -96,7 +91,7 @@ namespace Tal.Cavity
  /// <summary>List of detected cavities.</summary>
         public List<Cavity> Cavities { get; private set; } = new List<Cavity>();
 
- /// <summary>Current status message for progress reafterrting.</summary>
+ /// <summary>Current status message for progress reporting.</summary>
         public static string StatusMessage { get; private set; } = "";
 
  /// <summary>Total volume of all detected voids in A³.</summary>
@@ -402,7 +397,7 @@ namespace Tal.Cavity
             Flags.Instance.ForceSDFRecalculation = false;
 
  // ⭐ Reset state tracking
-            _lastAppliedResolution = 0.15f;
+            _lastAppliedResolution = 0.10f;
             _lastUseThermalMotion = false;
             _lastAppliedVdw = BASE_SDF_RADIUS;
             _lastAppliedProbe = 0f;
@@ -1142,7 +1137,7 @@ namespace Tal.Cavity
         {
             LogToDebug("========== CLEAR START ==========", System.Drawing.Color.Orange);
 
- // Disafterse oldch cavities
+ // Dispose oldch cavities
             if (Cavities != null)
             {
                 foreach (var cavity in Cavities)
@@ -1175,7 +1170,7 @@ namespace Tal.Cavity
             _baseVdwRadius = 0.5f;
 
  // ⭐ Reset tracking state
-            _lastAppliedResolution = 0.15f;
+            _lastAppliedResolution = 0.10f;
             _lastUseThermalMotion = false;
             _lastAppliedVdw = BASE_SDF_RADIUS;
             _lastAppliedProbe = 0f;
@@ -1223,7 +1218,7 @@ namespace Tal.Cavity
         #region Private Methods
 
  /// <summary>
- /// Reafterrts progress to UI thread. ALWAYS marshalls via BeginInvoke —
+ /// Reports progress to UI thread. ALWAYS marshalls via BeginInvoke —
  /// even when InvokeRequired == false, because IsHandleCreated race
  /// would otherwise allow calling handler from worker thread.
  /// </summary>
@@ -1361,9 +1356,27 @@ namespace Tal.Cavity
             float lenB = vecB.Length();
             float lenC = vecC.Length();
 
-            int cellResX = Math.Max(8, (int)(lenA / Scanner.VoxelSize) + 1);
-            int cellResY = Math.Max(8, (int)(lenB / Scanner.VoxelSize) + 1);
-            int cellResZ = Math.Max(8, (int)(lenC / Scanner.VoxelSize) + 1);
+            // Exact periodic grid: N voxels per axis, no duplicated endpoint; actual edge = len / N.
+            // Legacy mode: N = floor(len / nominal).
+            // Micro-tuning: each voxel edge may deviate from the nominal size by at most +-range;
+            // within that limit N_a, N_b, N_c are chosen so that the voxel is as cube-like as possible
+            // (see ChooseMicroTunedResolution). The same code is used by the Cavity Settings preview.
+            bool microTune = Flags.Instance.MicroTuneVoxelSize;
+            float rangePct = Math.Clamp(Flags.Instance.MicroTuneRangePercent, 0f, 20f);
+
+            var (cellResX, cellResY, cellResZ) = ChooseCellDivisions(
+                lenA, lenB, lenC, Scanner.VoxelSize, microTune, rangePct);
+
+            {
+                float ea = lenA / cellResX, eb = lenB / cellResY, ec = lenC / cellResZ;
+                float nom = Scanner.VoxelSize;
+                float maxDev = Math.Max(Math.Abs(ea / nom - 1f), Math.Max(Math.Abs(eb / nom - 1f), Math.Abs(ec / nom - 1f))) * 100f;
+                float aniso = (Math.Max(ea, Math.Max(eb, ec)) / Math.Min(ea, Math.Min(eb, ec)) - 1f) * 100f;
+                LogToDebug(
+                    $"Voxel edges ({(microTune ? $"micro-tuned, max deviation ±{rangePct:F1}%" : "legacy floor")}), nominal {nom:F4} Å: " +
+                    $"a={ea:F4} (N={cellResX}), b={eb:F4} (N={cellResY}), c={ec:F4} (N={cellResZ}) Å, max deviation {maxDev:F2}%, anisotropy {aniso:F2}%",
+                    System.Drawing.Color.LightGray);
+            }
 
             _periodicResX = cellResX;
             _periodicResY = cellResY;
@@ -1470,6 +1483,130 @@ namespace Tal.Cavity
 
             LogToDebug("Grid preparation complete", System.Drawing.Color.LightGreen);
             return true;
+        }
+
+        /// <summary>
+        /// Weight of the "stay close to the nominal voxel size" term relative to the isotropy term in
+        /// the micro-tuning cost. Small on purpose: isotropy decides, closeness to nominal only breaks
+        /// ties (and prevents drifting to the edge of the allowed range for no real gain).
+        /// </summary>
+        public const double MICROTUNE_NOMINAL_WEIGHT = 0.02;
+
+        /// <summary>
+        /// Number of voxels per cell axis for the periodic grid.
+        /// Legacy (microTune = false): N = floor(len / nominal), minimum 8.
+        /// Micro-tuned: see <see cref="ChooseMicroTunedResolution"/>; <paramref name="rangePercent"/> is
+        /// the maximum allowed deviation of each voxel edge from the nominal size, in percent.
+        /// </summary>
+        public static (int nx, int ny, int nz) ChooseCellDivisions(
+            float lenA, float lenB, float lenC, float nominal, bool microTune, float rangePercent)
+        {
+            if (microTune)
+            {
+                return ChooseMicroTunedResolution(
+                    lenA, lenB, lenC, nominal, Math.Clamp(rangePercent, 0f, 20f) / 100f);
+            }
+
+            return (Math.Max(8, (int)(lenA / nominal)),
+                    Math.Max(8, (int)(lenB / nominal)),
+                    Math.Max(8, (int)(lenC / nominal)));
+        }
+
+        /// <summary>
+        /// Lengths |a|, |b|, |c| (in Angstrom) of the cell vectors exactly as PrepareGridForDetection
+        /// derives them, so that a settings-window preview gives the same voxel counts as detection.
+        /// </summary>
+        public static bool TryGetCellAxisLengths(Molecule molecule, out float lenA, out float lenB, out float lenC)
+        {
+            lenA = lenB = lenC = 0f;
+            if (molecule == null) return false;
+
+            try
+            {
+                var m = Matrix.Transpose(molecule.FractionaltoCarttesianMatrix(0, 0, 0));
+                var o = XnaVector3.Transform(XnaVector3.Zero, m);
+                lenA = (XnaVector3.Transform(new XnaVector3(1, 0, 0), m) - o).Length();
+                lenB = (XnaVector3.Transform(new XnaVector3(0, 1, 0), m) - o).Length();
+                lenC = (XnaVector3.Transform(new XnaVector3(0, 0, 1), m) - o).Length();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return lenA > 0f && lenB > 0f && lenC > 0f
+                && !float.IsNaN(lenA) && !float.IsNaN(lenB) && !float.IsNaN(lenC);
+        }
+
+        /// <summary>
+        /// Allowed numbers of voxels along one axis: every N whose edge len/N lies within +-range of the
+        /// nominal size, plus the nearest integer to len/nominal (so range 0 = plain rounding).
+        /// Minimum of 8 voxels per axis. Returned ascending.
+        /// </summary>
+        private static int[] MicroTuneCandidates(float len, float nominal, float range, out int nearest)
+        {
+            nearest = Math.Max(8, (int)Math.Round(len / nominal));
+            var set = new SortedSet<int> { nearest };
+
+            int lo = Math.Max(8, (int)Math.Ceiling(len / (nominal * (1.0 + range))));
+            int hi = (int)Math.Floor(len / (nominal * (1.0 - range)));
+            for (int n = lo; n <= hi; n++) set.Add(n);
+
+            return new List<int>(set).ToArray();
+        }
+
+        /// <summary>
+        /// Chooses the number of voxels per axis (Na, Nb, Nc) for the micro-tuned periodic grid.
+        ///
+        /// <paramref name="range"/> (fraction, 0.05 = 5 %) is a HARD limit: every voxel edge len/N must lie
+        /// within +-range of the nominal size (the nearest integer N is always allowed, so range 0 gives
+        /// plain rounding). Inside that limit the triple is chosen to minimise
+        ///     sum_{i&lt;j} (x_i - x_j)^2  +  w * sum_i x_i^2 ,      x_i = ln(edge_i / nominal),  w = MICROTUNE_NOMINAL_WEIGHT,
+        /// i.e. primarily the most cube-like voxel (edges a, b, c as equal as possible), with a weak pull
+        /// towards the nominal size. A wider range therefore lets the program find a more isotropic voxel;
+        /// once the best triple is inside the range, widening it further changes nothing.
+        /// </summary>
+        public static (int nx, int ny, int nz) ChooseMicroTunedResolution(
+            float lenA, float lenB, float lenC, float nominal, float range)
+        {
+            range = Math.Clamp(range, 0f, 0.5f);
+
+            var ca = MicroTuneCandidates(lenA, nominal, range, out int nearA);
+            var cb = MicroTuneCandidates(lenB, nominal, range, out int nearB);
+            var cc = MicroTuneCandidates(lenC, nominal, range, out int nearC);
+
+            const double w = MICROTUNE_NOMINAL_WEIGHT;
+            double best = double.MaxValue;
+            int bx = nearA, by = nearB, bz = nearC;
+
+            foreach (int na in ca)
+            {
+                double xa = Math.Log((double)lenA / na / nominal);
+                foreach (int nb in cb)
+                {
+                    double xb = Math.Log((double)lenB / nb / nominal);
+
+                    // For fixed (na, nb) the cost is a convex quadratic in x_c with its minimum at
+                    // x_c* = (x_a + x_b) / (w + 2); only candidates next to that point need testing.
+                    double xcStar = (xa + xb) / (w + 2.0);
+                    double target = lenC / (nominal * Math.Exp(xcStar));
+                    int ip = Array.BinarySearch(cc, (int)Math.Round(target));
+                    if (ip < 0) ip = ~ip;
+
+                    int k0 = Math.Max(0, ip - 2);
+                    int k1 = Math.Min(cc.Length - 1, ip + 2);
+                    for (int k = k0; k <= k1; k++)
+                    {
+                        int nc = cc[k];
+                        double xc = Math.Log((double)lenC / nc / nominal);
+                        double cost = w * (xa * xa + xb * xb + xc * xc)
+                                    + (xa - xb) * (xa - xb) + (xa - xc) * (xa - xc) + (xb - xc) * (xb - xc);
+                        if (cost < best) { best = cost; bx = na; by = nb; bz = nc; }
+                    }
+                }
+            }
+
+            return (bx, by, bz);
         }
 
         private float[,,] CopyDensityGrid(float[,,] density)

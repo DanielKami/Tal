@@ -6,33 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.Cache.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Cache — per-frame cache + effect state preparation
-// ═══════════════════════════════════════════════════════════════════════
-//
-// This file contains cache preparation for the main render loop:
-//
-// PrepareAtomColors() — atom color array (depends on ColorMode flag)
-// PrepareAtomRenderCache() — snapshot of Molecule.Atom fields into arrays
-// BuildEllipsoidCache() — per-atom ellipsoid matrices for style 3
-// UpdateSceneCache() — snapshot of Flags into _effectCache
-// ApplyGlobalEffectState() — apply _effectCache to all 3 template effects
-// ApplyGlobalEffectStateTo() — apply to one BasicEffect
-// UpdateAtomCache() — set per-atom colors in _effectCache
-// ApplyPerAtomEffect() — apply _effectCache + world to BasicEffect
-// ApplyPerAtomEffectTransparent() — same, but with specular disabled
-//
-// ⚠️ HOT PATH: PrepareAtomColors, PrepareAtomRenderCache, UpdateAtomCache
-// and ApplyPerAtomEffect* are called MANY times per frame.
-// Keep them allocation-free and branch-light.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Tal.Cavity;
@@ -105,7 +78,7 @@ namespace Tal.DrawMethods
  /// <summary>
  /// Copies all atom fields used by the render loop into flat arrays.
  ///
- /// Purafterse: avoid repeated <c>_molecule.atom[i].X</c> dereferences
+ /// Purpose: avoid repeated <c>_molecule.atom[i].X</c> dereferences
  /// inside the hot per-atom loop (struct copy + cache locality).
  ///
  /// Cache is reallocated ONLY when atom count changes.

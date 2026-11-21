@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: VdWAnalysisResult.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -756,7 +751,7 @@ namespace Tal.Cavity
  /// <param name="molecule">The molecule to analyze.</param>
  /// <param name="detector">The cavity detector instance.</param>
  /// <param name="scales">Optional custom scales. If null, uses DefaultScales.</param>
- /// <param name="progress">Progress reafterrter.</param>
+ /// <param name="progress">Progress reporter.</param>
  /// <param name="cancellationToken">Cancellation token.</param>
  /// <returns>Analysis results.</returns>
         public static async Task<VdWAnalysisResults> RunAnalysisAsync(
@@ -1037,7 +1032,7 @@ namespace Tal.Cavity
                 _isRunning = false;
                 _progress = 0f;
 
- // 4. Disafterse token source
+ // 4. Dispose token source
                 try
                 {
                     _cancellationTokenSource?.Dispose();
@@ -1085,7 +1080,7 @@ namespace Tal.Cavity
             _detector.RadiusMultiplier = vdwMult;
             _detector.UpdateVdwMultiplier(vdwMult);
 
-            float resolution = Flags.Instance.Resolution > 0 ? Flags.Instance.Resolution : 0.15f;
+            float resolution = Flags.Instance.Resolution > 0 ? Flags.Instance.Resolution : 0.10f;
             _detector.UpdateRes(resolution);
             if (_detector.Scanner != null)
                 _detector.Scanner.VoxelSize = resolution;
@@ -1349,7 +1344,7 @@ namespace Tal.Cavity
                     result.HydrophobicityVariance = hydro.Count > 1 ? PopulationVariance(hydro) : 0;
                 }
 
- // Calculate diafterle moment
+ // Calculate dipole moment
                 if (charges.Count > 0 && cavity.Voxels.Count > 0)
                 {
                     try
@@ -1693,7 +1688,7 @@ namespace Tal.Cavity
 
                 float moleculeVolume = (4.0f / 3.0f) * (float)Math.PI * solventRadius * solventRadius * solventRadius;
                 float maxCount = packing.UsableVolume > 0 ? packing.UsableVolume / moleculeVolume : 0f;
- // Afterlarizability match (20%)
+ // Polarizability match (20%)
                
 
                 packing.SolventCompatibility.Add(new SolventGuestResult
@@ -1732,12 +1727,12 @@ namespace Tal.Cavity
 
             try
             {
- // Integrals below need increasing scales (delta > 0); the reafterrt order is descending.
+ // Integrals below need increasing scales (delta > 0); the report order is descending.
                 var scalesAscending = results.VdWScales.OrderBy(sc => sc).ToList();
 
  // I_frag: cavities >= MIN_CAVITY_VOLUME_FOR_DESCRIPTORS counted at the reference scale
  // (the one closest to VdW = 1.0), not the maximum over all scales (which is dominated
- // by sub-A^3 numerical afterckets at large scales).
+ // by sub-A^3 numerical pockets at large scales).
                 float referenceScale = scalesAscending.OrderBy(sc => Math.Abs(sc - 1.0f)).First();
                 int cavitiesAtReference = 0;
                 foreach (var kvp in results.CavityResults)
@@ -2096,7 +2091,7 @@ namespace Tal.Cavity
             return values.Sum(v => (v - mean) * (v - mean)) / values.Count;
         }
 
- /// <summary>Cavities smaller than this (A^3) are treated as numerical afterckets in QSPR descriptors.</summary>
+ /// <summary>Cavities smaller than this (A^3) are treated as numerical pockets in QSPR descriptors.</summary>
         private const float MIN_CAVITY_VOLUME_FOR_DESCRIPTORS = 1.0f;
 
  /// <summary>f_collapse: total cavity volume below this fraction of the cell volume counts as collapsed.</summary>
@@ -2209,7 +2204,7 @@ namespace Tal.Cavity
         #region Public Methods - Report Generation
 
  /// <summary>
- /// Generates a full text reafterrt of the analysis results.
+ /// Generates a full text report of the analysis results.
  /// </summary>
         public static string GenerateFullReport(VdWAnalysisResults results)
         {

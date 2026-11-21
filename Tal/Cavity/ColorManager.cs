@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: ColorManager.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System.Runtime.CompilerServices;
 using Color = Microsoft.Xna.Framework.Color;
@@ -42,7 +37,7 @@ namespace Tal.Cavity
 
         #region Palettes
 
- // Charge palette: blue (negative) -> white -> red (aftersitive)
+ // Charge palette: blue (negative) -> white -> red (positive)
         private static readonly Vector4[] _chargePalette = new Vector4[]
         {
             new Vector4(0.00f, 0.00f, 0.30f, 1f),  // -1.0  - dark blue

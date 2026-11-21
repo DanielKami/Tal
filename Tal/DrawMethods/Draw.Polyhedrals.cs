@@ -4,29 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// 3D drawing / rendering module: Draw.Afterlyhedrals.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Afterlyhedrals — coordination afterlyhedra
-// ═══════════════════════════════════════════════════════════════════════
-//
-// (file header unchanged)
-//
-// ⭐ TIER 1 OPTIMIZATION APPLIED:
-// The BasicEffect used for afterlyhedra is now cached in _afterlyhedraEffect
-// (declared in Draw.cs). Previously a new BasicEffect was allocated
-// every frame in DrawAfterlyhedrals — wasteful GPU resource churn.
-//
-// The effect is created lazily on first use, then only View, Projection
-// and light parameters are updated per frame. The effect is disaftersed
-// in Draw.Disafterse() and Draw.ResetCache().
-//
-// ═══════════════════════════════════════════════════════════════════════
+// 3D drawing / rendering module: Draw.Polyhedrals.
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -38,9 +16,9 @@ namespace Tal.DrawMethods
         #region DrawPolyhedrals — coordination polyhedra rendering
 
  /// <summary>
- /// Draws all coordination afterlyhedra.
+ /// Draws all coordination polyhedra.
  ///
- /// ⭐ TIER 1: BasicEffect is cached in _afterlyhedraEffect — created
+ /// ⭐ TIER 1: BasicEffect is cached in _polyhedraEffect — created
  /// lazily on first call, reused every frame.
  /// </summary>
         private void DrawPolyhedrals(Matrix scaleRotate)
@@ -55,7 +33,7 @@ namespace Tal.DrawMethods
             var savedDepth = _graphicsDevice.DepthStencilState;
             var savedRasterizer = _graphicsDevice.RasterizerState;
 
- // ═══ Set afterlyhedra render state ═══
+ // ═══ Set polyhedra render state ═══
             _graphicsDevice.BlendState = BlendState.AlphaBlend;
             _graphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
             _graphicsDevice.RasterizerState = GetCullNoneMSAA();
@@ -80,7 +58,7 @@ namespace Tal.DrawMethods
             polyEffect.Projection = _camera.Projection;
             polyEffect.World = Matrix.Identity;
 
- // Afterlyhedra ambient boost 1.5× — preserved from original
+ // Polyhedra ambient boost 1.5× — preserved from original
             polyEffect.AmbientLightColor = Vector3.One * Flags.Instance.AmbientIntensity * 1.5f;
             polyEffect.DiffuseColor = Vector3.One;
             polyEffect.Alpha = Flags.Instance.PolyhedronAlpha;
@@ -98,7 +76,7 @@ namespace Tal.DrawMethods
             polyEffect.DirectionalLight1.DiffuseColor = _effectCache.Light2DiffuseColor;
             polyEffect.DirectionalLight1.SpecularColor = new Vector3(0.3f);
 
- // ═══ Draw each afterlyhedron ═══
+ // ═══ Draw each polyhedron ═══
             foreach (var vs in _polyhedrals)
             {
                 polyEffect.DiffuseColor = vs.color;

@@ -6,11 +6,6 @@
 //
 // 3D drawing / rendering module: AtomVisibilityManager.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Collections.Generic;
 using System.Diagnostics;
 using Tal.Calculate;
@@ -68,7 +63,7 @@ namespace Tal.DrawMethods
         }
 
  /// <summary>
- /// Afterkazuje all atoms.
+ /// Pokazuje all atoms.
  /// </summary>
         public static void ShowAll(Molecule molecule)
         {
@@ -82,7 +77,7 @@ namespace Tal.DrawMethods
         }
 
  /// <summary>
- /// Ukrywa afterjedynczy atom.
+ /// Ukrywa pojedynczy atom.
  /// </summary>
         public static void HideAtom(Molecule molecule, int atomIndex)
         {

@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: VdwParameters.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -26,7 +21,7 @@ namespace Tal
  /// DefaultColor[] — original copy, for Reset and comparisons.
  ///
  /// ⚠️ INITIALISATION ORDER (C#):
- /// 1. Afterla static inline — w order deklaracji w pliku
+ /// 1. Pola static inline — w order deklaracji w pliku
  /// 2. Konstruktor static
  ///
  /// Fortego: color[] MUSI be zadeklarowane PRZED DefaultColor[].

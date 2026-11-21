@@ -6,31 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.CrystalPlanes.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.CrystalPlanes — crystallographic planes + their intersections
-// ═══════════════════════════════════════════════════════════════════════
-//
-// (file header unchanged)
-//
-// ⭐ TIER 1 OPTIMIZATION APPLIED:
-// DrawPlaneQuad and DrawPlaneEdges now use pre-allocated vertex
-// buffers from Draw.cs (_planeQuadBuffer / _planeEdgesBuffer)
-// instead of allocating a new VertexAftersitionColor[] every frame.
-// Eliminates 2 allocations per plane per frame.
-//
-// Why pre-allocated arrays instead of stackalloc?
-// MonoGame's DrawUserPrimitives only accepts T[] — not Span<T>.
-// Since the buffer sizes are fixed (6 quad verts, 8 edge verts),
-// a single field-level array can be reused indefinitely with
-// zero allocation and zero GC pressure.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Tal.Core.PowderDiffraction;

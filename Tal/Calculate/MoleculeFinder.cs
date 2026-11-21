@@ -6,33 +6,6 @@
 //
 // Calculation module: MoleculeFinder.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// MoleculeFinder — generyczny BFS do wykrywania molecules w dowolnym zbiorze atoms.
-//
-// ⭐ Wspólne source prawdy for:
-// - Molecule.DetectMolecules (existce API)
-// - HirshfeldScene.ExtractMolecules (new — builds własną cell)
-//
-// ⭐ KLUCZOWE cechy:
-// - useMinimumImage: parameter decydujący czy BFS uses minimum-image
-// (frakcjonalna redukcja mod 1) przy liczeniu distance bonds.
-// Domyślnie TRUE (for Molecule.DetectMolecules).
-// For Hirshfelda FALSE — bo cell bazowa zawiera full molecule,
-// a false bonds przez boundary (np. between dwiema niezależnymi
-// moleculemi w P-1) NIE są afterżądane.
-// - Próg bonds spójny z Flags (BOND_FACTOR, BOND_FACTOR_METALS,
-// H_COVALENT_MAX_DISTANCE) — identyczny jak Calculate_Bonds3D.
-// - IsHydrogenBond przerywa graf na mostkach H···N/O/F — PEŁNA logska
-// oryginalna z Molecule.DetectMolecules (z szukaniem donora).
-// IsHydrogenBond ZAWSZE uses minimum-image for distance H···A —
-// hydrogen bond przez boundary cell jest realny chemicznie.
-// - Mutuje IndividualMoleculeInCell na atomach (if resetIndividualIds=true).
-// - Returns list fragmentów z indexami atoms, centre, bbox.
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -70,7 +43,7 @@ namespace Tal.Calculate
  // Fallback for H_COVALENT_MAX_DISTANCE when Flags.Instance zwróci 0
         private const float H_COVALENT_THRESHOLD_DEFAULT = 1.3f;
 
- // Zawithoutpieczenie before nieskończoną pętlą
+ // Zabezpieczenie before nieskończoną pętlą
         private const int MAX_ATOMS_PER_MOLECULE = 100000;
 
         #endregion
@@ -78,13 +51,13 @@ namespace Tal.Calculate
         #region Public API
 
  /// <summary>
- /// Finds molecule w afterdanej list atoms.
+ /// Finds molecule w podanej list atoms.
  ///
  /// ⭐ useMinimumImage:
  /// - TRUE (by default) — BFS uses minimum-image (redukcja mod 1).
  /// Łączy molecule przez boundary cell.
  /// Used by Molecule.DetectMolecules.
- /// - FALSE — BFS uses distance withoutafterśredniej (without redukcji).
+ /// - FALSE — BFS uses distance bezpośredniej (without redukcji).
  /// NIE łączy przez boundary cell.
  /// Used by HirshfeldScene.
  ///

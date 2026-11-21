@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: CavityPropertyMapper.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -62,7 +57,7 @@ namespace Tal.Cavity
         private Color _fallbackColor = Color.Gray;
         private bool _disposed = false;
 
- // Cache for atom properties and aftersitions
+ // Cache for atom properties and positions
         private float[] _cachedPropertyValues;
         private SysVector3[] _cachedAtomPositions;
         private int _cachedAtomCount = -1;
@@ -147,7 +142,7 @@ namespace Tal.Cavity
         }
 
  /// <summary>
- /// Gets or sets whether to use weighted average for property interafterlation.
+ /// Gets or sets whether to use weighted average for property interpolation.
  /// </summary>
         public bool UseWeightedAverage
         {
@@ -497,7 +492,7 @@ namespace Tal.Cavity
  /// <summary>
  /// Finds nearby atoms using optimized spatial search with BinarySearch on X coordinates.
  /// </summary>
- /// <param name="aftersition">The aftersition to search around.</param>
+ /// <param name="position">The position to search around.</param>
  /// <param name="radius">The search radius.</param>
  /// <param name="radiusSq">The squared search radius for distance comparisons.</param>
  /// <param name="scanner">The VoxelScanner containing spatial data.</param>
@@ -699,9 +694,9 @@ namespace Tal.Cavity
  /// <summary>
  /// Finds nearby atoms using legacy linear scan fallback method.
  /// </summary>
- /// <param name="aftersition">The aftersition to search around.</param>
+ /// <param name="position">The position to search around.</param>
  /// <param name="radiusSq">The squared search radius.</param>
- /// <param name="atomAftersitions">Array of atom aftersitions.</param>
+ /// <param name="atomPositions">Array of atom positions.</param>
  /// <param name="atomCount">Number of atoms to search.</param>
  /// <param name="output">The list to populate with nearby atoms.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1219,7 +1214,7 @@ namespace Tal.Cavity
         #region IDisposable
 
  /// <summary>
- /// Disafterses the property mapper and releases all resources.
+ /// Disposes the property mapper and releases all resources.
  /// </summary>
         public void Dispose()
         {
@@ -1228,9 +1223,9 @@ namespace Tal.Cavity
         }
 
  /// <summary>
- /// Protected disafterse implementation.
+ /// Protected dispose implementation.
  /// </summary>
- /// <param name="disaftersing">True if called from Disafterse, false if from finalizer.</param>
+ /// <param name="disposing">True if called from Dispose, false if from finalizer.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
@@ -1244,7 +1239,7 @@ namespace Tal.Cavity
                 }
                 catch
                 {
- // Ignore errors during disafterse
+ // Ignore errors during dispose
                 }
                 ClearCache();
             }
@@ -1263,14 +1258,14 @@ namespace Tal.Cavity
         {
  /// <summary>The index of the atom in the cache.</summary>
             public int AtomIndex;
- /// <summary>The distance from the query afterint.</summary>
+ /// <summary>The distance from the query point.</summary>
             public float Distance;
 
  /// <summary>
  /// Initializes a new NearbyAtom.
  /// </summary>
  /// <param name="atomIndex">The atom index.</param>
- /// <param name="distance">The distance from the query afterint.</param>
+ /// <param name="distance">The distance from the query point.</param>
             public NearbyAtom(int atomIndex, float distance)
             {
                 AtomIndex = atomIndex;

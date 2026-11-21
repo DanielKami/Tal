@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Cavity detection / analysis module: VdWAnalysisReafterrt.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Cavity detection / analysis module: VdWAnalysisReport.
 
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,8 +12,8 @@ using System.Text.RegularExpressions;
 namespace Tal.Cavity
 {
  /// <summary>
- /// Generates reafterrts from VdW analysis results.
- /// Supafterrts TXT and HTML formats.
+ /// Generates reports from VdW analysis results.
+ /// Supports TXT and HTML formats.
  /// </summary>
     public static class VdWAnalysisReport
     {
@@ -113,6 +108,8 @@ namespace Tal.Cavity
             sb.AppendLine("CELL PARAMETERS:");
             sb.AppendLine($"  Volume:         {results.CellVolume:F4} Å³");
             sb.AppendLine($"  Voxel volume:   {CellParameters.GetVoxelVolume():F6} Å³");
+            sb.AppendLine($"  Voxel edges:    {CellParameters.GetVoxelEdgeSummary()}");
+            sb.AppendLine($"  Micro-tuning:   {(Flags.Instance.MicroTuneVoxelSize ? "ON" : "OFF")}");
             sb.AppendLine($"  Atoms in cell:  {results.AtomCount}");
             sb.AppendLine($"  Cell mass:      {results.CellMass:F2} u");
             sb.AppendLine();
@@ -248,7 +245,7 @@ namespace Tal.Cavity
             sb.AppendLine($"    Correlates with adsorption enthalpy of non-polar guests");
             sb.AppendLine();
 
- // α_afterlar
+ // α_polar
             sb.AppendLine($"α_polar (Max Dipole Sensitivity):    {results.MaxDipoleSensitivity:F6}");
             sb.AppendLine($"  → Maximum dipole sensitivity; response to external electric field");
             sb.AppendLine($"    α_polar = max |d|Dipole|/d(VdW)| between consecutive VdW scales");
@@ -815,6 +812,8 @@ namespace Tal.Cavity
             sb.AppendLine("<div class='info-grid'>");
             sb.AppendLine($"<div><span class='label'>Volume:</span> <span class='value'>{results.CellVolume:F4} Å³</span></div>");
             sb.AppendLine($"<div><span class='label'>Voxel volume:</span> <span class='value'>{CellParameters.GetVoxelVolume():F6} Å³</span></div>");
+            sb.AppendLine($"<div><span class='label'>Voxel edges (a, b, c):</span> <span class='value'>{CellParameters.GetVoxelEdgeSummary()}</span></div>");
+            sb.AppendLine($"<div><span class='label'>Voxel micro-tuning:</span> <span class='value'>{(Flags.Instance.MicroTuneVoxelSize ? "ON" : "OFF")}</span></div>");
             sb.AppendLine($"<div><span class='label'>Atoms in cell:</span> <span class='value'>{results.AtomCount}</span></div>");
             sb.AppendLine($"<div><span class='label'>Cell mass:</span> <span class='value'>{results.CellMass:F2} u</span></div>");
             sb.AppendLine("</div>");
@@ -951,7 +950,7 @@ namespace Tal.Cavity
                 $"<td>Mean Polarizability</td>" +
                 $"<td style='font-size:11px;color:#9cdcfe;'>Polarizability capacity<br/>Higher → stronger dispersion interactions</td></tr>");
 
- // α_afterlar
+ // α_polar
             sb.AppendLine($"<tr><td><strong>α_polar</strong></td>" +
                 $"<td>{results.MaxDipoleSensitivity:F6}</td>" +
                 $"<td>Max Dipole Sensitivity</td>" +

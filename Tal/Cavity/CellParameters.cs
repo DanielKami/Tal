@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: CellParameters.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using SysVector3 = System.Numerics.Vector3;
 using System;
 
@@ -113,6 +108,26 @@ public static class CellParameters
  /// Returns the step size in Angstroms along vector C.
  /// </summary>
     public static float GetStepZ_Angstroms() => StepZ * VecC.Length();
+
+    /// <summary>Number of voxels along A (N = 1 / fractional step).</summary>
+    public static int GetCountA() => StepX > 0 ? (int)Math.Round(1.0 / StepX) : 0;
+    /// <summary>Number of voxels along B.</summary>
+    public static int GetCountB() => StepY > 0 ? (int)Math.Round(1.0 / StepY) : 0;
+    /// <summary>Number of voxels along C.</summary>
+    public static int GetCountC() => StepZ > 0 ? (int)Math.Round(1.0 / StepZ) : 0;
+
+    /// <summary>
+    /// Human-readable summary of the actual voxel edge lengths along a, b, c
+    /// (after optional micro-tuning) with their deviation from the nominal voxel size.
+    /// </summary>
+    public static string GetVoxelEdgeSummary()
+    {
+        if (!IsInitialized) return "n/a";
+        float a = GetStepX_Angstroms(), b = GetStepY_Angstroms(), c = GetStepZ_Angstroms();
+        float nom = VoxelSize;
+        string Dev(float v) => nom > 0 ? $"{(v / nom - 1f) * 100f:+0.00;-0.00;0.00}%" : "";
+        return $"a = {a:F4} Å (N={GetCountA()}, {Dev(a)}), b = {b:F4} Å (N={GetCountB()}, {Dev(b)}), c = {c:F4} Å (N={GetCountC()}, {Dev(c)})";
+    }
 
     #endregion
 

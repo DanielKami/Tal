@@ -6,23 +6,6 @@
 //
 // 3D drawing / rendering module: RuntimeCylinder.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Runtime generator cylindra (rod) for MonoGame 3.8.
-// Nie wymaga pliku rod.X — creates Model w memory przy starcie.
-//
-// ⭐ Kompatybilny z oryginalnym rod.X:
-// - Base length = 39.370080 (as original after FrameTransformMatrix)
-// - Along the -X axis (from X=0 to X=-BASE_LENGTH)
-// - Radius bazowy = RuntimeIcosphere.BASE_RADIUS (1.0)
-// - Without FrameTransformMatrix (identity)
-//
-// Usage (in GameWindow.InitializeGraphics):
-// _smallRod = RuntimeCylinder.Create(_graphicsDevice, segments: 24, capped: true);
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -33,7 +16,7 @@ namespace Tal.DrawMethods
         #region Constants
 
  /// <summary>
- /// ⭐ Length bazowa — odafterwiada oryginalnemu rod.X (39.370080 = 1 metr w calach).
+ /// ⭐ Length bazowa — odpowiada oryginalnemu rod.X (39.370080 = 1 metr w calach).
  /// DO NOT CHANGE — Draw.cs assumes this value via stickFactor.
  /// </summary>
         public const float BASE_LENGTH = -39.370080f;
@@ -165,7 +148,7 @@ namespace Tal.DrawMethods
 
             model.Root = rootBone;
 
- // Afterbond mesha z bone
+ // Pobond mesha z bone
             rootBone.AddMesh(mesh);
 
             return model;

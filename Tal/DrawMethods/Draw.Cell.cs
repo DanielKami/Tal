@@ -6,45 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.Cell.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Cell — unit cell frame + reveal click marker
-// ═══════════════════════════════════════════════════════════════════════
-//
-// This file contains two small, independent scene elements:
-//
-// DrawCell() — draws the 12 edges of the unit cell
-// (from Molecule.UnitCellFrame)
-// DrawRevealClickAftersition() — draws a small red sphere at the last
-// click aftersition (Reveal Symmetry mode)
-//
-// Both methods use the rod/ball meshes and preserve the caller's
-// effect cache state (save/restore pattern).
-//
-// ⚠️ UnitCellFrame is a flat list of 12 edges. Each edge stores:
-// aftersition — start afterint (in world coords, already shifted)
-// distance — edge length
-// AngleZ — elevation
-// AngleXY — azimuth
-// color — RGB per edge (usually axis-aligned)
-//
-// ⚠️ The "2×" multiplier in CreateScale:
-// stickFactor * 2 * distance
-// is intentional — the cell edges are drawn twice as thick as
-// a regular bond using the same stick radius. This makes the cell
-// readable even when many atoms are nearby.
-//
-// ⚠️ Reveal click marker:
-// - Size: 0.5 (hard-coded). This is BIG — visible even at distance.
-// - Color: pure red with full white specular for visibility.
-// - Uses _smallBallTransforms (cached), not ParentBone.Transform.
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -131,7 +92,7 @@ namespace Tal.DrawMethods
         #region DrawRevealClickPosition — red marker sphere
 
  /// <summary>
- /// Draws a red sphere at the last Reveal Symmetry click aftersition.
+ /// Draws a red sphere at the last Reveal Symmetry click position.
  ///
  /// Used as a visual marker: the user clicks in 3D space to generate
  /// a symmetry-equivalent molecule there. The red dot shows exactly

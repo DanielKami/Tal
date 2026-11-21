@@ -6,11 +6,6 @@
 //
 // Calculation module: ShortContactsFinder.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 
@@ -142,7 +137,7 @@ namespace Tal.Calculate
         }
 
  /// <summary>
- /// Zeruje WSZYSTKIE afterla Contact* na all atomach molecule.
+ /// Zeruje WSZYSTKIE pola Contact* na all atomach molecule.
  /// Nie usuwa atoms — only clears dane contacts.
  /// </summary>
         public static void ClearAllContacts(Molecule molecule)
@@ -160,7 +155,7 @@ namespace Tal.Calculate
  /// <summary>
  /// ⭐ ZMIENIONE: NIE usuwa atoms z atom[].
  /// Tylko zeruje flag UseForShortContacts na atomach zarejestrowanych
- /// w ExpandedAtomIndices. Thanks to this indexy w atom[] afterzostają stabilne
+ /// w ExpandedAtomIndices. Thanks to this indexy w atom[] pozostają stabilne
  /// i ContactAtom[] always wskazuje na correct atoms.
  ///
  /// Dodatkowo clears dane Contact* na all atomach.
@@ -188,7 +183,7 @@ namespace Tal.Calculate
             Debug.WriteLine($"[ShortContactsFinder] Reset UseForShortContacts on {resetCount} atoms " +
                             $"(total remains: {molecule.NumberOfAtoms})");
 
- // clear dane Contact* na afterzostałych
+ // clear dane Contact* na pozostałych
             ClearAllContacts(molecule);
         }
 
@@ -207,7 +202,7 @@ namespace Tal.Calculate
         }
 
  /// <summary>
- /// Adde atoms z list do molecule.atom[] z afterprawnym CellShift,
+ /// Adde atoms z list do molecule.atom[] z poprawnym CellShift,
  /// alokacją tablic and rejestracją w ExpandedAtomIndices.
  ///
  /// ⭐ Setia UseForShortContacts = true, UseForHBonds = false.
@@ -255,13 +250,13 @@ namespace Tal.Calculate
                 molecule.atom[idx].H_NrBondedAtoms = 0;
 
  // ═══════════════════════════════════════════════════════
- // Afterzycja kartezjańska (fractional + translation → Cartesian - shift)
+ // Pozycja kartezjańska (fractional + translation → Cartesian - shift)
  // ═══════════════════════════════════════════════════════
                 Vector3 fracPos = new Vector3(na.x, na.y, na.z);
                 molecule.atom[idx].Coordinate = Vector3.Transform(fracPos, U) - shift;
 
  // ═══════════════════════════════════════════════════════
- // Afterdstawowe afterla atom
+ // Podstawowe pola atom
  // ═══════════════════════════════════════════════════════
                 molecule.atom[idx].AtomicNumber = na.AtomicNumber;
                 molecule.atom[idx].name = na.name;
@@ -279,6 +274,7 @@ namespace Tal.Calculate
                 molecule.atom[idx].Ue = na.Ue;
                 molecule.atom[idx].Un = na.Un;
                 molecule.atom[idx].Transformation = na.Transformation;
+                molecule.atom[idx].AsymmetricIndexPlusOne = na.AsymmetricIndexPlusOne;
 
  // ═══════════════════════════════════════════════════════
  // Metadane structurelne
@@ -348,9 +344,9 @@ namespace Tal.Calculate
         }
 
  /// <summary>
- /// Finds atoms z symmetry around afterdanej positions.
+ /// Finds atoms z symmetry around podanej positions.
  /// Used zarówno przez Short Contacts (z filtrem intra/inter)
- /// jak i przez Expand Contacts (without filtra - afterkaż all neighbours).
+ /// jak i przez Expand Contacts (without filtra - pokaż all neighbours).
  /// </summary>
         public static List<Molecule.AtomSimple> FindNearbyAtomsFromSymmetry(
             Molecule molecule,
@@ -392,7 +388,7 @@ namespace Tal.Calculate
                         {
                             if (tx == 0 && ty == 0 && tz == 0) continue;
 
- // optional afterminięcie cell matrixystej
+ // optional pominięcie cell matrixystej
                             if (skipCellZero && tx == 0 && ty == 0 && tz == 0) continue;
 
                             float translatedX = srcAtom.x + tx;
@@ -472,9 +468,9 @@ namespace Tal.Calculate
         }
 
  /// <summary>
- /// Builds matrixe drawing contacts for afterjedynczego atom.
+ /// Builds matrixe drawing contacts for pojedynczego atom.
  /// Used wewnętrznie przez Calculate and przez MainForm
- /// w HandleExpandContactsClick (for afterjedynczego kliknięcia).
+ /// w HandleExpandContactsClick (for pojedynczego kliknięcia).
  /// </summary>
         public static void BuildContactMatrices(
             Molecule molecule,
@@ -544,7 +540,7 @@ namespace Tal.Calculate
         #region Private Helpers
 
  /// <summary>
- /// Zeruje afterla Contact* na afterjedynczym atomie (przez ref — Atom to struct).
+ /// Zeruje pola Contact* na pojedynczym atomie (przez ref — Atom to struct).
  /// </summary>
         private static void ClearContactDataOnAtom(ref Molecule.Atom atom)
         {

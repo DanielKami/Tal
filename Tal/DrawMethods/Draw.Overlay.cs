@@ -6,25 +6,6 @@
 //
 // 3D drawing / rendering module: Draw.Overlay.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════
-// Draw.Overlay — overlay atoms (other molecules alongside the main one)
-// ═══════════════════════════════════════════════════════════════════════
-//
-// (file header unchanged)
-//
-// ⭐ TIER 2.2 OPTIMIZATION APPLIED:
-// Overlay grouping is now cached in _cachedOverlayGroups and rebuilt
-// only when _overlayGroupingDirty is true (set by SetOverlayAtoms and
-// RefreshOverlayCache). Eliminates the per-frame ToLookup allocation
-// (~2-5 KB per frame for typical overlay sizes).
-//
-// ═══════════════════════════════════════════════════════════════════════
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

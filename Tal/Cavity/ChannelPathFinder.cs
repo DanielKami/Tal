@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: ChannelPathFinder.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Runtime.CompilerServices;
 using SysMatrix4x4 = System.Numerics.Matrix4x4;
 using SysVector3 = System.Numerics.Vector3;
@@ -215,7 +210,7 @@ namespace Tal.Cavity
                 Buffer.BlockCopy(density, 0, _densityFlat, 0, _totalVoxels * sizeof(float));
             }
 
- // Flatten aftersitions
+ // Flatten positions
             var grid = cavity.Grid;
             _positionsFlat = new SysVector3[_totalVoxels];
             if (grid?.Positions != null)

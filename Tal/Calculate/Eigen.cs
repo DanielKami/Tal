@@ -6,19 +6,14 @@
 //
 // Calculation module: Eigen.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 
 namespace Tal.Calculate
 {
  /// <summary>
- /// Provides eigenvalue and eigenvector decomaftersition for matrices.
+ /// Provides eigenvalue and eigenvector decomposition for matrices.
  /// Implements numerical algorithms for both symmetric and non-symmetric matrices,
- /// including balancing, Hessenberg reduction, and QR decomaftersition.
+ /// including balancing, Hessenberg reduction, and QR decomposition.
  /// </summary>
     public static class Eigen
     {

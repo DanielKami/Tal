@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: FillAndSpred.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -24,7 +19,7 @@ namespace Tal.Cavity
 {
  /// <summary>
  /// Performs flood-fill cavity detection on a 3D density grid.
- /// Optimized with flat arrays, queue afteroling, and minimal memory allocations.
+ /// Optimized with flat arrays, queue pooling, and minimal memory allocations.
  /// </summary>
     public class CavityFillAndSpread
     {
@@ -240,10 +235,10 @@ namespace Tal.Cavity
  /// Detects cavities in the density grid using flood fill.
  /// </summary>
  /// <param name="densityGrid3D">3D density grid with SDF values.</param>
- /// <param name="grid">Voxel grid with aftersitions and fractional coordinates.</param>
+ /// <param name="grid">Voxel grid with positions and fractional coordinates.</param>
  /// <param name="invFracToCart">Inverse fractional to Cartesian transformation matrix.</param>
  /// <param name="minCorner">Minimum corner of the cell.</param>
- /// <param name="minVolume">Minimum volume for a cavity to be reafterrted.</param>
+ /// <param name="minVolume">Minimum volume for a cavity to be reported.</param>
  /// <param name="minVoxels">Minimum number of voxels for a cavity.</param>
  /// <param name="wallThreshold">Threshold for wall detection.</param>
  /// <param name="marginX">X margin for search range.</param>
@@ -285,7 +280,7 @@ namespace Tal.Cavity
                 return new List<CavityRegion>();
             }
 
- // Flatten aftersitions
+ // Flatten positions
             var positions3D = grid.Positions;
             _positionsFlat = new float[_totalVoxels * 3];
             int idx = 0;
@@ -673,10 +668,10 @@ namespace Tal.Cavity
         #region Report Generation
 
  /// <summary>
- /// Generates a toafterlogy reafterrt for the detected cavities.
+ /// Generates a topology report for the detected cavities.
  /// </summary>
  /// <param name="cavities">List of detected cavities.</param>
- /// <returns>Formatted reafterrt string.</returns>
+ /// <returns>Formatted report string.</returns>
         public string GenerateTopologyReport(List<CavityRegion> cavities)
         {
             var sb = new StringBuilder();

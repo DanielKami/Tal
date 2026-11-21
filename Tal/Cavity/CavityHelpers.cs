@@ -6,11 +6,6 @@
 //
 // Cavity detection / analysis module: CavityHelpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using SysVector3 = System.Numerics.Vector3;
 
@@ -544,7 +539,7 @@ namespace Tal.Cavity
         }
 
  /// <summary>
- /// Gets the toafterlogy type description for a cavity.
+ /// Gets the topology type description for a cavity.
  /// </summary>
         public string GetTopologyDescription(Cavity cavity)
         {
@@ -575,7 +570,7 @@ namespace Tal.Cavity
         }
 
  /// <summary>
- /// Gets color based on toafterlogy type.
+ /// Gets color based on topology type.
  /// </summary>
         public Microsoft.Xna.Framework.Color GetTopologyColor(Cavity cavity)
         {
@@ -1057,7 +1052,7 @@ namespace Tal.Cavity
             return stats;
         }
 
- /// <summary>Exafterrts cavity data to CSV format.</summary>
+ /// <summary>Exports cavity data to CSV format.</summary>
         public string ExportCavitiesToCSV(List<Cavity> cavities)
         {
             if (cavities == null || cavities.Count == 0)
@@ -1081,7 +1076,7 @@ namespace Tal.Cavity
             return sb.ToString();
         }
 
- /// <summary>Exafterrts channel data to CSV format.</summary>
+ /// <summary>Exports channel data to CSV format.</summary>
         public string ExportChannelsToCSV(List<Cavity> cavities)
         {
             if (cavities == null || cavities.Count == 0)
@@ -1110,7 +1105,7 @@ namespace Tal.Cavity
         }
 
  /// <summary>
- /// Generates a channel network reafterrt for all cavities.
+ /// Generates a channel network report for all cavities.
  /// </summary>
         public string GenerateChannelNetworkReport(List<Cavity> cavities)
         {

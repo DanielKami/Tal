@@ -4,12 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Cavity detection / analysis module: CavitySingleRunReafterrt.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
+// Cavity detection / analysis module: CavitySingleRunReport.
 
 using System.Globalization;
 using System.Text;
@@ -17,7 +12,7 @@ using System.Text;
 namespace Tal.Cavity
 {
  /// <summary>
- /// Generates a complete single-run cavity detection reafterrt.
+ /// Generates a complete single-run cavity detection report.
  /// Includes crystal data, grid info, per-cavity table, channels,
  /// sphere fits, gas/solvent compatibility, single-run QSPR, and refinement metadata.
  /// </summary>
@@ -208,7 +203,14 @@ namespace Tal.Cavity
             float voxelSize = detector.Scanner?.VoxelSize ?? 0f;
 
             sb.AppendLine("Voxel geometry:");
-            sb.AppendLine($"  Voxel size:              {voxelSize:F4} Å");
+            sb.AppendLine($"  Voxel size (nominal):    {voxelSize:F4} Å");
+            if (CellParameters.IsInitialized)
+            {
+                sb.AppendLine($"  Voxel edge a:            {CellParameters.GetStepX_Angstroms():F4} Å  (N = {CellParameters.GetCountA()})");
+                sb.AppendLine($"  Voxel edge b:            {CellParameters.GetStepY_Angstroms():F4} Å  (N = {CellParameters.GetCountB()})");
+                sb.AppendLine($"  Voxel edge c:            {CellParameters.GetStepZ_Angstroms():F4} Å  (N = {CellParameters.GetCountC()})");
+            }
+            sb.AppendLine($"  Micro-tuning:            {(Flags.Instance.MicroTuneVoxelSize ? $"ON (range ±{Flags.Instance.MicroTuneRangePercent:F1}%)" : "OFF (floor)")}");
             sb.AppendLine($"  Voxel volume:            {voxelVolume:F6} Å³");
             sb.AppendLine($"  Max SDF distance:        {detector.Scanner?.MaxDistFine ?? 0:F3} Å");
             sb.AppendLine($"  Non-orthogonal cell:     {(CellParameters.IsNonOrthogonal() ? "YES" : "NO")}");
