@@ -6,13 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldParameters.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldParameters v4 — increased CUT_OFF for better neighbour collection.
-
 using System;
 using Microsoft.Xna.Framework;
 using Tal.Hirshfeld.Sto;

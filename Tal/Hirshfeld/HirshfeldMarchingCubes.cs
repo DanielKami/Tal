@@ -6,19 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldMarchingCubes.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldMarchingCubes v2.1 — flat arrays.
-//
-// ⭐ ZMIANY relative to v2.0:
-// - NIE alokuje mcInput (float[] z (W - isoLevel)).
-// - Passes W (flat) + isoLevel DIRECTLY to the generator.
-// Generator odejmuje isoLevel inline w hot loopie.
-// - Savings: 55 MB allocations + copying at 240³.
-
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -127,7 +114,7 @@ namespace Tal.Hirshfeld
         }
 
  /// <summary>
- /// Proste Laplacian smoothing — without changes toafterlogsi.
+ /// Proste Laplacian smoothing — without changes topologsi.
  /// </summary>
         private static void SmoothMesh(HirshfeldSurface surface, int iterations, float factor)
         {

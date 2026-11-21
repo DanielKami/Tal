@@ -6,37 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldProperties.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldProperties v3 — fixes for "white patches" on the Hirshfeld surface.
-//
-// ⭐ v3 CHANGES (bug fixes):
-//
-// FIX #1 — MIN_DIST_SQ reduced from 1e-6f to 1e-10f.
-// Rationale: the mesh vertex is NOT an atom, so "self-distance" does
-// not exist. The old threshold 1e-3 Å was rejecting legitimate atoms
-// that sit very close to the surface (heavy atoms with narrow Gaussians,
-// or vertices near atomic nuclei). When ALL outer atoms were rejected,
-// de == 0 and the d_norm term was silently skipped → d_norm ≈ 0 →
-// white color on the surface.
-//
-// FIX #2 — d_norm now ALWAYS accumulates BOTH terms.
-// Old code used "if (de > 0 && ...)" which silently skipped a term
-// when no atom was found. That produced d_norm ≈ 0 (white) by accident.
-// New code uses a fallback (r_vdW * 2) so d_norm is never 0 due to
-// missing data.
-//
-// FIX #3 — d_norm clamp widened from [-1.5, 1.5] to [-3.0, 3.0].
-// Old clamp created large flat-colored regions where d_norm exceeded
-// 1.5 — visually appearing as "non-physical brightening".
-//
-// KEPT — SceneAtom-based computation (v2). CartPosition in SceneAtom is
-// already in the same coordinate frame as surface.Vertices (no extra
-// moleculeShift is added).
-
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;

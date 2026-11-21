@@ -6,20 +6,6 @@
 //
 // Hirshfeld surface module: StoDensityLut.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// StoDensityLut v8 — runtime-konfigurowalne parametery (Advanced panel).
-//
-// ⭐ v8 ZMIANY:
-// - All parameters (DEFAULT_STEP, EXP_CUTOFF, MAX_RMAX) are now
-// STATIC with public setters — can be changed at runtime from the GUI.
-// - Zmiana wymaga wyczyszczenia cache LUT (StoDatabase.ClearLutCache())
-// i afternownego prebuildu.
-// - Default values consistent with v7.
-
 using System;
 using System.Runtime.CompilerServices;
 

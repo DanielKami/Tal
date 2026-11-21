@@ -4,18 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Hirshfeld surface module: HirshfeldContactDecomafterse.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldContactDecomafterse — full decomafterse fingerprintu (jak CrystalExplorer):
-// - typ contactu per vertex (Element_inner ··· Element_outer)
-// - % surface (area-weighted triangles)
-// - tabela tekstowa do schowka
-// - element-order normalisation (H···O = O···H)
+// Hirshfeld surface module: HirshfeldContactDecompose.
 
 using System;
 using System.Collections.Generic;

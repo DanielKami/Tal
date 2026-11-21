@@ -6,13 +6,6 @@
 //
 // Hirshfeld surface module: StoDatabase.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// StoDatabase v2 — cache LUT per symbol (shared between atomami tego samego typu).
-
 using System;
 using System.Collections.Generic;
 using System.IO;

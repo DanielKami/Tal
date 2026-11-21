@@ -6,13 +6,6 @@
 //
 // Hirshfeld surface module: StoAtomDensity.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// StoAtomDensity v4 — dodano FindRadiusAtThreshold (cutoff na density).
-
 using System;
 using System.Collections.Generic;
 

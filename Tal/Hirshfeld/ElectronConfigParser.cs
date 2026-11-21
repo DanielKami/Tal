@@ -6,14 +6,6 @@
 //
 // Hirshfeld surface module: ElectronConfigParser.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ElectronConfigParser v2 — fix for letter-catching bugs in names
-// elements (CARBON → O, IRON → O) and in orbital symbols (2P → P).
-
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -117,7 +109,7 @@ namespace Tal.Hirshfeld.Sto
         }
 
  /// <summary>
- /// Number of orbitals in afterdshell (2l+1): S=1, P=3, D=5, F=7.
+ /// Number of orbitals in podshell (2l+1): S=1, P=3, D=5, F=7.
  /// </summary>
         private static int GetOrbitalCount(string orbital)
         {

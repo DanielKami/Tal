@@ -6,25 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldDetector.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldDetector v4 — STO (LUT) + Gaussian fallback.
-//
-// ⭐ v4 ZMIANY:
-// - FillDensity uses ALL cores (was: ProcessorCount - 1).
-// - Round-robin partition atoms → even thread load.
-// - Fallback single-thread for small grids.
-// - OOM fallback → half the threads.
-// - Grid blur DISABLED by default (unless the user explicitly sets it).
-// - FillDensitySto zoptymalizowane (inline, cutoff per-i-j).
-//
-// Historia:
-// v3 — STO + Gaussian fallback, threadCount = ProcessorCount - 1.
-// v4 — full core usage + sharper surface.
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

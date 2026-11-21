@@ -6,11 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldAnalysisResults.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
@@ -113,7 +108,7 @@ namespace Tal.Hirshfeld
         public (int binDe, int binDi)[] VertexBins;
 
  /// <summary>
- /// Calculates number vertices per type contactu (na afterdstawie ContactTypes).
+ /// Calculates number vertices per type contactu (na podstawie ContactTypes).
  /// Call after filling ContactTypes.
  /// </summary>
         public void ComputeContactTypeCounts()

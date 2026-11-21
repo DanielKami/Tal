@@ -6,20 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldUnitCell.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldUnitCell — INDEPENDENT unit-cell representation.
-//
-// ⭐ v14:
-// - CellAtom ma areas Charge i Hydrophobicity (kopiowane z AtomSimple).
-// - Per-op translation + dedup (jak v13).
-//
-// ⭐ Cartesian coordinates (CellAtom.Cart) are in the RAW frame:
-// Cart = FracToCart(frac) (BEZ -MoleculeShift)
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

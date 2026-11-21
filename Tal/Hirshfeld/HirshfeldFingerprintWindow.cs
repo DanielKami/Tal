@@ -6,11 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldFingerprintWindow.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -23,9 +18,9 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 namespace Tal.Hirshfeld
 {
  /// <summary>
- /// ⭐ v18 — Contact decomafterse:
+ /// ⭐ v18 — Contact decompose:
  /// - CheckedListBox z typami contacts (C···H, O···H, itd.)
- /// - Tabelka decomafterse (area %, verts, sumy)
+ /// - Tabelka decompose (area %, verts, sumy)
  /// - Filtr przekazywany do HirshfeldDocument przez OnContactFilterChanged
  /// - Start: wszystko selected = no filtra (null)
  /// - Suppress events while filling lists (avoid "only O" effect)

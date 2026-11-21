@@ -6,20 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldDocument.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldDocument v10 — Advanced panel for STO tuning.
-//
-// ⭐ v10 ZMIANY:
-// - Removed Pre-blur (grid) — always disabled (blur=0).
-// - Removed White band — always 0 (no band).
-// - Dodano Advanced checkbox + panel z 3 suwakami:
-// DEFAULT_STEP, EXP_CUTOFF, MAX_RMAX
-// - Rebuild LUT cache + Regenerate przyciskiem.
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -126,7 +112,7 @@ namespace Tal.Hirshfeld
         private const float DNORM_SCALE_MIN = 0.2f;
         private const float DNORM_SCALE_MAX = 3.0f;
 
- // ⭐ White band REMOVED — always 0. Afterle _whiteBandFactor removed.
+ // ⭐ White band REMOVED — always 0. Pole _whiteBandFactor removed.
 
  // ⭐ Used by DE/DI palety
         private float _thresholdGamma = 0.55f;
@@ -1964,7 +1950,7 @@ namespace Tal.Hirshfeld
                 }
             }
 
- // ═══ 3) Maafterwanie property ═══
+ // ═══ 3) Mapowanie property ═══
             switch (_propertyMode)
             {
                 case HirshfeldPropertyMode.BaseColor:

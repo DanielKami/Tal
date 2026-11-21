@@ -6,11 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldSmoothing.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -29,7 +24,7 @@ namespace Tal.Hirshfeld
  /// z tego samego punktu, so suwak jest deterministyczny:
  /// change 5 → 0 wraca do ORYGINALNEJ surface z MC.
  ///
- /// ⭐ Cache neighbourhood — toafterlogsa nie zmienia, so liczone raz.
+ /// ⭐ Cache neighbourhood — topologsa nie zmienia, so liczone raz.
  ///
  /// ⭐ Normals recomputed after every smoothing (needed for lighting).
  /// </summary>
@@ -55,7 +50,7 @@ namespace Tal.Hirshfeld
             = new Dictionary<int, Vector3[]>();
 
  /// <summary>
- /// Cache neighbourhood per-vertex — toafterlogsa nie zmienia .
+ /// Cache neighbourhood per-vertex — topologsa nie zmienia .
  /// </summary>
         private static readonly Dictionary<int, int[][]> _neighborCache
             = new Dictionary<int, int[][]>();
@@ -259,7 +254,7 @@ namespace Tal.Hirshfeld
                 newPos[i] = Vector3.Lerp(verts[i], avg, factor);
             }
 
- // ⭐ Scopy z afterwrotem (in-place)
+ // ⭐ Scopy z powrotem (in-place)
             for (int i = 0; i < n; i++)
                 verts[i] = newPos[i];
         }

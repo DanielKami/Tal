@@ -6,18 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldDiagnosticsFormatter.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldDiagnosticsFormatter — zamienia HirshfeldAtomDistanceDiagnostics
-// na list linii (string, Color) do display w DebugWindow.
-//
-// ⭐ ZASADA: DebugWindow NIE WIE nic o Hirshfeldzie.
-// This class does ALL the formatting work.
-// DebugWindow dostaje only gotowe linie do display.
-
 using System.Collections.Generic;
 using System.Globalization;
 using GdiColor = System.Drawing.Color;

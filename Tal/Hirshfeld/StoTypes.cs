@@ -6,11 +6,6 @@
 //
 // Hirshfeld surface module: StoTypes.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Collections.Generic;
 
 namespace Tal.Hirshfeld.Sto

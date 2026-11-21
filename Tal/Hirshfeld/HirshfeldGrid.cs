@@ -6,44 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldGrid.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldGrid — mesh density Hirshfelda.
-//
-// ⭐ ZMIANA v3 (flat arrays — performance):
-// All density arrays (W, RhoPro, RhoProm_Outer) are now
-// FLAT: float[] of length nx*ny*nz instead of float[nx,ny,nz].
-//
-// Uzasadnienie:
-// - float[,,] in .NET is NOT a contiguous block — it is a jagged array:
-// float[,,] → float[][,] → float[][] → float[]
-// Each [i,j,k] access is 3 pointer dereferences.
-// - float[] with manual indexing is 1 pointer dereference.
-// - Flat array has better cache locality (prefetch works linearly).
-// - Flat array allows SIMD (Vector<float> on a contiguous buffer).
-// - One large object instead of hundreds of small ones — less GC pressure.
-//
-// Layout: idx = i + nx * (j + ny * k)
-// - Fastest iteration over k (innermost loop) — sequential access
-// - Iteracja after j — stride nx
-// - Iteracja after i — stride nx*ny
-//
-// To jest column-major for (i,j,k) z k jako najszybszym indexem.
-//
-// ⭐ ZMIANA v2 (semantyka — zachowana):
-// Fallback for emptych voxels: 0.5f → 0f.
-//
-// Uzasadnienie:
-// - Value 0.5 means the "true Hirshfeld surface" (rho_pro = rho_outer).
-// - Empty voxels (prom < EPS) are NOT surface — that is true vacuum
-// outside the range of all Gaussians.
-// - Fallback 0.5 gave false "≈ 0.5" in ~67% of voxels (the entire grid vacuum),
-// which caused Marching Cubes to generate false triangles.
-// - Fallback 0 jest correct: vacuum = w = 0 = "outside target molecule".
-
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;

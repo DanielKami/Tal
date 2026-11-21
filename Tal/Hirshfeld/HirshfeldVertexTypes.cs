@@ -6,11 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldVertexTypes.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -18,7 +13,7 @@ namespace Tal.Hirshfeld
 {
  /// <summary>
  /// Vertex typu Position + Normal + Color (Vector4) — dedykowany for
- /// meshu surface Hirshfelda. Afterzwala na lighting per-pixel
+ /// meshu surface Hirshfelda. Pozwala na lighting per-pixel
  /// (BasicEffect.PreferPerPixelLighting) + colour per-vertex
  /// (d_norm / d_e / d_i or own colour bazowy).
  ///

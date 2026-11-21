@@ -6,29 +6,10 @@
 //
 // Hirshfeld surface module: HirshfeldScene.
 
-﻿// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
 // HIRSHFELD SURFACE — PIPELINE OVERVIEW
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ───────────────────────────────────────────────────────────────────────────
-// PURPOSE
-// ───────────────────────────────────────────────────────────────────────────
-// Compute the Hirshfeld surface of a selected molecule (promolecule / host)
-// in a crystal. The surface is the isosurface where the promolecule's
-// electron density equals the density of all surrounding atoms:
-//
-// w(r) = rho_promolecule(r) / ( rho_promolecule(r) + rho_outer(r) ) = 0.5
-//
-// ⭐ v14:
-// - SceneAtom ma areas Charge + Hydrophobicity (kopiowane z CellAtom).
-// - CollectTargetAtoms i CollectNeighbors propagate these fields.
-// - Zachowane v13: pre-kalkulacja cellAtomsCart + translations.
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

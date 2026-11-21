@@ -6,11 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldDocument.Designer.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 namespace Tal.Hirshfeld
 {
     partial class HirshfeldDocument
@@ -719,7 +714,7 @@ namespace Tal.Hirshfeld
             this._btnSavePly.UseVisualStyleBackColor = false;
 
  // ═══════════════════════════════════════════════════════════
- // _btnExafterrtPng
+ // _btnExportPng
  // ═══════════════════════════════════════════════════════════
             this._btnExportPng.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this._btnExportPng.BackColor = System.Drawing.Color.FromArgb(230, 230, 235);

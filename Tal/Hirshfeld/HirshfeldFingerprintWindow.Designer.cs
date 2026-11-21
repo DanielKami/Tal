@@ -6,11 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldFingerprintWindow.Designer.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 namespace Tal.Hirshfeld
 {
     partial class HirshfeldFingerprintWindow
@@ -35,7 +30,7 @@ namespace Tal.Hirshfeld
         #region Component Designer generated code
 
  /// <summary>
- /// Required method for Designer supafterrt - do not modify
+ /// Required method for Designer support - do not modify
  /// the contents of this method with the code editor.
  /// </summary>
         private void InitializeComponent()
@@ -69,7 +64,7 @@ namespace Tal.Hirshfeld
             this._chkShowMajorGrid = new System.Windows.Forms.CheckBox();
             this._chkShowMinorGrid = new System.Windows.Forms.CheckBox();
 
- // ── Contact decomafterse ──
+ // ── Contact decompose ──
             this._lblDecomposeTitle = new System.Windows.Forms.Label();
             this._lstContactTypes = new System.Windows.Forms.CheckedListBox();
             this._btnSelectAllTypes = new System.Windows.Forms.Button();
@@ -78,7 +73,7 @@ namespace Tal.Hirshfeld
             this._txtDecomposeTable = new System.Windows.Forms.TextBox();
             this._btnCopyTable = new System.Windows.Forms.Button();
 
- // ── Exafterrt ──
+ // ── Export ──
             this._btnSavePng = new System.Windows.Forms.Button();
 
  // ── Status ──
@@ -309,7 +304,7 @@ namespace Tal.Hirshfeld
             this._chkShowMinorGrid.UseVisualStyleBackColor = true;
 
  // ═══════════════════════════════════════════════════════════
- // _lblDecomafterseTitle
+ // _lblDecomposeTitle
  // ═══════════════════════════════════════════════════════════
             this._lblDecomposeTitle.AutoSize = false;
             this._lblDecomposeTitle.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Bold);
@@ -363,7 +358,7 @@ namespace Tal.Hirshfeld
             this._btnClearTypes.UseVisualStyleBackColor = false;
 
  // ═══════════════════════════════════════════════════════════
- // _lblDecomafterseTableTitle
+ // _lblDecomposeTableTitle
  // ═══════════════════════════════════════════════════════════
             this._lblDecomposeTableTitle.AutoSize = false;
             this._lblDecomposeTableTitle.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Bold);
@@ -376,7 +371,7 @@ namespace Tal.Hirshfeld
             this._lblDecomposeTableTitle.Text = "Decompose table:";
 
  // ═══════════════════════════════════════════════════════════
- // _txtDecomafterseTable
+ // _txtDecomposeTable
  // ═══════════════════════════════════════════════════════════
             this._txtDecomposeTable.Font = new System.Drawing.Font("Consolas", 8F);
             this._txtDecomposeTable.Location = new System.Drawing.Point(13, 560);

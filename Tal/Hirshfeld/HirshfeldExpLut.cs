@@ -6,29 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldExpLut.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldExpLut — fast exp(-x) approximation via LUT table
-// with linear interpolation.
-//
-// ⭐ ZAMIENNIK MathF.Exp w hot loopach FillDensity.
-//
-// Uzasadnienie:
-// - MathF.Exp to ~20-40 cykli CPU (f2xm1 + fscale).
-// - Przy h=0.05 Å i 100 atomach → ~15M calls per thread.
-// - LUT with linear interpolation: ~5 cycles (2 load + FMA).
-// - Max error ~1e-5 for x ∈ [0, 25] — visually invisible.
-//
-// Zakres:
-// - x ∈ [0, 25] → returns exp(-x) ∈ [1, ~1.4e-11]
-// - x < 0 → returns 1.0 (should not happen, but safe)
-// - x > 25 → returns 0.0 (exp(-25) ≈ 1.4e-11, below visual precision)
-//
-// Rozmiar LUT: 4096 entries × 4 B = 16 KB — fits in L1 cache.
-
 using System;
 using System.Runtime.CompilerServices;
 

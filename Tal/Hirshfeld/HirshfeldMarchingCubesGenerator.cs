@@ -6,24 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldMarchingCubesGenerator.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// KOPIA MarchingCubesMeshGenerator — dedykowana for Hirshfelda.
-// Vertex positions are taken from grid.GetPosition(x, y, z), same as in cavities.
-//
-// ⭐ v2.1 (STABILNA — without per-thread list, without precompute):
-// - Sygnatura Extract przyjmuje float[] density (flat) + nx, ny, nz + isoLevel.
-// - Hot loop czyta density[i + nx*(j + ny*k)] (1 pointer dereference).
-// - isoLevel odejmowane inline (without alokacji mcInput).
-// - stackalloc afterints/edgeT/localVerts/localIndices RAZ na thread.
-// - lock (vertices) — wolne, ale POPRAWNE.
-// - GetPosition per voxel — without precompute.
-// - Debug.Assert na triangles.Length.
-// - Span.CopyTo zamiast Array.Copy.
-
 using System;
 using System.Buffers;
 using System.Collections.Generic;

@@ -6,16 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldAtomDistanceDiagnostics.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldAtomDistanceDiagnostics — statystyki distance atoms od TargetCenter.
-//
-// Used for diagnostics: how many atoms are at what distance from the surface
-// Hirshfelda i which can be discarded without changing the result.
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +49,7 @@ namespace Tal.Hirshfeld
  // ═══ Metody ═══
 
  /// <summary>
- /// Liczy statystyki na afterdstawie Scene + Grid + Surface.
+ /// Liczy statystyki na podstawie Scene + Grid + Surface.
  /// </summary>
         public static HirshfeldAtomDistanceDiagnostics Compute(
             HirshfeldScene scene,
@@ -92,7 +82,7 @@ namespace Tal.Hirshfeld
                 if (surface != null)
                 {
  // margin = R_grid - R_target
- // Ale nie mamy R_grid wprost — afterlicz z gridu:
+ // Ale nie mamy R_grid wprost — policz z gridu:
  // grid is a cube, R_grid = (BoundsMax.X - BoundsMin.X) / 2
                     diag.RGrid = extent / 2f;
                     diag.Margin = diag.RGrid - diag.RTarget;

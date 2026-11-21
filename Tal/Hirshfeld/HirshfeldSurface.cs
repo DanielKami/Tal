@@ -6,11 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldSurface.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 

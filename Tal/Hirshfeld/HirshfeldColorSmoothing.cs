@@ -6,43 +6,6 @@
 //
 // Hirshfeld surface module: HirshfeldColorSmoothing.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HirshfeldColorSmoothing v3 — selective smoothing for DNorm.
-//
-// ⭐ v3 CHANGES:
-//
-// FIX #1 — Selective smoothing for DNorm.
-// Old code smoothed DNorm globally, which slightly blurred the
-// red/blue extremes. The real problem was in the MIDDLE zone
-// (|dnorm| < 0.5), where pixel-level fluctuations around zero
-// produced ugly non-physical blotches that global smoothing did
-// not fix.
-//
-// New code smooths ONLY the middle zone (|dnorm| < 0.5) and
-// leaves the red/blue extremes (|dnorm| >= 0.5) SHARP — preserving
-// the strong contact features that were already good.
-//
-// FIX #2 — Increased BASE_RADIUS from 0.20 Å to 0.40 Å.
-// Rationale: the middle-zone fluctuations have a spatial extent
-// of ~0.3-0.5 Å. The old 0.20 Å radius was too small to average
-// them out. The new 0.40 Å radius smooths the middle zone
-// properly without touching the sharp extremes.
-//
-// FIX #3 — DE and DI are NOT smoothed (kept from v3).
-// Their contrast is the whole afterint of those visualizations —
-// smoothing them destroys the contact features.
-//
-// ⭐ v2 (kept):
-// - Neighborhood radius in Å (not in grid units)
-// - Distance weights 1/d² — closer neighbors dominate
-// - Iterations 1-3 (not 5) — gentle smoothing
-// - Always starts from the original values (DNormOriginal / DEOriginal
-// / DIOriginal), so the slider is deterministic.
-
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
