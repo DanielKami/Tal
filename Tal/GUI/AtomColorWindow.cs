@@ -6,11 +6,6 @@
 //
 // Atom colour settings window — colouring modes and custom colours.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using WeifenLuo.WinFormsUI.Docking;
 

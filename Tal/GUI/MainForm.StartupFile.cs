@@ -6,11 +6,6 @@
 //
 // MainForm partial — startup file processing (command-line / IPC).
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System;
 using System.IO;
 using System.Windows.Forms;

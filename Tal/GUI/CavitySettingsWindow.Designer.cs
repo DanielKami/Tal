@@ -6,7 +6,7 @@
 //
 // CavitySettingsWindow designer-generated layout.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class CavitySettingsWindow
     {
@@ -42,6 +42,9 @@
             lblVdwMultiplier = new Label();
             numResolution = new NumericUpDown();
             chkUseThermalMotion = new CheckBox();
+            chkMicroTuneVoxel = new CheckBox();
+            numMicroTuneRange = new NumericUpDown();
+            lblMicroTuneRange = new Label();
             lblResolution = new Label();
             btnClearCavities = new Button();
             btnDetectCavities = new Button();
@@ -61,6 +64,8 @@
             btnExportReport = new Button();
             lblStatus = new Label();
             lblCavityCount = new Label();
+            grpVoxelEdges = new GroupBox();
+            lblVoxelEdges = new Label();
             grpCavityList = new GroupBox();
             lstCavityVisibility = new CheckedListBox();
             btnCavitiesAll = new Button();
@@ -68,10 +73,12 @@
             grpDetection.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numVdwMultiplier).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numResolution).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numMicroTuneRange).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numSmoothing).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackTransparency).BeginInit();
             grpDisplayMode.SuspendLayout();
             grpCavityList.SuspendLayout();
+            grpVoxelEdges.SuspendLayout();
             SuspendLayout();
             // 
             // chkEnableCavity
@@ -92,12 +99,15 @@
             grpDetection.Controls.Add(lblVdwMultiplier);
             grpDetection.Controls.Add(numResolution);
             grpDetection.Controls.Add(chkUseThermalMotion);
+            grpDetection.Controls.Add(chkMicroTuneVoxel);
+            grpDetection.Controls.Add(numMicroTuneRange);
+            grpDetection.Controls.Add(lblMicroTuneRange);
             grpDetection.Controls.Add(lblResolution);
             grpDetection.Controls.Add(btnClearCavities);
             grpDetection.Controls.Add(btnDetectCavities);
             grpDetection.Location = new Point(12, 41);
             grpDetection.Name = "grpDetection";
-            grpDetection.Size = new Size(301, 195);
+            grpDetection.Size = new Size(301, 253);
             grpDetection.TabIndex = 1;
             grpDetection.TabStop = false;
             grpDetection.Text = "🔬 Detection Parameters";
@@ -134,7 +144,7 @@
             numResolution.Name = "numResolution";
             numResolution.Size = new Size(80, 27);
             numResolution.TabIndex = 1;
-            numResolution.Value = new decimal(new int[] { 15, 0, 0, 131072 });
+            numResolution.Value = new decimal(new int[] { 10, 0, 0, 131072 });
             numResolution.ValueChanged += NumResolution_ValueChanged;
             // 
             // chkUseAnisotropicVdW
@@ -147,6 +157,39 @@
             chkUseThermalMotion.Text = "Use thermal motion (Uij/Uiso)";
             chkUseThermalMotion.UseVisualStyleBackColor = true;
             chkUseThermalMotion.CheckedChanged += ChkUseThermalMotion_CheckedChanged;
+            // 
+            // chkMicroTuneVoxel
+            // 
+            chkMicroTuneVoxel.AutoSize = true;
+            chkMicroTuneVoxel.Location = new Point(10, 148);
+            chkMicroTuneVoxel.Name = "chkMicroTuneVoxel";
+            chkMicroTuneVoxel.Size = new Size(247, 24);
+            chkMicroTuneVoxel.TabIndex = 10;
+            chkMicroTuneVoxel.Text = "Micro-tune voxel size (a, b, c)";
+            chkMicroTuneVoxel.UseVisualStyleBackColor = true;
+            chkMicroTuneVoxel.CheckedChanged += ChkMicroTuneVoxel_CheckedChanged;
+            // 
+            // lblMicroTuneRange
+            // 
+            lblMicroTuneRange.AutoSize = true;
+            lblMicroTuneRange.Location = new Point(30, 180);
+            lblMicroTuneRange.Name = "lblMicroTuneRange";
+            lblMicroTuneRange.Size = new Size(106, 20);
+            lblMicroTuneRange.TabIndex = 11;
+            lblMicroTuneRange.Text = "Max deviation ± (%):";
+            // 
+            // numMicroTuneRange
+            // 
+            numMicroTuneRange.DecimalPlaces = 1;
+            numMicroTuneRange.Increment = new decimal(new int[] { 5, 0, 0, 65536 });
+            numMicroTuneRange.Location = new Point(170, 178);
+            numMicroTuneRange.Maximum = new decimal(new int[] { 20, 0, 0, 0 });
+            numMicroTuneRange.Minimum = new decimal(new int[] { 0, 0, 0, 0 });
+            numMicroTuneRange.Name = "numMicroTuneRange";
+            numMicroTuneRange.Size = new Size(80, 27);
+            numMicroTuneRange.TabIndex = 12;
+            numMicroTuneRange.Value = new decimal(new int[] { 50, 0, 0, 65536 });
+            numMicroTuneRange.ValueChanged += NumMicroTuneRange_ValueChanged;
             // 
             // lblResolution
             // 
@@ -162,7 +205,7 @@
             btnClearCavities.BackColor = Color.FromArgb(200, 50, 50);
             btnClearCavities.FlatStyle = FlatStyle.Flat;
             btnClearCavities.ForeColor = Color.White;
-            btnClearCavities.Location = new Point(155, 158);
+            btnClearCavities.Location = new Point(155, 216);
             btnClearCavities.Name = "btnClearCavities";
             btnClearCavities.Size = new Size(135, 30);
             btnClearCavities.TabIndex = 11;
@@ -175,7 +218,7 @@
             btnDetectCavities.BackColor = Color.FromArgb(0, 120, 215);
             btnDetectCavities.FlatStyle = FlatStyle.Flat;
             btnDetectCavities.ForeColor = Color.White;
-            btnDetectCavities.Location = new Point(10, 158);
+            btnDetectCavities.Location = new Point(10, 216);
             btnDetectCavities.Name = "btnDetectCavities";
             btnDetectCavities.Size = new Size(135, 30);
             btnDetectCavities.TabIndex = 10;
@@ -243,7 +286,7 @@
             grpDisplayMode.Controls.Add(rbPropertyMap);
             grpDisplayMode.Controls.Add(rbNormal);
             grpDisplayMode.Controls.Add(rbHidden);
-            grpDisplayMode.Location = new Point(12, 242);
+            grpDisplayMode.Location = new Point(12, 300);
             grpDisplayMode.Name = "grpDisplayMode";
             grpDisplayMode.Size = new Size(301, 286);
             grpDisplayMode.TabIndex = 2;
@@ -335,7 +378,7 @@
             grpCavityList.Controls.Add(lstCavityVisibility);
             grpCavityList.Controls.Add(btnCavitiesAll);
             grpCavityList.Controls.Add(btnCavitiesNone);
-            grpCavityList.Location = new Point(12, 520);
+            grpCavityList.Location = new Point(12, 578);
             grpCavityList.Name = "grpCavityList";
             grpCavityList.Size = new Size(301, 160);
             grpCavityList.TabIndex = 8;
@@ -376,7 +419,7 @@
             // 
             // btnExportReport
             // 
-            btnExportReport.Location = new Point(12, 688);
+            btnExportReport.Location = new Point(12, 746);
             btnExportReport.Name = "btnExportReport";
             btnExportReport.Size = new Size(301, 30);
             btnExportReport.TabIndex = 5;
@@ -384,11 +427,31 @@
             btnExportReport.UseVisualStyleBackColor = true;
             btnExportReport.Click += BtnExportReport_Click;
             // 
+            // grpVoxelEdges
+            // 
+            grpVoxelEdges.Controls.Add(lblVoxelEdges);
+            grpVoxelEdges.Location = new Point(12, 784);
+            grpVoxelEdges.Name = "grpVoxelEdges";
+            grpVoxelEdges.Size = new Size(301, 80);
+            grpVoxelEdges.TabIndex = 7;
+            grpVoxelEdges.TabStop = false;
+            grpVoxelEdges.Text = "Voxel edges (Å)";
+            // 
+            // lblVoxelEdges
+            // 
+            lblVoxelEdges.AutoSize = false;
+            lblVoxelEdges.Font = new Font("Consolas", 9F);
+            lblVoxelEdges.Location = new Point(10, 22);
+            lblVoxelEdges.Name = "lblVoxelEdges";
+            lblVoxelEdges.Size = new Size(281, 52);
+            lblVoxelEdges.TabIndex = 0;
+            lblVoxelEdges.Text = "a   -\r\nb   -\r\nc   -";
+            // 
             // lblStatus
             // 
             lblStatus.AutoSize = true;
             lblStatus.ForeColor = Color.Gray;
-            lblStatus.Location = new Point(12, 726);
+            lblStatus.Location = new Point(12, 872);
             lblStatus.Name = "lblStatus";
             lblStatus.Size = new Size(50, 20);
             lblStatus.TabIndex = 6;
@@ -398,7 +461,7 @@
             // 
             lblCavityCount.AutoSize = true;
             lblCavityCount.ForeColor = Color.Gray;
-            lblCavityCount.Location = new Point(227, 726);
+            lblCavityCount.Location = new Point(227, 872);
             lblCavityCount.Name = "lblCavityCount";
             lblCavityCount.Size = new Size(75, 20);
             lblCavityCount.TabIndex = 7;
@@ -410,8 +473,11 @@
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(248, 248, 250);
-            ClientSize = new Size(340, 760);
+            AutoScroll = true;
+            AutoScrollMinSize = new Size(325, 904);
+            ClientSize = new Size(340, 904);
             Controls.Add(lblCavityCount);
+            Controls.Add(grpVoxelEdges);
             Controls.Add(lblStatus);
             Controls.Add(btnExportReport);
             Controls.Add(grpCavityList);
@@ -419,18 +485,20 @@
             Controls.Add(grpDetection);
             Controls.Add(chkEnableCavity);
             Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point, 238);
-            MinimumSize = new Size(350, 720);
+            MinimumSize = new Size(350, 400);
             Name = "CavitySettingsWindow";
             Text = "🕳️ Cavity Settings";
             grpDetection.ResumeLayout(false);
             grpDetection.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numVdwMultiplier).EndInit();
             ((System.ComponentModel.ISupportInitialize)numResolution).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numMicroTuneRange).EndInit();
             ((System.ComponentModel.ISupportInitialize)numSmoothing).EndInit();
             ((System.ComponentModel.ISupportInitialize)trackTransparency).EndInit();
             grpDisplayMode.ResumeLayout(false);
             grpDisplayMode.PerformLayout();
             grpCavityList.ResumeLayout(false);
+            grpVoxelEdges.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -442,6 +510,11 @@
         private System.Windows.Forms.Button btnClearCavities;
         private System.Windows.Forms.Button btnDetectCavities;
         private System.Windows.Forms.CheckBox chkUseThermalMotion;
+        private System.Windows.Forms.CheckBox chkMicroTuneVoxel;
+        private System.Windows.Forms.GroupBox grpVoxelEdges;
+        private System.Windows.Forms.Label lblVoxelEdges;
+        private System.Windows.Forms.NumericUpDown numMicroTuneRange;
+        private System.Windows.Forms.Label lblMicroTuneRange;
         private System.Windows.Forms.NumericUpDown numSmoothing;
         private System.Windows.Forms.Label lblSmoothing;
         private System.Windows.Forms.Label lblTransparencyValue;

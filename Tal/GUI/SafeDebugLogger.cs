@@ -6,11 +6,6 @@
 //
 // Thread-safe debug log queue drained on the UI thread.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Tal.GUI;

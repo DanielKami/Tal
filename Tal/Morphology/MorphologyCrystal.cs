@@ -6,12 +6,6 @@
 //
 // Crystal morphology / Wulff module: MorphologyCrystal.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// Wersja: dokładna normalna z CrystalFace.NormalCart (stabilne FaceId for edges)
-
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Tal.Utils;
@@ -60,7 +54,7 @@ namespace Tal
  // ⭐ Transposition — spójnie z Molecule.PrepareUnitCell.
  // FractionaltoCarttesianMatrix ma kolumny = wektory a,b,c (konwencja x_cart = M·x_frac),
  // a XNA Vector3.Transform robi v·M (= M^T·v for v jako kolumny),
- // so mustmy transafternewć, so that dostać M·v.
+ // so mustmy transponewć, so that dostać M·v.
             Matrix fracToCart;
             if (result.Molecule != null)
                 fracToCart = Matrix.Transpose(result.Molecule.FractionaltoCarttesianMatrix(0, 0, 0));
@@ -92,13 +86,13 @@ namespace Tal
 
  // ⭐ ‖g‖ — length wektora normalnego (hkl) w metryce Cartesianj.
  // g = U^{-T} · (h,k,l) — to samo co w ComputeCartesianNormal,
- // only without normalisation (aftertrzebujemy length).
+ // only without normalisation (potrzebujemy length).
                 Vector3 g = Vector3.TransformNormal(new Vector3(h, k, l), cartToFrac);
                 float norm = g.Length();
 
                 if (norm < 1e-9f) continue;
 
- // dScaled = distance od afterczątku do planes (hkl)
+ // dScaled = distance od początku do planes (hkl)
  // wyrażona w jednostkach ułamkowych.
  // d_cart = DistFrac * d_hkl (w Å, wzdłuż normalnej)
  // d_frac = d_cart / ‖g‖ (bo ‖g‖ ma jednostkę 1/Å)
@@ -324,7 +318,7 @@ namespace Tal
  /// <summary>
  /// ⭐ Kolor for faces — deterministyczny hash FNV-1a z nazwy.
  /// Każda ściana (każda nazwa) ma own colour.
- /// Without gruafterwania after "rodzinach" — to wymaga correctj symmetry krystalograficznej.
+ /// Without grupowania after "rodzinach" — to wymaga correctj symmetry krystalograficznej.
  /// </summary>
         public static Color NameToColor(string name)
         {

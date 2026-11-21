@@ -6,7 +6,7 @@
 //
 // PackingWindow designer-generated layout.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class PackingWindow
     {

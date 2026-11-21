@@ -6,11 +6,6 @@
 //
 // Atom / measurement labels settings window.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using WeifenLuo.WinFormsUI.Docking;
 
 namespace Tal.Forms

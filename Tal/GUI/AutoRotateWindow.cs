@@ -6,7 +6,7 @@
 //
 // Auto-rotate settings window.
 
-﻿using Tal.GUI;
+using Tal.GUI;
 using WeifenLuo.WinFormsUI.Docking;
 
 namespace Tal.Forms

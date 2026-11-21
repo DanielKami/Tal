@@ -6,11 +6,6 @@
 //
 // Display options window — presentation modes and visibility flags.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.GUI;
 using WeifenLuo.WinFormsUI.Docking;
 using Tal.Calculate;

@@ -6,7 +6,7 @@
 //
 // SpaceGroupSettingDialog designer-generated layout.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class SpaceGroupSettingDialog
     {

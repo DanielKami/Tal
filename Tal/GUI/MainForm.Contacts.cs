@@ -6,11 +6,6 @@
 //
 // MainForm partial — short contacts / expand contacts orchestration.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Tal.Calculate;
 using Tal.GUI;

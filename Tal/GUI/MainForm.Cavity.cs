@@ -6,11 +6,6 @@
 //
 // MainForm partial — cavity detection orchestration and UI glue.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using Tal.Cavity;
 using Tal.Forms;

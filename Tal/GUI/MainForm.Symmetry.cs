@@ -6,31 +6,6 @@
 //
 // MainForm partial — symmetry reveal / apply helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// ═══════════════════════════════════════════════════════════════════════════
-//  MainForm.Symmetry.cs
-// ═══════════════════════════════════════════════════════════════════════════
-//
-//  Helpers for refreshing symmetry elements on all open
-//  documents. Called from SymmetryElementsWindow (and possibly
-//  other windows) when colour / size / visibility changes.
-//
-//  Filozofia:
-//    - SymmetryElementsRenderer reads COLOURS from Flags.Instance live,
-//      so changing the Flag alone is enough — no need to rebuild _elements.
-//    - But if someone later changes the model (colour cache in CellSymElement),
-//      InvalidateSymmetryRenderers() forces a full rebuild.
-//
-//  Usage in SymmetryElementsWindow:
-//      MainForm.Instance?.InvalidateSymmetryRenderers();
-//      MainForm.Instance?.RefreshAllDocuments();
-//
-// ═══════════════════════════════════════════════════════════════════════════
-
 using System.Diagnostics;
 using Tal.DrawMethods;
 using Tal.GUI;

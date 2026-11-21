@@ -6,11 +6,6 @@
 //
 // MainForm partial — docking layout: dock panel init, layout save/load, structure list refresh, tool window open helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.Forms;
 using Tal.GUI;
 using Tal.Hirshfeld;

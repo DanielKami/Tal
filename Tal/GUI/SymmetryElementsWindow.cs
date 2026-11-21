@@ -6,11 +6,6 @@
 //
 // Symmetry elements visibility / style window.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.Forms;
 using Tal.Utils;
 using WeifenLuo.WinFormsUI.Docking;

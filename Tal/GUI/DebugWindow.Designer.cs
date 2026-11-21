@@ -6,11 +6,6 @@
 //
 // DebugWindow designer-generated layout.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 namespace Tal.GUI
 {
     partial class DebugWindow

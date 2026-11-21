@@ -6,11 +6,6 @@
 //
 // MainForm partial — van der Waals analysis run and reporting.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Text;
 using Tal.Cavity;

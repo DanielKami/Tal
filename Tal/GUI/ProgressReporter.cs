@@ -6,11 +6,6 @@
 //
 // UI progress reporting helper.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Tal.GUI;

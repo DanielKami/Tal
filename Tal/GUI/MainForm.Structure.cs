@@ -6,11 +6,6 @@
 //
 // MainForm partial — structure load/open, view-mode reset, structure info helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.Forms;
 using Tal.GUI;
 using WeifenLuo.WinFormsUI.Docking;

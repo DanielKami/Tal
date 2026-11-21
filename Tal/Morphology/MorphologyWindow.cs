@@ -6,12 +6,6 @@
 //
 // Crystal morphology / Wulff module: MorphologyWindow.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// Morphology window: description table; BFDH (without F/S/K) as the physical method
-
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -345,7 +339,7 @@ namespace Tal.Forms
 
         private void ListFaces_SelectedIndexChanged(object sender, EventArgs e)
         {
- // ⭐ Afterdświetl wybraną ścianę w 3D
+ // ⭐ Podświetl wybraną ścianę w 3D
             if (_doc3D == null || _doc3D.IsDisposed) return;
 
             if (_listFaces.SelectedItems.Count == 0)

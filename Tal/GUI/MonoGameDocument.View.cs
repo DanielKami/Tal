@@ -6,11 +6,6 @@
 //
 // MonoGameDocument partial — view / camera helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Tal.DrawMethods;
 

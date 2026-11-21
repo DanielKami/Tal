@@ -6,11 +6,6 @@
 //
 // Depth-cue (fog) settings window.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.GUI;
 using WeifenLuo.WinFormsUI.Docking;
 

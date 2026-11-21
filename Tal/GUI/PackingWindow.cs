@@ -8,7 +8,7 @@
 // Bounds map to Flags.ShiftNegative/Positive{X,Y,Z} as a half-open fractional box
 // consumed by Molecule.Calculate_SymmetryAtoms3D_Packing.
 
-﻿using System;
+using System;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 

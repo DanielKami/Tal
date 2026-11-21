@@ -6,11 +6,6 @@
 //
 // MainForm partial — view-related event handlers (camera, projection, reset view).
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Tal.DrawMethods;
 

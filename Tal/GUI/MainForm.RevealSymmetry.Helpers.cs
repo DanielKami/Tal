@@ -6,11 +6,6 @@
 //
 // MainForm partial — helpers for revealing and applying symmetry operations.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Tal.DrawMethods;
 

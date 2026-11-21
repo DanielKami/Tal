@@ -6,20 +6,6 @@
 //
 // Atom display settings — ball sizes, stick thickness, ADP ellipsoids.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Atom display settings window — ball sizes, stick thickness,
-// ADP ellipsoid parameters.
-//
-// ⭐ KEY: this window is the ONLY place that converts probability percent
-//             of ADP ellipsoids into the scale factor (√χ²).
-//             Both fields are written to Flags consistently:
-//               - ATP_ProbabilityPercent  (raw percent, source of truth)
-//               - ATP_Probability         (wyliczony scale factor, cache for Draw.cs)
-
 using System;
 using System.Drawing;
 using System.Windows.Forms;

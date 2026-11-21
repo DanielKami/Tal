@@ -6,7 +6,7 @@
 //
 // AtomDisplayWindow designer-generated layout.
 
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 

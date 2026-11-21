@@ -6,11 +6,6 @@
 //
 // MainForm core — fields, constructor, form events, file open, active document/molecule accessors, view helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.Hirshfeld;
 using Tal.DrawMethods;
 using Tal.Forms;

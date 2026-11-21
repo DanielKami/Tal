@@ -6,11 +6,6 @@
 //
 // Structure list dock window.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.Overlay;
 using WeifenLuo.WinFormsUI.Docking;
 

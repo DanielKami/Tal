@@ -6,19 +6,6 @@
 //
 // Hydrogen bond-length normalisation window.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// HydrogenNormalizationWindow — window GUI do normalizacji wodoru.
-//
-// ⭐ v2: Auto-refresh when the active molecule changes in MainForm.
-//        Subscribes to MainForm.ActiveMoleculeChanged — when the user switches
-//        tab or loads a new structure, the window automatically loads
-//        a new molecule and rebuilds the table.
-//        Event is unsubscribed in OnFormClosed (no leaks).
-
 using System;
 using System.Collections.Generic;
 using System.Drawing;

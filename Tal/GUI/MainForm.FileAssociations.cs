@@ -6,11 +6,6 @@
 //
 // MainForm partial — file association registration helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Win32;
 using System;
 using System.Diagnostics;

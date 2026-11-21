@@ -6,11 +6,6 @@
 //
 // MainForm partial — status bar construction and SetStatus helpers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 namespace Tal
 {
     public partial class MainForm

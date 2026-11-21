@@ -6,13 +6,6 @@
 //
 // Crystal morphology / Wulff module: WulffPlotDocument.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// Wulff Plot v7 — zoom with mouse, prosta rotation, all etykiety
-// Tło z Flags.Instance.color1
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -788,7 +781,7 @@ namespace Tal.Morphology
         }
 
  /// <summary>
- /// ⭐ Panel radius — always MIN(width, height) so that zachować proafterrcje angleowe.
+ /// ⭐ Panel radius — always MIN(width, height) so that zachować proporcje angleowe.
  /// </summary>
         private float GetPanelRadius()
         {

@@ -4,13 +4,7 @@
 // Project: TAL
 // License: see license.txt (Academic / Non-Commercial)
 //
-// Crystal morphology / Wulff module: ConvexAfterlyhedronClipper.
-
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// Wersja: accelerated + correct RemoveDuplicates (27 buckets)
+// Crystal morphology / Wulff module: ConvexPolyhedronClipper.
 
 using Microsoft.Xna.Framework;
 using Tal.Utils;
@@ -218,7 +212,7 @@ namespace Tal
 
  /// <summary>
  /// ⭐ POPRAWIONE: duplicate removal with verification against 27 neighbouring buckets.
- /// Zaafterbiega gubieniu triangles przez kolizje hasha.
+ /// Zapobiega gubieniu triangles przez kolizje hasha.
  /// </summary>
         private static List<Vector3> RemoveDuplicates(List<Vector3> points, float eps)
         {

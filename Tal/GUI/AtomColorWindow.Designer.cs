@@ -6,7 +6,7 @@
 //
 // AtomColorWindow designer-generated layout.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class AtomColorWindow
     {

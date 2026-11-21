@@ -6,11 +6,6 @@
 //
 // MonoGameDocument partial — screenshot / export.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Diagnostics;

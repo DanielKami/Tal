@@ -6,11 +6,6 @@
 //
 // MainForm partial — high-level command handlers invoked from menus and toolbars.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Tal.Calculate;
 using Tal.Core.PowderDiffraction;

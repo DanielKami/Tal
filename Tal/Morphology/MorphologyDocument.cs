@@ -6,12 +6,6 @@
 //
 // Crystal morphology / Wulff module: MorphologyDocument.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// Wersja: T-junction removal + rozszerzony debug afterzostałych single edges
-
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -46,7 +40,7 @@ namespace Tal.Morphology
         private VertexBuffer _lineVB;
         private int _lineVertCount;
 
- // ⭐ Afterdświetlanie faces
+ // ⭐ Podświetlanie faces
         private VertexBuffer _highlightVB;
         private int _highlightVertCount;
         private string _highlightedFaceName = null;
@@ -164,8 +158,8 @@ namespace Tal.Morphology
         }
 
  /// <summary>
- /// ⭐ Afterdświetla ścianę o afterdanej nazwie (np. "(100)"). null = wyłącz.
- /// Afterdświetla WSZYSTKIE faces o tej nazwie.
+ /// ⭐ Podświetla ścianę o podanej nazwie (np. "(100)"). null = wyłącz.
+ /// Podświetla WSZYSTKIE faces o tej nazwie.
  /// </summary>
         public void HighlightFace(string faceName)
         {
@@ -642,11 +636,11 @@ namespace Tal.Morphology
  // then Content/, then dev (../../../Content).
                 string[] candidates = new[]
                 {
- // 1. Withoutafterśrednio obok .exe / w katalogu roboczym (dystrybucja)
+ // 1. Bezpośrednio obok .exe / w katalogu roboczym (dystrybucja)
             Path.Combine(exeDir, "SpriteFont.xnb"),
             Path.Combine(baseDir, "SpriteFont.xnb"),
 
- // 2. W afterdfolderze Content (dystrybucja or dev)
+ // 2. W podfolderze Content (dystrybucja or dev)
             Path.Combine(exeDir, "Content", "SpriteFont.xnb"),
             Path.Combine(baseDir, "Content", "SpriteFont.xnb"),
 
@@ -675,7 +669,7 @@ namespace Tal.Morphology
                     return;
                 }
 
- // ⭐ ContentManager aftertrzebuje katalogu bazowego i nazwy zasobu BEZ .xnb.
+ // ⭐ ContentManager potrzebuje katalogu bazowego i nazwy zasobu BEZ .xnb.
                 string contentDir = Path.GetDirectoryName(fontFile);
                 string assetName = Path.GetFileNameWithoutExtension(fontFile);   // "SpriteFont1"
 
@@ -757,7 +751,7 @@ namespace Tal.Morphology
 
  /// <summary>
  /// ⭐ Rysowanie edges — only granice between RÓŻNYMI ścianami.
- /// ⭐ T-junction removal + rozszerzony DEBUG afterzostałych single edges.
+ /// ⭐ T-junction removal + rozszerzony DEBUG pozostałych single edges.
  /// </summary>
         private void RebuildLineBuffer()
         {
@@ -966,7 +960,7 @@ namespace Tal.Morphology
                         if (isBoundary)
                         {
                             drawnEdges.Add(segKey);
- // ⭐ Draw z pixelAftersitions (already przeskalowane), nie z vertexAftersitions.
+ // ⭐ Draw z pixelPositions (already przeskalowane), nie z vertexPositions.
                             lineVerts.Add(new VertexPositionColor(pixelPositions[chain[k]], lc));
                             lineVerts.Add(new VertexPositionColor(pixelPositions[chain[k + 1]], lc));
                         }
@@ -993,7 +987,7 @@ namespace Tal.Morphology
         }
 
  /// <summary>
- /// ⭐ Builds buffer żółtych obwódek for afterdświetlonej faces.
+ /// ⭐ Builds buffer żółtych obwódek for podświetlonej faces.
  /// </summary>
         private void RebuildHighlightBuffer()
         {
@@ -1131,7 +1125,7 @@ namespace Tal.Morphology
                             pp.BackBufferHeight = newH;
 
                             try { _device.Reset(pp); }
-                            catch { return; }
+                            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Morphology] device reset failed: {ex.Message}"); return; }
 
                             if (_camera != null)
                             {
@@ -1308,7 +1302,7 @@ namespace Tal.Morphology
 
                     Vector2 textSize;
                     try { textSize = _spriteFont.MeasureString(text); }
-                    catch { continue; }
+                    catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Morphology] MeasureString failed: {ex.Message}"); continue; }
 
                     if (float.IsNaN(textSize.X) || textSize.X <= 0) continue;
 
@@ -1351,7 +1345,7 @@ namespace Tal.Morphology
                     _availableCharsCache = new HashSet<char>(font.Characters);
                     _cachedFontRef = font;
                 }
-                catch { return false; }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"[Morphology] font character table failed: {ex.Message}"); return false; }
             }
 
             if (_availableCharsCache.Count == 0) return false;

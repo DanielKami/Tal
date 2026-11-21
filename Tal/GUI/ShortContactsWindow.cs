@@ -6,7 +6,7 @@
 //
 // Short contacts settings window.
 
-﻿using WeifenLuo.WinFormsUI.Docking;
+using WeifenLuo.WinFormsUI.Docking;
 
 namespace Tal.Forms
 {

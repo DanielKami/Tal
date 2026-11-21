@@ -6,7 +6,7 @@
 //
 // SceneQualityWindow designer-generated layout.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class SceneQualityWindow
     {

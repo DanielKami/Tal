@@ -6,7 +6,7 @@
 //
 // Structure info UI: StructureInfoWindow.Designer.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class StructureInfoWindow
     {

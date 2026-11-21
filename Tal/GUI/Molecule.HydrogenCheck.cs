@@ -6,16 +6,7 @@
 //
 // GUI helper — hydrogen normalisation status checks for Molecule.
 
-﻿// Molecule.HydrogenCheck.cs
-// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Molecule partial — hydrogen normalisation state check
-// before Hirshfeld analysis (and other operations requiring
-// poprawnej geometry H).
-
+// Molecule.HydrogenCheck.cs
 using System.Collections.Generic;
 using System.Diagnostics;
 using Tal.Calculate;

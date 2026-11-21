@@ -6,11 +6,6 @@
 //
 // MainForm partial — style, view and picking toolbar construction and handlers.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.GUI;
 
 namespace Tal

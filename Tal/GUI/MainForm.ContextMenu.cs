@@ -6,11 +6,6 @@
 //
 // MainForm partial — 3D viewport context menu (build once, update before show).
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System;
 using System.Drawing;
 using System.Windows.Forms;

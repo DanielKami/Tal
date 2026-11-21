@@ -6,11 +6,6 @@
 //
 // MainForm partial — helper methods: atom picking under mouse, measurement label positions, mouse ray, shared utilities.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using Tal.Core.PowderDiffraction;
 using Tal.DrawMethods;

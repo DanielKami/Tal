@@ -6,11 +6,6 @@
 //
 // MainForm partial — Hirshfeld surface / STO-related actions.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using Tal.GUI;
 using Tal.Hirshfeld.Sto;

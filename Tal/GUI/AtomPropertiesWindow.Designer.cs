@@ -6,7 +6,7 @@
 //
 // AtomPropertiesWindow designer-generated layout.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class AtomPropertiesWindow
     {

@@ -6,14 +6,6 @@
 //
 // Space-group setting selection dialog.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-//
-// Dialog wyboru docelowego settings space group.
-// User picks one of the allowed settings (e.g. P21/c, P21/n, ...).
-
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;

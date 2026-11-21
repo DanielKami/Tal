@@ -6,11 +6,6 @@
 //
 // Labels window helpers — property lists and formatting.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.GUI;
 
 namespace Tal.Forms

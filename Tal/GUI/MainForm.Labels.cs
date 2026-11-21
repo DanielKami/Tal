@@ -7,11 +7,6 @@ using System;
 //
 // MainForm partial — atom/measurement label drag and visibility logic.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 
 namespace Tal

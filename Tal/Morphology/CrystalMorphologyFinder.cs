@@ -6,12 +6,6 @@
 //
 // Crystal morphology / Wulff module: CrystalMorphologyFinder.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// Wersja: BFDH z 5 trybami softening + PRAWDZIWA symmetry (space group)
-
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
@@ -105,7 +99,7 @@ namespace Tal.Calculate
             var uniquePlanes = GenerateUniquePlanes(maxIndex);
             Debug.WriteLine($"[CrystalMorphologyFinder] Generated {uniquePlanes.Count} planes");
 
- // ═══ 2. Afterlicz d_hkl i multiplicity (PRAWDZIWĄ z space group) ═══
+ // ═══ 2. Policz d_hkl i multiplicity (PRAWDZIWĄ z space group) ═══
             var faces = new List<CrystalFace>();
 
             foreach (var (h, k, l) in uniquePlanes)
@@ -157,7 +151,7 @@ namespace Tal.Calculate
             ApplySoftening(faces, softening, mode);
 
  // ═══ 5. RelativeArea — TYLKO jako info, NIE do sortowania ═══
- // ⚠️ Fizycznie: afterle faces zależy od DistFrac (depth cięcia),
+ // ⚠️ Fizycznie: pole faces zależy od DistFrac (depth cięcia),
  // a nie od Multiplicity. Fortego NIE mnożymy przez Multiplicity.
             float maxArea = 0f;
             foreach (var f in faces)
@@ -272,7 +266,7 @@ namespace Tal.Calculate
         #region Equivalent Planes — PRAWDZIWA symetria
 
  /// <summary>
- /// ⭐ Prawdziwa multiplicity — orbita faces (hkl) afterd działaniem
+ /// ⭐ Prawdziwa multiplicity — orbita faces (hkl) pod działaniem
  /// operacji symmetry z space group kryształu.
  ///
  /// Zamiast zakładać cubic — we use RZECZYWISTEJ grupy z Molecule.
@@ -293,7 +287,7 @@ namespace Tal.Calculate
                 return CountEquivalentPlanesCubic(h, k, l);
             }
 
- // ⭐ Afterbierz operacje symmetry z grupy
+ // ⭐ Pobierz operacje symmetry z grupy
             List<SymmetryElements.ReadSymm> ops;
             try
             {
@@ -339,7 +333,7 @@ namespace Tal.Calculate
                 int kNew = M[0, 1] * h + M[1, 1] * k + M[2, 1] * l;
                 int lNew = M[0, 2] * h + M[1, 2] * k + M[2, 2] * l;
 
- // Zredukuj do kanonicznej afterstaci
+ // Zredukuj do kanonicznej postaci
                 var canonical = CanonicalHkl(hNew, kNew, lNew);
                 orbit.Add(canonical);
             }

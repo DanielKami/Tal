@@ -6,7 +6,7 @@
 //
 // MainForm partial — crystal planes window and plane selection handling.
 
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Tal.Core.PowderDiffraction;
 using Tal.Forms;
 

@@ -6,11 +6,6 @@
 //
 // Cavity detection settings window.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System;
 using System.Linq;
 using System.Text;
@@ -63,6 +58,8 @@ namespace Tal.Forms
 
         #endregion
 
+        private readonly ToolTip _voxelToolTip = new ToolTip();
+
         #region State Management
 
         /// <summary>
@@ -88,6 +85,20 @@ namespace Tal.Forms
             this.numSmoothing.Value = smoothing;
 
             this.chkUseThermalMotion.Checked = flags.UseThermalMotion;
+            this.chkMicroTuneVoxel.Checked = flags.MicroTuneVoxelSize;
+            this.numMicroTuneRange.Value = (decimal)Math.Clamp(flags.MicroTuneRangePercent, 0f, 20f);
+
+            const string microTip =
+                "Resolution is the nominal voxel edge. Micro-tuning picks the number of voxels along a, b, c\n" +
+                "so that the voxel is as cube-like as possible (edges a, b, c as equal as possible).";
+            const string rangeTip =
+                "Maximum allowed deviation of each voxel edge (a, b, c) from the nominal Resolution, in percent.\n" +
+                "0 % = plain rounding of |axis| / Resolution. A wider range lets the program find a more cube-like\n" +
+                "voxel; once the best combination fits inside the range, widening it further changes nothing.\n" +
+                "The panel 'Voxel edges' below shows the resulting edges and N for the current settings.";
+            _voxelToolTip.SetToolTip(this.chkMicroTuneVoxel, microTip);
+            _voxelToolTip.SetToolTip(this.numMicroTuneRange, rangeTip);
+            _voxelToolTip.SetToolTip(this.lblMicroTuneRange, rangeTip);
 
             int drawMode = flags.CavityDrawMode;
             switch (drawMode)
@@ -127,6 +138,8 @@ namespace Tal.Forms
             flags.smuth = ValidateSmoothing(smoothing);
 
             flags.UseThermalMotion = this.chkUseThermalMotion.Checked;
+            flags.MicroTuneVoxelSize = this.chkMicroTuneVoxel.Checked;
+            flags.MicroTuneRangePercent = (float)this.numMicroTuneRange.Value;
             flags.ShowCavities = this.chkEnableCavity.Checked;
 
             if (this.rbHidden.Checked) flags.CavityDrawMode = 0;
@@ -153,6 +166,9 @@ namespace Tal.Forms
             this.trackTransparency.Enabled = enabled;
             this.numSmoothing.Enabled = enabled;
             this.chkUseThermalMotion.Enabled = enabled;
+            this.chkMicroTuneVoxel.Enabled = enabled;
+            this.numMicroTuneRange.Enabled = enabled && this.chkMicroTuneVoxel.Checked;
+            this.lblMicroTuneRange.Enabled = this.numMicroTuneRange.Enabled;
             this.btnDetectCavities.Enabled = enabled;
             this.btnClearCavities.Enabled = enabled;
 
@@ -173,10 +189,61 @@ namespace Tal.Forms
         }
 
         /// <summary>
+        /// Shows the voxel edge along a, b, c, the number of voxels N per axis and the deviation from the
+        /// nominal voxel size, one axis per line.
+        /// With a structure loaded the values are computed live from the CURRENT controls (resolution,
+        /// micro-tuning on/off, max deviation) with the same code the detection uses, so changing the
+        /// controls updates this panel immediately. Without a structure the values of the last detection
+        /// (CellParameters) are shown instead.
+        /// </summary>
+        private void UpdateVoxelEdges()
+        {
+            string Line(string name, float edge, int n, float nom)
+            {
+                string dev = nom > 0f ? $"{(edge / nom - 1f) * 100f,7:+0.00;-0.00;0.00}%" : "";
+                return $"{name}  {edge:F4}  N={n,-4} {dev}";
+            }
+
+            var mainForm = Application.OpenForms["MainForm"] as MainForm;
+            var molecule = mainForm?.GetActiveDocument()?.GetMolecule();
+
+            if (CavityDetector.TryGetCellAxisLengths(molecule, out float lenA, out float lenB, out float lenC))
+            {
+                float nom = Flags.Instance.Resolution > 0f ? Flags.Instance.Resolution : (float)this.numResolution.Value;
+                var (na, nb, nc) = CavityDetector.ChooseCellDivisions(
+                    lenA, lenB, lenC, nom,
+                    this.chkMicroTuneVoxel.Checked, (float)this.numMicroTuneRange.Value);
+
+                this.grpVoxelEdges.Text = "Voxel edges (Å) - current settings";
+                this.lblVoxelEdges.Text =
+                    Line("a", lenA / na, na, nom) + "\r\n" +
+                    Line("b", lenB / nb, nb, nom) + "\r\n" +
+                    Line("c", lenC / nc, nc, nom);
+                return;
+            }
+
+            if (!CellParameters.IsInitialized || CellParameters.GetCountA() <= 0)
+            {
+                this.grpVoxelEdges.Text = "Voxel edges (Å)";
+                this.lblVoxelEdges.Text = "a   -\r\nb   -\r\nc   -";
+                return;
+            }
+
+            float nomLast = CellParameters.VoxelSize;
+            this.grpVoxelEdges.Text = "Voxel edges (Å) - last detection";
+            this.lblVoxelEdges.Text =
+                Line("a", CellParameters.GetStepX_Angstroms(), CellParameters.GetCountA(), nomLast) + "\r\n" +
+                Line("b", CellParameters.GetStepY_Angstroms(), CellParameters.GetCountB(), nomLast) + "\r\n" +
+                Line("c", CellParameters.GetStepZ_Angstroms(), CellParameters.GetCountC(), nomLast);
+        }
+
+        /// <summary>
         /// Updates the status display with current cavity information.
         /// </summary>
         private void UpdateStatus()
         {
+            UpdateVoxelEdges();
+
             var mainForm = Application.OpenForms["MainForm"] as MainForm;
             if (mainForm == null) return;
 
@@ -198,6 +265,11 @@ namespace Tal.Forms
 
             int count = renderer.CavityCount;
             this.lblCavityCount.Text = $"Cavities: {count}";
+            // actual (possibly micro-tuned) voxel edges a, b, c shown on hover
+            _voxelToolTip.SetToolTip(this.lblCavityCount,
+                CellParameters.IsInitialized
+                    ? "Voxel edges (actual): " + CellParameters.GetVoxelEdgeSummary()
+                    : "Voxel edges: run detection first");
             this.lblStatus.Text = this.chkEnableCavity.Checked ?
                 $"✅ Cavity display ON - {count} cavities" :
                 "⛔ Cavity display OFF";
@@ -265,6 +337,7 @@ namespace Tal.Forms
             }
 
             this.lblStatus.Text = $"Resolution changed to {flags.Resolution:F2} Å (rebuild needed)";
+            UpdateVoxelEdges();
         }
 
         private void NumVdwMultiplier_ValueChanged(object sender, EventArgs e)
@@ -331,6 +404,28 @@ namespace Tal.Forms
             this.lblStatus.Text = this.chkUseThermalMotion.Checked ?
                 "Thermal motion enabled (rebuild needed)" :
                 "Thermal motion disabled (rebuild needed)";
+        }
+
+        private void NumMicroTuneRange_ValueChanged(object sender, EventArgs e)
+        {
+            var flags = Flags.Instance;
+            flags.MicroTuneRangePercent = (float)this.numMicroTuneRange.Value;
+            flags.SDFNeedsRebuild = true;
+            this.lblStatus.Text = $"Micro-tuning max deviation set to ±{flags.MicroTuneRangePercent:F1}% (rebuild needed)";
+            UpdateVoxelEdges();
+        }
+
+        private void ChkMicroTuneVoxel_CheckedChanged(object sender, EventArgs e)
+        {
+            var flags = Flags.Instance;
+            flags.MicroTuneVoxelSize = this.chkMicroTuneVoxel.Checked;
+            this.numMicroTuneRange.Enabled = this.chkMicroTuneVoxel.Checked;
+            this.lblMicroTuneRange.Enabled = this.numMicroTuneRange.Enabled;
+            flags.SDFNeedsRebuild = true;
+            this.lblStatus.Text = this.chkMicroTuneVoxel.Checked ?
+                "Voxel micro-tuning enabled (rebuild needed)" :
+                "Voxel micro-tuning disabled (rebuild needed)";
+            UpdateVoxelEdges();
         }
 
         #endregion
@@ -929,6 +1024,7 @@ namespace Tal.Forms
                         int count = renderer.CavityCount;
                         int triCount = renderer.GetTotalMarchingCubesTriangles();
                         PopulateCavityVisibilityList();
+                        UpdateVoxelEdges();
                         this.lblCavityCount.Text = $"Cavities: {count}";
                         this.lblStatus.Text = $"✅ Detection complete: {count} cavities, {triCount:N0} triangles";
 

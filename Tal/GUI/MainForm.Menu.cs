@@ -6,11 +6,6 @@
 //
 // MainForm partial — menu strip construction.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 namespace Tal
 {
     public partial class MainForm

@@ -6,11 +6,6 @@
 //
 // MainForm partial — recent files menu and persistence.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System;
 using System.IO;
 using System.Windows.Forms;

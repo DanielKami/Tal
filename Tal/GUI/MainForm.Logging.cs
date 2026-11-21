@@ -6,10 +6,7 @@
 //
 // MainForm partial — SafeDebugLogger drain timer integration.
 
-﻿// MainForm.Logging.cs
-// Author: Daniel M. Kaminski
-// Year: 2026
-
+// MainForm.Logging.cs
 using Tal.Diagnostics;
 
 namespace Tal
