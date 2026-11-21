@@ -45,6 +45,7 @@ namespace Tal.Forms
             labelDebyeWaller = new Label();
             numericDebyeWaller = new NumericUpDown();
             trackDebyeWaller = new TrackBar();
+            chkUseAtomicU = new CheckBox();
             groupBoxSource = new GroupBox();
             labelSource = new Label();
             comboSource = new ComboBox();
@@ -52,7 +53,6 @@ namespace Tal.Forms
             chkShowDScale = new CheckBox();
             chkShowBackground = new CheckBox();
             chkLPCorrection = new CheckBox();
-            chkUseAtomicU = new CheckBox();
             groupBoxHover = new GroupBox();
             labelStatus = new Label();
             labelPeakCount = new Label();
@@ -77,9 +77,9 @@ namespace Tal.Forms
             groupBoxHover.SuspendLayout();
             panelPlot.SuspendLayout();
             SuspendLayout();
- // 
- // panelControls
- // 
+            // 
+            // panelControls
+            // 
             panelControls.BackColor = SystemColors.Control;
             panelControls.Controls.Add(groupBoxRange);
             panelControls.Controls.Add(groupBoxPeak);
@@ -95,9 +95,9 @@ namespace Tal.Forms
             panelControls.Name = "panelControls";
             panelControls.Size = new Size(1307, 150);
             panelControls.TabIndex = 1;
- // 
- // groupBoxRange
- // 
+            // 
+            // groupBoxRange
+            // 
             groupBoxRange.Controls.Add(labelMinTheta);
             groupBoxRange.Controls.Add(numericMinTheta);
             groupBoxRange.Controls.Add(labelMaxTheta);
@@ -110,17 +110,17 @@ namespace Tal.Forms
             groupBoxRange.TabIndex = 0;
             groupBoxRange.TabStop = false;
             groupBoxRange.Text = "Range 2θ";
- // 
- // labelMinTheta
- // 
+            // 
+            // labelMinTheta
+            // 
             labelMinTheta.Location = new Point(8, 26);
             labelMinTheta.Name = "labelMinTheta";
             labelMinTheta.Size = new Size(51, 25);
             labelMinTheta.TabIndex = 0;
             labelMinTheta.Text = "Min:";
- // 
- // numericMinTheta
- // 
+            // 
+            // numericMinTheta
+            // 
             numericMinTheta.DecimalPlaces = 1;
             numericMinTheta.Location = new Point(65, 24);
             numericMinTheta.Margin = new Padding(3, 4, 3, 4);
@@ -129,17 +129,17 @@ namespace Tal.Forms
             numericMinTheta.Size = new Size(64, 27);
             numericMinTheta.TabIndex = 1;
             numericMinTheta.Value = new decimal(new int[] { 5, 0, 0, 0 });
- // 
- // labelMaxTheta
- // 
+            // 
+            // labelMaxTheta
+            // 
             labelMaxTheta.Location = new Point(139, 27);
             labelMaxTheta.Name = "labelMaxTheta";
             labelMaxTheta.Size = new Size(44, 25);
             labelMaxTheta.TabIndex = 2;
             labelMaxTheta.Text = "Max:";
- // 
- // numericMaxTheta
- // 
+            // 
+            // numericMaxTheta
+            // 
             numericMaxTheta.DecimalPlaces = 1;
             numericMaxTheta.Location = new Point(189, 24);
             numericMaxTheta.Margin = new Padding(3, 4, 3, 4);
@@ -148,9 +148,9 @@ namespace Tal.Forms
             numericMaxTheta.Size = new Size(55, 27);
             numericMaxTheta.TabIndex = 3;
             numericMaxTheta.Value = new decimal(new int[] { 90, 0, 0, 0 });
- // 
- // groupBoxPeak
- // 
+            // 
+            // groupBoxPeak
+            // 
             groupBoxPeak.Controls.Add(labelResolution);
             groupBoxPeak.Controls.Add(numericResolution);
             groupBoxPeak.Controls.Add(labelFWHM);
@@ -165,17 +165,17 @@ namespace Tal.Forms
             groupBoxPeak.TabIndex = 1;
             groupBoxPeak.TabStop = false;
             groupBoxPeak.Text = "Peak parameters";
- // 
- // labelResolution
- // 
+            // 
+            // labelResolution
+            // 
             labelResolution.Location = new Point(8, 100);
             labelResolution.Name = "labelResolution";
             labelResolution.Size = new Size(112, 25);
             labelResolution.TabIndex = 4;
             labelResolution.Text = "Points / pixel:";
- // 
- // numericResolution
- // 
+            // 
+            // numericResolution
+            // 
             numericResolution.Location = new Point(123, 98);
             numericResolution.Margin = new Padding(3, 4, 3, 4);
             numericResolution.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
@@ -184,17 +184,17 @@ namespace Tal.Forms
             numericResolution.Size = new Size(55, 27);
             numericResolution.TabIndex = 5;
             numericResolution.Value = new decimal(new int[] { 2, 0, 0, 0 });
- // 
- // labelFWHM
- // 
+            // 
+            // labelFWHM
+            // 
             labelFWHM.Location = new Point(8, 26);
             labelFWHM.Name = "labelFWHM";
             labelFWHM.Size = new Size(55, 25);
             labelFWHM.TabIndex = 0;
             labelFWHM.Text = "FWHM:";
- // 
- // numericFWHM
- // 
+            // 
+            // numericFWHM
+            // 
             numericFWHM.DecimalPlaces = 2;
             numericFWHM.Increment = new decimal(new int[] { 1, 0, 0, 131072 });
             numericFWHM.Location = new Point(70, 23);
@@ -205,17 +205,17 @@ namespace Tal.Forms
             numericFWHM.Size = new Size(83, 27);
             numericFWHM.TabIndex = 1;
             numericFWHM.Value = new decimal(new int[] { 5, 0, 0, 65536 });
- // 
- // labelProfile
- // 
+            // 
+            // labelProfile
+            // 
             labelProfile.Location = new Point(8, 62);
             labelProfile.Name = "labelProfile";
             labelProfile.Size = new Size(55, 25);
             labelProfile.TabIndex = 2;
             labelProfile.Text = "Profile:";
- // 
- // comboProfile
- // 
+            // 
+            // comboProfile
+            // 
             comboProfile.DropDownStyle = ComboBoxStyle.DropDownList;
             comboProfile.Items.AddRange(new object[] { "Gaussian", "Lorentzian", "Pseudo-Voigt" });
             comboProfile.Location = new Point(70, 60);
@@ -223,9 +223,9 @@ namespace Tal.Forms
             comboProfile.Name = "comboProfile";
             comboProfile.Size = new Size(160, 28);
             comboProfile.TabIndex = 3;
- // 
- // groupBoxDebye
- // 
+            // 
+            // groupBoxDebye
+            // 
             groupBoxDebye.Controls.Add(labelDebyeWaller);
             groupBoxDebye.Controls.Add(numericDebyeWaller);
             groupBoxDebye.Controls.Add(trackDebyeWaller);
@@ -237,21 +237,21 @@ namespace Tal.Forms
             groupBoxDebye.Size = new Size(210, 135);
             groupBoxDebye.TabIndex = 2;
             groupBoxDebye.TabStop = false;
-            groupBoxDebye.Text = "Displacement (Debye-Waller)";
- // 
- // labelDebyeWaller
- // 
-            labelDebyeWaller.Location = new Point(8, 33);
+            groupBoxDebye.Text = "Displacement (D-W)";
+            // 
+            // labelDebyeWaller
+            // 
+            labelDebyeWaller.Location = new Point(8, 28);
             labelDebyeWaller.Name = "labelDebyeWaller";
             labelDebyeWaller.Size = new Size(55, 25);
             labelDebyeWaller.TabIndex = 0;
             labelDebyeWaller.Text = "Scale ×:";
- // 
- // numericDebyeWaller
- // 
+            // 
+            // numericDebyeWaller
+            // 
             numericDebyeWaller.DecimalPlaces = 2;
             numericDebyeWaller.Increment = new decimal(new int[] { 1, 0, 0, 131072 });
-            numericDebyeWaller.Location = new Point(69, 33);
+            numericDebyeWaller.Location = new Point(69, 27);
             numericDebyeWaller.Margin = new Padding(3, 4, 3, 4);
             numericDebyeWaller.Maximum = new decimal(new int[] { 10, 0, 0, 0 });
             numericDebyeWaller.Name = "numericDebyeWaller";
@@ -259,9 +259,9 @@ namespace Tal.Forms
             numericDebyeWaller.TabIndex = 1;
             numericDebyeWaller.Value = new decimal(new int[] { 100, 0, 0, 131072 });
             numericDebyeWaller.ValueChanged += NumericDebyeWaller_ValueChanged;
- // 
- // trackDebyeWaller
- // 
+            // 
+            // trackDebyeWaller
+            // 
             trackDebyeWaller.Location = new Point(8, 58);
             trackDebyeWaller.Margin = new Padding(3, 4, 3, 4);
             trackDebyeWaller.Maximum = 100;
@@ -271,22 +271,22 @@ namespace Tal.Forms
             trackDebyeWaller.TickFrequency = 10;
             trackDebyeWaller.Value = 10;
             trackDebyeWaller.Scroll += TrackDebyeWaller_Scroll;
- // 
- // chkUseAtomicU
- // 
+            // 
+            // chkUseAtomicU
+            // 
             chkUseAtomicU.AutoSize = true;
             chkUseAtomicU.Checked = true;
             chkUseAtomicU.CheckState = CheckState.Checked;
-            chkUseAtomicU.Location = new Point(11, 106);
+            chkUseAtomicU.Location = new Point(11, 114);
             chkUseAtomicU.Margin = new Padding(3, 4, 3, 4);
             chkUseAtomicU.Name = "chkUseAtomicU";
-            chkUseAtomicU.Size = new Size(160, 24);
+            chkUseAtomicU.Size = new Size(180, 24);
             chkUseAtomicU.TabIndex = 3;
             chkUseAtomicU.Text = "Use atomic U from file";
             chkUseAtomicU.UseVisualStyleBackColor = true;
- // 
- // groupBoxSource
- // 
+            // 
+            // groupBoxSource
+            // 
             groupBoxSource.Controls.Add(labelSource);
             groupBoxSource.Controls.Add(comboSource);
             groupBoxSource.Location = new Point(763, 8);
@@ -297,17 +297,17 @@ namespace Tal.Forms
             groupBoxSource.TabIndex = 3;
             groupBoxSource.TabStop = false;
             groupBoxSource.Text = "Radiation source";
- // 
- // labelSource
- // 
+            // 
+            // labelSource
+            // 
             labelSource.Location = new Point(8, 26);
             labelSource.Name = "labelSource";
             labelSource.Size = new Size(50, 25);
             labelSource.TabIndex = 0;
             labelSource.Text = "Source:";
- // 
- // comboSource
- // 
+            // 
+            // comboSource
+            // 
             comboSource.DropDownStyle = ComboBoxStyle.DropDownList;
             comboSource.Items.AddRange(new object[] { "Cu Kα (1.5406 Å)", "Mo Kα (0.7107 Å)", "Co Kα (1.7889 Å)", "Fe Kα (1.9360 Å)", "Cr Kα (2.2910 Å)", "Ag Kα (0.5609 Å)" });
             comboSource.Location = new Point(64, 24);
@@ -315,9 +315,9 @@ namespace Tal.Forms
             comboSource.Name = "comboSource";
             comboSource.Size = new Size(162, 28);
             comboSource.TabIndex = 1;
- // 
- // groupBoxDisplay
- // 
+            // 
+            // groupBoxDisplay
+            // 
             groupBoxDisplay.Controls.Add(chkShowDScale);
             groupBoxDisplay.Controls.Add(chkShowBackground);
             groupBoxDisplay.Controls.Add(chkLPCorrection);
@@ -329,33 +329,33 @@ namespace Tal.Forms
             groupBoxDisplay.TabIndex = 4;
             groupBoxDisplay.TabStop = false;
             groupBoxDisplay.Text = "Display options";
- // 
- // chkShowDScale
- // 
+            // 
+            // chkShowDScale
+            // 
             chkShowDScale.AutoSize = true;
-            chkShowDScale.Location = new Point(8, 20);
+            chkShowDScale.Location = new Point(8, 24);
             chkShowDScale.Margin = new Padding(3, 4, 3, 4);
             chkShowDScale.Name = "chkShowDScale";
             chkShowDScale.Size = new Size(117, 24);
             chkShowDScale.TabIndex = 2;
             chkShowDScale.Text = "Show d scale";
             chkShowDScale.UseVisualStyleBackColor = true;
- // 
- // chkShowBackground
- // 
+            // 
+            // chkShowBackground
+            // 
             chkShowBackground.AutoSize = true;
             chkShowBackground.Checked = true;
             chkShowBackground.CheckState = CheckState.Checked;
-            chkShowBackground.Location = new Point(8, 43);
+            chkShowBackground.Location = new Point(8, 46);
             chkShowBackground.Margin = new Padding(3, 4, 3, 4);
             chkShowBackground.Name = "chkShowBackground";
             chkShowBackground.Size = new Size(110, 24);
             chkShowBackground.TabIndex = 0;
             chkShowBackground.Text = "Background";
             chkShowBackground.UseVisualStyleBackColor = true;
- // 
- // chkLPCorrection
- // 
+            // 
+            // chkLPCorrection
+            // 
             chkLPCorrection.AutoSize = true;
             chkLPCorrection.Checked = true;
             chkLPCorrection.CheckState = CheckState.Checked;
@@ -366,9 +366,9 @@ namespace Tal.Forms
             chkLPCorrection.TabIndex = 1;
             chkLPCorrection.Text = "LP corr.";
             chkLPCorrection.UseVisualStyleBackColor = true;
- // 
- // groupBoxHover
- // 
+            // 
+            // groupBoxHover
+            // 
             groupBoxHover.Controls.Add(labelStatus);
             groupBoxHover.Controls.Add(labelPeakCount);
             groupBoxHover.Location = new Point(1002, 9);
@@ -379,9 +379,9 @@ namespace Tal.Forms
             groupBoxHover.TabIndex = 5;
             groupBoxHover.TabStop = false;
             groupBoxHover.Text = "Info";
- // 
- // labelStatus
- // 
+            // 
+            // labelStatus
+            // 
             labelStatus.Font = new Font("Segoe UI", 8F);
             labelStatus.ForeColor = Color.Gray;
             labelStatus.Location = new Point(8, 24);
@@ -389,9 +389,9 @@ namespace Tal.Forms
             labelStatus.Size = new Size(155, 24);
             labelStatus.TabIndex = 0;
             labelStatus.Text = "Ready";
- // 
- // labelPeakCount
- // 
+            // 
+            // labelPeakCount
+            // 
             labelPeakCount.Font = new Font("Segoe UI", 8F);
             labelPeakCount.ForeColor = Color.Gray;
             labelPeakCount.Location = new Point(8, 52);
@@ -399,9 +399,9 @@ namespace Tal.Forms
             labelPeakCount.Size = new Size(155, 24);
             labelPeakCount.TabIndex = 1;
             labelPeakCount.Text = "Peaks: 0";
- // 
- // btnExport
- // 
+            // 
+            // btnExport
+            // 
             btnExport.BackColor = Color.FromArgb(60, 60, 70);
             btnExport.FlatStyle = FlatStyle.Flat;
             btnExport.ForeColor = Color.White;
@@ -412,9 +412,9 @@ namespace Tal.Forms
             btnExport.TabIndex = 6;
             btnExport.Text = "📁 Export";
             btnExport.UseVisualStyleBackColor = false;
- // 
- // btnCopy
- // 
+            // 
+            // btnCopy
+            // 
             btnCopy.BackColor = Color.FromArgb(60, 60, 70);
             btnCopy.FlatStyle = FlatStyle.Flat;
             btnCopy.ForeColor = Color.White;
@@ -425,9 +425,9 @@ namespace Tal.Forms
             btnCopy.TabIndex = 7;
             btnCopy.Text = "📋 Copy";
             btnCopy.UseVisualStyleBackColor = false;
- // 
- // panelPlot
- // 
+            // 
+            // panelPlot
+            // 
             panelPlot.BackColor = Color.White;
             panelPlot.Controls.Add(labelHoverDetail);
             panelPlot.Controls.Add(labelHoverInfo);
@@ -443,9 +443,9 @@ namespace Tal.Forms
             panelPlot.MouseMove += PanelPlot_MouseMove;
             panelPlot.MouseUp += PanelPlot_MouseUp;
             panelPlot.Resize += PanelPlot_Resize;
- // 
- // labelHoverDetail
- // 
+            // 
+            // labelHoverDetail
+            // 
             labelHoverDetail.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             labelHoverDetail.Font = new Font("Segoe UI", 8.5F);
             labelHoverDetail.ForeColor = Color.FromArgb(60, 60, 70);
@@ -454,9 +454,9 @@ namespace Tal.Forms
             labelHoverDetail.Size = new Size(366, 29);
             labelHoverDetail.TabIndex = 0;
             labelHoverDetail.Text = "d: - | hkl: -";
- // 
- // labelHoverInfo
- // 
+            // 
+            // labelHoverInfo
+            // 
             labelHoverInfo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             labelHoverInfo.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             labelHoverInfo.ForeColor = Color.FromArgb(0, 120, 212);
@@ -465,9 +465,9 @@ namespace Tal.Forms
             labelHoverInfo.Size = new Size(135, 29);
             labelHoverInfo.TabIndex = 1;
             labelHoverInfo.Text = "2θ: -";
- // 
- // PowderDiffractionWindow
- // 
+            // 
+            // PowderDiffractionWindow
+            // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1307, 508);
@@ -497,7 +497,7 @@ namespace Tal.Forms
             ResumeLayout(false);
         }
 
- // Deklaracje kontrolek
+        // Deklaracje kontrolek
         private BufferedPanel panelPlot;
         private System.Windows.Forms.Panel panelControls;
 
