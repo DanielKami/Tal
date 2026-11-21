@@ -6,11 +6,6 @@
 //
 // Crystal planes module: RingFinder.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -234,7 +229,7 @@ namespace Tal.Core.PowderDiffraction
             cov[2, 0] = cov[0, 2];
             cov[2, 1] = cov[1, 2];
 
- // Eigendecomaftersition
+ // Eigendecomposition
             double[] eigenvalues;
             double[,] eigenvectors;
             if (!JacobiEigen(cov, out eigenvalues, out eigenvectors))
@@ -267,7 +262,7 @@ namespace Tal.Core.PowderDiffraction
         }
 
  /// <summary>
- /// Local copy of the Jacobi eigendecomaftersition for symmetric 3x3 matrices.
+ /// Local copy of the Jacobi eigendecomposition for symmetric 3x3 matrices.
  /// </summary>
         private static bool JacobiEigen(double[,] A, out double[] eigenvalues, out double[,] eigenvectors)
         {

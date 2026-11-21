@@ -6,12 +6,6 @@
 //
 // Structure file parsers: ResParser.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// EXTENDED: REM line parsing (refinement statistics) + hydrogen AFIX U_iso recalculation
-
 using Microsoft.Xna.Framework;
 using System.Diagnostics;
 using System.Globalization;
@@ -60,7 +54,7 @@ namespace Tal.Parsers
         };
 
  /// <summary>
- /// Radius afterszukiwań neighbour wodoru (Å) w drugim przebiegu AFIX.
+ /// Radius poszukiwań neighbour wodoru (Å) w drugim przebiegu AFIX.
  /// Kowalencyjne H-C/N/O: 0.92–1.10 Å; hydrogen bonds > 1.4 Å.
  /// </summary>
         private const float HYDROGEN_NEIGHBOR_SEARCH_RADIUS = 1.3f;
@@ -255,7 +249,7 @@ namespace Tal.Parsers
  /// U_iso(H) = afix_multiplier × U_eq(neighbor)
  ///
  /// Atomy wodoru without AFIX (multiplier == 0) są skipped —
- /// ich U_iso zostało afterdane wprost przez SHELX i jest already correct.
+ /// ich U_iso zostało podane wprost przez SHELX i jest already correct.
  /// </summary>
         private static void RecalculateHydrogenUiso(ResData res)
         {
@@ -657,7 +651,7 @@ namespace Tal.Parsers
         }
 
  /// <summary>
- /// Ensures "x,y,z" is at aftersition 0.
+ /// Ensures "x,y,z" is at position 0.
  /// </summary>
         private static void EnsureIdentityFirst(List<string> ops)
         {
@@ -814,7 +808,7 @@ namespace Tal.Parsers
         }
 
  /// <summary>
- /// Parses SFAC card. Supafterrts both formats:
+ /// Parses SFAC card. Supports both formats:
  /// SFAC C H N O
  /// SFAC C 0.003 H 0.001 N 0.006 O 0.004
  /// Skips numeric scattering-factor coefficients after each symbol.
@@ -1056,7 +1050,7 @@ namespace Tal.Parsers
  // ═══════════════════════════════════════════════════════════
  // ⭐ SHELX U-iso konwencja:
  //
- // iso >= 0: U_iso = iso (Å²) — withoutafterśrednia value
+ // iso >= 0: U_iso = iso (Å²) — bezpośrednia value
  // iso < 0: AFIX multiplier |iso| — U_iso zostanie
  // przeliczone w drugim przebiegu:
  // U_iso(H) = |iso| × U_eq(neighbor)
@@ -1321,14 +1315,16 @@ namespace Tal.Parsers
         {
             error = 0;
             if (string.IsNullOrEmpty(value)) return;
-            var match = Regex.Match(value, @"\((\d+)\)");
-            if (match.Success)
-            {
-                int digits = match.Groups[1].Value.Length;
-                float mul = (float)Math.Pow(10, digits);
-                float val = float.Parse(match.Groups[1].Value);
-                error = val / mul;
-            }
+            // esd is given in units of the last decimal place of the value:
+            // "0.12345(6)" -> 0.00006, "11.800(3)" -> 0.003
+            var match = Regex.Match(value, @"(?<val>[-+]?\d*\.?\d*)\((?<esd>\d+)\)");
+            if (!match.Success) return;
+
+            string val = match.Groups["val"].Value;
+            int dot = val.IndexOf('.');
+            int decimals = dot >= 0 ? val.Length - dot - 1 : 0;
+            double esd = double.Parse(match.Groups["esd"].Value, CultureInfo.InvariantCulture);
+            error = (float)(esd * Math.Pow(10.0, -decimals));
         }
 
         private static void ParseCoordErrors(string[] parts, out float xe, out float ye, out float ze)

@@ -6,7 +6,7 @@
 //
 // Molecule overlay module: MoleculeOverlayWindow.
 
-﻿// MoleculeOverlayWindow.cs - POPRAWIONY PLIK
+// MoleculeOverlayWindow.cs - POPRAWIONY PLIK
 using Microsoft.Xna.Framework;
 using Tal.GUI;
 using Tal.Overlay;
@@ -995,7 +995,7 @@ namespace Tal.Forms
  // ⭐ IF ZAZNACZONE - UŻYJ KONTRASTOWEGO KOLORU
             if ((e.State & DrawItemState.Selected) == DrawItemState.Selected)
             {
- // Afterdświetlenie for selectedgo
+ // Podświetlenie for selectedgo
                 using (var brush = new SolidBrush(System.Drawing.Color.FromArgb(0, 122, 204)))
                 {
                     e.Graphics.FillRectangle(brush, e.Bounds);

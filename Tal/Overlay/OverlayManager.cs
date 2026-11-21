@@ -6,7 +6,7 @@
 //
 // Molecule overlay module: OverlayManager.
 
-﻿// OverlayManager.cs
+// OverlayManager.cs
 using Microsoft.Xna.Framework;
 using System.Linq;
 using Tal.GUI;
@@ -549,7 +549,7 @@ namespace Tal.Overlay
             OnMoleculesChanged();
         }
  /// <summary>
- /// Afterbiera styl z pierwszeo atom w molekule.
+ /// Pobiera styl z pierwszeo atom w molekule.
  /// </summary>
         private int GetMoleculeStyle(OverlayMoleculeData molData)
         {
@@ -1246,10 +1246,10 @@ namespace Tal.Overlay
 
  // OverlayManager.cs - MapBasisToBasis
  // Mapuje punkt świata z lokalnej bazy SOURCE (pivotSource, xs,ys,zs)
- // do odafterwiadającego punktu w bazie TARGET (pivotTarget, xt,yt,zt).
+ // do odpowiadającego punktu w bazie TARGET (pivotTarget, xt,yt,zt).
  // Obie bazy muszą be ortonormalne i have tę samą skrętność (obie
  // zbudowane przez ys/yt = Cross(zs/zt, xs/xt)) — wtedy result jest
- // afterprawnym obrotem sztywnym (rigid rotation), without aftertrzeby
+ // poprawnym obrotem sztywnym (rigid rotation), without potrzeby
  // ręcznego checksnia/odwracania wyznacznika.
         private Vector3 MapBasisToBasis(
             Vector3 worldPoint,
@@ -1266,8 +1266,8 @@ namespace Tal.Overlay
 
  // OverlayManager.cs - IterativeFit
  //sourceMolecule molecule to rotate after finding rotations
- //sourcepoints - 3 afterints of the molecule we want to rotate so they overlay targetpoints
- //targetpoints afterints to which we wont rotate our ourcepoints 
+ //sourcepoints - 3 points of the molecule we want to rotate so they overlay targetpoints
+ //targetpoints points to which we wont rotate our ourcepoints 
         public void IterativeFit(
             OverlayMoleculeData sourceMolecule,
             Vector3[] sourcePoints,
@@ -1320,14 +1320,14 @@ namespace Tal.Overlay
             Vector3 yt = Vector3.Cross(zt, xt);
 
  // ------------------------------------------------------------------
- // 3. Maafterwanie punkt-after-punkcie between bazami (without mnożenia matrixy!)
+ // 3. Mapowanie punkt-after-punkcie between bazami (without mnożenia matrixy!)
  //
  // For dowolnego wektora v liczonego relative to sourcepoints[0]:
  // a = v·xs, b = v·ys, c = v·zs (coordinates w bazie SOURCE)
  // Ten sam punkt w bazie TARGET (czyli after obrocie) to:
  // v' = a*xt + b*yt + c*zt
  // Because obie bazy są zbudowane tą samą konwencją (right-handed),
- // to jest afterprawny obrót — without aftertrzeby ręcznego odwracania det.
+ // to jest poprawny obrót — without potrzeby ręcznego odwracania det.
  //
  // (Previous version budowała matrixe Ms/Mt i liczyła
  // R = Mtᵀ * Ms, after czym stosowała ją jako v*R. W konwencji
@@ -1421,7 +1421,7 @@ namespace Tal.Overlay
             sourceMolecule.Color = currentColor;
 
  // ------------------------------------------------------------------
- // 5. Raafterrt
+ // 5. Raport
  // ------------------------------------------------------------------
             float finalError = 0f;
             for (int i = 0; i < 3; i++)
@@ -1456,7 +1456,7 @@ namespace Tal.Overlay
  // OverlayManager.cs - ApplyMirrorToMolecule
  /// <summary>
  /// Zastosowuje operation lustra (odbicie relative to planes XY).
- /// To wystarczy, afternieważ algorytm dopasowania i tak dostosuje orientację.
+ /// To wystarczy, ponieważ algorytm dopasowania i tak dostosuje orientację.
  /// </summary>
         public void ApplyMirrorToMolecule(int moleculeId)
         {

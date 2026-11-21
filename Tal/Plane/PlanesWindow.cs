@@ -6,11 +6,6 @@
 //
 // Crystal planes module: PlanesWindow.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Tal.Core.PowderDiffraction;
 using WeifenLuo.WinFormsUI.Docking;
 
@@ -56,7 +51,7 @@ namespace Tal.Forms
         }
 
  /// <summary>
- /// Afterdmienia list planes (when zmienia active dokument).
+ /// Podmienia list planes (when zmienia active dokument).
  /// </summary>
         public void UpdatePlanes(List<CrystalPlane> planes)
         {

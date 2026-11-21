@@ -6,7 +6,7 @@
 //
 // Crystal planes module: PlanePropertiesWindow.Designer.
 
-﻿namespace Tal.Forms
+namespace Tal.Forms
 {
     partial class PlanePropertiesWindow
     {

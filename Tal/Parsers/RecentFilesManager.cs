@@ -6,11 +6,6 @@
 //
 // Structure file parsers: RecentFilesManager.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -77,7 +72,7 @@ namespace Tal.Parsers
         }
 
  /// <summary>
- /// Adde plik na afterczątek list. Deduplikuje (case-insensitive),
+ /// Adde plik na początek list. Deduplikuje (case-insensitive),
  /// przesuwa existcy wpis na górę.
  /// </summary>
         public void Add(string filePath)
@@ -101,7 +96,7 @@ namespace Tal.Parsers
                 _files.RemoveAll(p =>
                     string.Equals(p, fullPath, StringComparison.OrdinalIgnoreCase));
 
- // Insert na afterczątek
+ // Insert na początek
                 _files.Insert(0, fullPath);
 
  // Przytnij do MaxEntries

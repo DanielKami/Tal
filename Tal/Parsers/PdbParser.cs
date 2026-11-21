@@ -6,11 +6,6 @@
 //
 // Structure file parsers: PdbParser.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -104,7 +99,7 @@ namespace Tal.Parsers
             var lines = Regex.Split(content, "\r\n|\r|\n");
             Debug.WriteLine($"[PdbParser] Lines: {lines.Length}");
 
- // Temafterrary storage for ANISOU (keyed by serial)
+ // Temporary storage for ANISOU (keyed by serial)
             var anisoDict = new Dictionary<int, (float u11, float u22, float u33, float u12, float u13, float u23)>();
 
             foreach (var rawLine in lines)

@@ -6,7 +6,7 @@
 //
 // Molecule overlay module: MoleculeOverlayWindow.Designer.
 
-﻿// MoleculeOverlayWindow.Designer.cs - POPRAWIONY
+// MoleculeOverlayWindow.Designer.cs - POPRAWIONY
 namespace Tal.Forms
 {
     partial class MoleculeOverlayWindow

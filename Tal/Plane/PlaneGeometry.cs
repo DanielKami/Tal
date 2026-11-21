@@ -6,11 +6,6 @@
 //
 // Crystal planes module: PlaneGeometry.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -26,7 +21,7 @@ namespace Tal.Core.PowderDiffraction
         #region HKL Intercepts
 
  /// <summary>
- /// Computes the corner afterints of a crystal plane (hkl) in FRACTIONAL coordinates.
+ /// Computes the corner points of a crystal plane (hkl) in FRACTIONAL coordinates.
  /// 
  /// The plane equation is: h·x + k·y + l·z = 1
  /// 
@@ -44,7 +39,7 @@ namespace Tal.Core.PowderDiffraction
  /// Returns 4 corners (an edge swept along the parallel axis).
  /// 
  /// 4. THREE non-zero indices (0 zeros) - general case, plane cuts all 3 axes.
- /// Returns 3 intercept afterints with the axes.
+ /// Returns 3 intercept points with the axes.
  /// </summary>
         public static List<Vector3> GetHKLIntercepts(int h, int k, int l)
         {
@@ -157,7 +152,7 @@ namespace Tal.Core.PowderDiffraction
 
  // ─────────────────────────────────────────────────────────────
  // Case 4: general case (all indices non-zero) → plane cuts all 3 axes
- // Returns 3 intercept afterints.
+ // Returns 3 intercept points.
  // ─────────────────────────────────────────────────────────────
             return new List<Vector3>
             {
@@ -208,8 +203,8 @@ namespace Tal.Core.PowderDiffraction
  /// <summary>
  /// Computes the geometry of a crystal plane (hkl) in CARTESIAN coordinates.
  /// 
- /// Imafterrtant convention (matching Molecule.PrepareUnitCell):
- /// U = Matrix.Transafterse(fracToCart)
+ /// Important convention (matching Molecule.PrepareUnitCell):
+ /// U = Matrix.Transpose(fracToCart)
  /// p_cart = Vector3.Transform(p_frac, U)
  /// p_cart -= moleculeShift
  /// 
@@ -238,7 +233,7 @@ namespace Tal.Core.PowderDiffraction
                 return;
             }
 
- // ⭐ Transafterse - same convention as Molecule.PrepareUnitCell
+ // ⭐ Transpose - same convention as Molecule.PrepareUnitCell
  // and Molecule.Calculate_SymmetryAtoms3D
             Matrix U = Matrix.Transpose(fracToCart);
 
@@ -251,7 +246,7 @@ namespace Tal.Core.PowderDiffraction
                 interceptsCart.Add(cart);
             }
 
- // Compute the plane normal from the geometric afterints
+ // Compute the plane normal from the geometric points
  // (cross product of two edge vectors)
             Vector3 v1 = interceptsCart[1] - interceptsCart[0];
             Vector3 v2 = interceptsCart[2] - interceptsCart[0];
@@ -401,7 +396,7 @@ namespace Tal.Core.PowderDiffraction
             if (tEnd < tStart)
             {
  // Linia exists ale nie przechodzi przez OBA prostoangley razem
- // Fallback: użyj afterbeforeniej metody (bounding box)
+ // Fallback: użyj poprzedniej metody (bounding box)
                 result.Point = pointOnLine;
                 result.HalfLength = ComputeIntersectionHalfLength(p1, p2);
                 return result;
@@ -421,11 +416,11 @@ namespace Tal.Core.PowderDiffraction
         }
 
  /// <summary>
- /// Calculates zakres parameteru t, w którym linia (afterintOnLine + t·dir)
+ /// Calculates zakres parameteru t, w którym linia (pointOnLine + t·dir)
  /// leży wewnątrz rectangle planes.
  /// 
  /// Metoda: rzut linii na lokalny system 2D rectangle (u, v),
- /// aftertem klasyczne przecięcie prostej z AABB (axis-aligned bounding box).
+ /// potem klasyczne przecięcie prostej z AABB (axis-aligned bounding box).
  /// 
  /// Zakres u, v jest wyliczany z min/max after WSZYSTKICH 4 corners —
  /// dzięki temu works for each order corners (prostoangle,
@@ -462,8 +457,8 @@ namespace Tal.Core.PowderDiffraction
 
             Vector3 center = plane.Center;
 
- // ⭐ Afterlicz zakres u, v after all 4 corners
- // (for withoutpieczeństwa — niezależnie od order)
+ // ⭐ Policz zakres u, v after all 4 corners
+ // (for bezpieczeństwa — niezależnie od order)
             float minU = float.MaxValue, maxU = float.MinValue;
             float minV = float.MaxValue, maxV = float.MinValue;
 
@@ -537,7 +532,7 @@ namespace Tal.Core.PowderDiffraction
         }
 
  /// <summary>
- /// Fallback: length pół-odcinka na afterdstawie bounding-boxów planes.
+ /// Fallback: length pół-odcinka na podstawie bounding-boxów planes.
  /// Used when precyzyjne obliczenie nie jest możliwe
  /// (np. no corners, or prostoangley nie przecinają wzdłuż linii).
  /// </summary>

@@ -6,11 +6,6 @@
 //
 // Structure file parsers: MolParser.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -54,7 +49,7 @@ namespace Tal
 
  /// <summary>
  /// Parser for MDL Molfile / SDF (V2000).
- /// Supafterrts classic 3-line header + counts line + atom/bond blocks.
+ /// Supports classic 3-line header + counts line + atom/bond blocks.
  /// Coordinates are Cartesian. No unit cell → treated as P1 molecule.
  /// </summary>
     public static class MolParser

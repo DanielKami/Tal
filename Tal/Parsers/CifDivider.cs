@@ -6,11 +6,6 @@
 //
 // Structure file parsers: CifDivider.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 namespace Tal.Parsers
 {
  /// <summary>
@@ -68,7 +63,7 @@ namespace Tal.Parsers
                 {
                     if (startIndex != -1)
                     {
- // Save afterbeforeni blok
+ // Save poprzedni blok
                         var blockLines = new List<string>();
                         for (int j = startIndex; j < i; j++)
                             blockLines.Add(lines[j]);

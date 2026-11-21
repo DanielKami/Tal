@@ -6,11 +6,6 @@
 //
 // Structure file parsers: GaussianParser.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -184,7 +179,7 @@ namespace Tal.Parsers
                     gau.atom.Add(atom);
                 else
                 {
- // If linia nie pasuje do atom – prawdoafterdobnie koniec bloku
+ // If linia nie pasuje do atom – prawdopodobnie koniec bloku
  // (np. Z-matrix or connectivity)
                     break;
                 }
@@ -310,7 +305,7 @@ namespace Tal.Parsers
             int idx = 1;
             foreach (var ga in gau.atom)
             {
- // Aftermicavities dummy atoms (X, Bq) – optionally
+ // Pomicavities dummy atoms (X, Bq) – optionally
                 if (ga.element.Equals("X", StringComparison.OrdinalIgnoreCase) ||
                     ga.element.Equals("Bq", StringComparison.OrdinalIgnoreCase))
                     continue;

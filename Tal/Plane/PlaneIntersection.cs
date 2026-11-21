@@ -6,11 +6,6 @@
 //
 // Crystal planes module: PlaneIntersection.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 
 namespace Tal.Core.PowderDiffraction

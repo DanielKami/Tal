@@ -6,7 +6,7 @@
 //
 // Molecule overlay module: OverlayMoleculeData.
 
-﻿// OverlayMoleculeData.cs
+// OverlayMoleculeData.cs
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Tal;
@@ -14,7 +14,7 @@ using Tal;
 namespace Tal.Overlay
 {
  /// <summary>
- /// Przechowuje dane o afterjedynczej molekule dodanej do nakładania.
+ /// Przechowuje dane o pojedynczej molekule dodanej do nakładania.
  /// </summary>
     public class OverlayMoleculeData
     {
@@ -29,7 +29,7 @@ namespace Tal.Overlay
         public string Name { get; set; }
 
  /// <summary>
- /// Nazwa source (np. nazwa okna, z którego afterchodzi).
+ /// Nazwa source (np. nazwa okna, z którego pochodzi).
  /// </summary>
         public string SourceName { get; set; }
 
@@ -96,7 +96,7 @@ namespace Tal.Overlay
         public TransformationMode CurrentTransformation { get; set; } = TransformationMode.None;
 
  /// <summary>
- /// Macierz transformation (calculatesna na afterdstawie CurrentTransformation).
+ /// Macierz transformation (calculatesna na podstawie CurrentTransformation).
  /// </summary>
         public Matrix TransformationMatrix { get; set; } = Matrix.Identity;
 
@@ -111,12 +111,12 @@ namespace Tal.Overlay
         public bool IsVisible { get; set; } = true;
 
  /// <summary>
- /// Czy molecule afterchodzi z entire structure (czy only z molecule).
+ /// Czy molecule pochodzi z entire structure (czy only z molecule).
  /// </summary>
         public bool IsStructure { get; set; } = false;
 
  /// <summary>
- /// Czy molecule afterchodzi z zaznaczenia atoms (a nie z entire molecule).
+ /// Czy molecule pochodzi z zaznaczenia atoms (a nie z entire molecule).
  /// </summary>
         public bool IsSelection { get; set; } = false;
 

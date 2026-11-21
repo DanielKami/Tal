@@ -6,14 +6,6 @@
 //
 // Structure file parsers: CifParser.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// EXTENDED: full CIF parsing (refinement, reflections, experiment, publication)
-// FIXED: CCDC anisotropic parsing — handling variants of U_11/U11, U_22/U22, etc.
-// FIXED: removed ref from Dictionary — pass object by reference
-
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Tal;
@@ -26,7 +18,7 @@ namespace Tal.Parsers
  /// refinement statistics, reflection statistics, experiment details,
  /// anisotropic displacement parameters, and publication metadata.
  ///
- /// ⭐ FIX CCDC: obsługa obu wariantów kluczy anizotroafterwych:
+ /// ⭐ FIX CCDC: obsługa obu wariantów kluczy anizotropowych:
  /// _atom_site_aniso_U_11 → "U11" (after normalisation)
  /// _atom_site_aniso_U11 → "U11"
  /// Normalizacja + checksnie obu wariantów w warunku wejścia.
@@ -486,7 +478,7 @@ namespace Tal.Parsers
                 {
                     string flag = lines[j].Trim();
 
- // ⭐ Wyklucz flagi anizotroafterwe — one należą do innego loop_
+ // ⭐ Wyklucz flagi anizotropowe — one należą do innego loop_
                     if (flag.Contains("_atom_site_") && !flag.Contains("_atom_site_aniso_"))
                     {
                         string key = flag.Replace("_atom_site_", "").Trim();
@@ -540,7 +532,7 @@ namespace Tal.Parsers
  /// <summary>
  /// Parses the anisotropic displacement parameter loop.
  ///
- /// ⭐ FIX CCDC: obsługa obu wariantów kluczy anizotroafterwych:
+ /// ⭐ FIX CCDC: obsługa obu wariantów kluczy anizotropowych:
  /// _atom_site_aniso_U_11 → "U11" (after normalisation)
  /// _atom_site_aniso_U11 → "U11"
  /// Pełne logs diagnostyczne na każdym etapie.
@@ -684,7 +676,7 @@ namespace Tal.Parsers
         }
 
  /// <summary>
- /// ⭐ Normalisee klucz anizotroafterwy: usuwa afterdkreślnik between U a cyframi.
+ /// ⭐ Normalisee klucz anizotropowy: usuwa podkreślnik between U a cyframi.
  /// Przykłady: "U_11" → "U11", "U11" → "U11", "U_12" → "U12"
  /// </summary>
         private static string NormalizeAnisoKey(string key)
@@ -700,7 +692,7 @@ namespace Tal.Parsers
         }
 
  /// <summary>
- /// Assigns anisotropic displacement data to the corresafternding atoms.
+ /// Assigns anisotropic displacement data to the corresponding atoms.
  /// ⭐ FIX: dopasowanie exact + case-insensitive fallback, full logs.
  /// </summary>
         private static void AssignAnisotropicDataToAtoms(CifData cif, Dictionary<string, AnisoData> tempU)
@@ -778,7 +770,7 @@ namespace Tal.Parsers
 
  /// <summary>
  /// Parses single-line anisotropic data (legacy format without loop_).
- /// ⭐ FIX: aftermija, if Uani already setione z loop_ (ochrona before nadpisaniem).
+ /// ⭐ FIX: pomija, if Uani already setione z loop_ (ochrona before nadpisaniem).
  /// </summary>
         private static void ParseSingleLineAnisotropic(string[] lines, CifData cif)
         {
@@ -1011,21 +1003,24 @@ namespace Tal.Parsers
             return 0;
         }
 
- /// <summary>
- /// Extracts the standard uncertainty from a CIF line (value in parentheses).
- /// </summary>
+        /// <summary>
+        /// Parses the standard uncertainty (esd) written in parentheses, e.g.
+        /// "0.12345(6)" -> 0.00006, "11.800(3)" -> 0.003, "0.1234(12)" -> 0.0012.
+        /// The esd is expressed in units of the last decimal place of the value,
+        /// so the number of decimals of the value (not the number of esd digits)
+        /// decides the scale. Accepts a whole CIF line ("_cell_length_a 11.800(3)").
+        /// </summary>
         private static float GetError(string line)
         {
             if (string.IsNullOrEmpty(line)) return 0;
-            var match = Regex.Match(line, @"[(](\d+)[)]");
-            if (match.Success)
-            {
-                int digits = match.Groups[1].Value.Length;
-                float mul = (float)Math.Pow(10, digits);
-                float val = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                return val / mul;
-            }
-            return 0;
+            var match = Regex.Match(line, @"(?<val>[-+]?\d*\.?\d*)\((?<esd>\d+)\)");
+            if (!match.Success) return 0;
+
+            string val = match.Groups["val"].Value;
+            int dot = val.IndexOf('.');
+            int decimals = dot >= 0 ? val.Length - dot - 1 : 0;
+            double esd = double.Parse(match.Groups["esd"].Value, CultureInfo.InvariantCulture);
+            return (float)(esd * Math.Pow(10.0, -decimals));
         }
 
  /// <summary>

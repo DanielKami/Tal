@@ -6,11 +6,6 @@
 //
 // Structure file parsers: XyzParser.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;

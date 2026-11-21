@@ -6,11 +6,6 @@
 //
 // Structure file parsers: Mol2Parser.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -71,8 +66,8 @@ namespace Tal.Parsers
     }
 
  /// <summary>
- /// Parser for Triafters MOL2 files (common CSD / Sybyl exafterrt).
- /// Supafterrts:
+ /// Parser for Tripos MOL2 files (common CSD / Sybyl export).
+ /// Supports:
  /// @&lt;TRIPOS&gt;MOLECULE
  /// @&lt;TRIPOS&gt;ATOM
  /// @&lt;TRIPOS&gt;BOND
@@ -148,7 +143,7 @@ namespace Tal.Parsers
                 }
             }
 
- // Afterst-processing
+ // Post-processing
             if (mol2.a > 0.1f && mol2.b > 0.1f && mol2.c > 0.1f)
             {
                 mol2.cell_volume = CalculateCellVolume(mol2.a, mol2.b, mol2.c,

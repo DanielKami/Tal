@@ -6,12 +6,6 @@
 //
 // Structure file parsers: CifData.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// EXTENDED: full CIF metadata (refinement, reflections, experiment, publication)
-
 namespace Tal.Parsers
 {
  /// <summary>
@@ -112,7 +106,7 @@ namespace Tal.Parsers
 
         #region Chemical Metadata
 
- /// <summary>Common chemical name of the comafterund.</summary>
+ /// <summary>Common chemical name of the compound.</summary>
         public string chemical_name_common = "";
 
  /// <summary>⭐ NEW: Systematic (IUPAC) chemical name.</summary>
@@ -395,7 +389,7 @@ namespace Tal.Parsers
 
  /// <summary>
  /// Represents a single atom parsed from a CIF file.
- /// Contains aftersitional coordinates, displacement parameters,
+ /// Contains positional coordinates, displacement parameters,
  /// and other crystallographic data for an atom in the asymmetric unit.
  /// </summary>
     public class Atom
@@ -455,7 +449,7 @@ namespace Tal.Parsers
  /// <summary>Symmetry order (multiplicity of the atom site).</summary>
         public int symmetry_order;
 
- /// <summary>Calculation flag (e.g., "calc" for calculated aftersition).</summary>
+ /// <summary>Calculation flag (e.g., "calc" for calculated position).</summary>
         public string calc_flag;
 
  /// <summary>Disorder group number for disordered structures.</summary>

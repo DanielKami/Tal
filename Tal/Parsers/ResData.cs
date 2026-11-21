@@ -6,12 +6,6 @@
 //
 // Structure file parsers: ResData.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-// EXTENDED: full RES metadata (refinement from REM lines)
-
 using System.Collections.Generic;
 
 namespace Tal.Parsers
@@ -307,7 +301,7 @@ namespace Tal.Parsers
 
  /// <summary>
  /// ⭐ NEW: AFIX multiplier for wodoru geometrycznego (np. 1.2, 1.5).
- /// 0 = no AFIX (U_iso afterdane directly, albo atom ciężki).
+ /// 0 = no AFIX (U_iso podane directly, albo atom ciężki).
  /// Used w drugim przebiegu RecalculateHydrogenUiso do obliczenia
  /// U_iso(H) = afix_multiplier × U_eq(neighbor).
  /// </summary>

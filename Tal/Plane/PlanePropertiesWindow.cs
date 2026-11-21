@@ -6,11 +6,6 @@
 //
 // Crystal planes module: PlanePropertiesWindow.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -35,7 +30,7 @@ namespace Tal.Forms
         private bool _inPlaneSelectionMode = false;
         private System.Windows.Forms.Timer _selectionTimer;
 
- // ⭐ Zaafterbiega afternownemu wejściu do handlerów RadioButton
+ // ⭐ Zapobiega ponownemu wejściu do handlerów RadioButton
         private bool _updatingRadioButtons = false;
 
         #endregion
@@ -139,7 +134,7 @@ namespace Tal.Forms
 
         private void LoadPlaneToUI()
         {
- // ⭐ Blokuj reakcje RadioButton-ów afterdczas ładowania
+ // ⭐ Blokuj reakcje RadioButton-ów podczas ładowania
             _updatingRadioButtons = true;
 
             tabControl.SelectedIndex = _workingPlane.Type == CrystalPlaneType.HKL ? 1 : 0;

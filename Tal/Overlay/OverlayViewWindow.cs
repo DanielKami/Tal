@@ -6,7 +6,7 @@
 //
 // Molecule overlay module: OverlayViewWindow.
 
-﻿// OverlayViewWindow.cs
+// OverlayViewWindow.cs
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;

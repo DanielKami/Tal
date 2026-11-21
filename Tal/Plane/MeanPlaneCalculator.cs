@@ -6,11 +6,6 @@
 //
 // Crystal planes module: MeanPlaneCalculator.
 
-﻿// Author: Daniel M. Kaminski
-// Year: 2026
-// Location: Lublin
-// Project: TAL
-
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -20,8 +15,8 @@ namespace Tal.Core.PowderDiffraction
  /// <summary>
  /// Computes the best-fit (least-squares) plane through a set of selected atoms.
  /// 
- /// The plane is found using eigendecomaftersition of the covariance matrix of
- /// the selected atom aftersitions. The eigenvector corresafternding to the SMALLEST
+ /// The plane is found using eigendecomposition of the covariance matrix of
+ /// the selected atom positions. The eigenvector corresponding to the SMALLEST
  /// eigenvalue is the plane normal (the direction of least variance).
  /// 
  /// Coordinate convention (must match CrystalPlane HKL planes):
@@ -50,7 +45,7 @@ namespace Tal.Core.PowderDiffraction
  /// - plane.Size = half-side length of the rectangle
  /// 
  /// Returns false if there are fewer than 3 valid atoms or the
- /// covariance matrix cannot be decomaftersed.
+ /// covariance matrix cannot be decomposed.
  /// </summary>
  /// <param name="molecule">The molecule containing the atoms.</param>
  /// <param name="plane">The CrystalPlane instance to fill in.</param>
@@ -69,7 +64,7 @@ namespace Tal.Core.PowderDiffraction
                 return false;
 
  // ─────────────────────────────────────────────────────────────
- // Step 1: collect atom aftersitions in RAW Cartesian space
+ // Step 1: collect atom positions in RAW Cartesian space
  // (add MoleculeShift back, since atom.Coordinate has -shift)
  // ─────────────────────────────────────────────────────────────
             Vector3 shift = molecule.MoleculeShift;
@@ -120,7 +115,7 @@ namespace Tal.Core.PowderDiffraction
                 covariance[2, 2] += dz * dz;
             }
 
- // Normalize by the number of afterints. Eigenvectors are scale-invariant,
+ // Normalize by the number of points. Eigenvectors are scale-invariant,
  // but keeping values reasonable avoids numerical issues.
             double invN = 1.0 / positions.Count;
             for (int i = 0; i < 3; i++)
@@ -128,7 +123,7 @@ namespace Tal.Core.PowderDiffraction
                     covariance[i, j] *= invN;
 
  // ─────────────────────────────────────────────────────────────
- // Step 4: eigendecomaftersition (Jacobi)
+ // Step 4: eigendecomposition (Jacobi)
  // ─────────────────────────────────────────────────────────────
             double[] eigenvalues;
             double[,] eigenvectors;
@@ -221,7 +216,7 @@ namespace Tal.Core.PowderDiffraction
  /// 
  /// Output:
  /// eigenvalues[k] - k-th eigenvalue
- /// eigenvectors[i,k] - i-th comafternent of k-th eigenvector
+ /// eigenvectors[i,k] - i-th component of k-th eigenvector
  /// (eigenvectors are COLUMNS of the output matrix)
  /// </summary>
         internal static bool SymmetricEigen3x3(double[,] A,

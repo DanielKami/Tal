@@ -6,7 +6,7 @@
 //
 // Molecule overlay module: OverlayViewWindow.Designer.
 
-﻿// OverlayViewWindow.Designer.cs
+// OverlayViewWindow.Designer.cs
 namespace Tal.Forms
 {
     partial class OverlayViewWindow
