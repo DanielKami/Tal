@@ -163,12 +163,33 @@ namespace Tal
 
                         if (mode == CavityRenderer.DrawMode.CavityColorMap)
                         {
+                            // v3.74: the old code only set mapper.CurrentProperty on the mapper of the
+                            // PREVIOUS detection. The new cavities were never coloured (grey surface) and
+                            // a later "apply property" reused that stale mapper because its
+                            // CurrentProperty already matched. Build a fresh mapper bound to the new
+                            // cavities and actually apply the property.
                             var propertyType = settingsWin.GetSelectedPropertyType();
-                            var mapper = doc.GetPropertyMapper();
-                            if (mapper != null)
+                            var mol = doc.GetMolecule();
+                            try { doc.GetPropertyMapper()?.Dispose(); } catch { /* ignore */ }
+                            var mapper = new CavityPropertyMapper(mol, renderer.GetCavities());
+                            doc.SetPropertyMapper(mapper);
+
+                            if (mol != null)
                             {
-                                mapper.CurrentProperty = propertyType;
+                                if (propertyType == CavityPropertyMapper.PropertyType.Charge
+                                    && mol.ChargeMin < mol.ChargeMax)
+                                    ColorManager.SetDynamicRange(ColorManager.PropertyType.Charge,
+                                        mol.ChargeMin, mol.ChargeMax);
+                                else if (propertyType == CavityPropertyMapper.PropertyType.Hydrophobicity
+                                    && mol.HydrophobicityMin < mol.HydrophobicityMax)
+                                    ColorManager.SetDynamicRange(ColorManager.PropertyType.Hydrophobicity,
+                                        mol.HydrophobicityMin, mol.HydrophobicityMax);
                             }
+
+                            await mapper.ApplyPropertyToCavitiesAsync(propertyType);
+                            renderer.CopyColorsToRenderCavities();
+                            renderer.InvalidateNormalsCache();
+                            renderer.UpdateCavityColors();
                         }
                     }
                     else

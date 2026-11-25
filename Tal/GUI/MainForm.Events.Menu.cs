@@ -852,6 +852,24 @@ namespace Tal
 
         #region Transform Space Group
 
+        /// <summary>
+        /// Finds the StructureData that belongs to the given document (path + name match).
+        /// Falls back to the list selection only when the document cannot be matched.
+        /// </summary>
+        private StructureData GetStructureOfDocument(MonoGameDocument doc)
+        {
+            var storage = StructureStorage.Instance;
+            if (doc != null)
+            {
+                foreach (var s in storage.Structures)
+                {
+                    if (doc.MatchesStructure(s))
+                        return s;
+                }
+            }
+            return storage.SelectedStructure;
+        }
+
         private void OnTransformSpaceGroup(object sender, EventArgs e)
         {
             var doc = GetActiveDocument();
@@ -868,7 +886,11 @@ namespace Tal
                 return;
             }
 
-            var structure = StructureStorage.Instance.SelectedStructure;
+            // ⭐ v3.74: the structure to transform is the one shown in the ACTIVE document,
+            //    not StructureStorage.SelectedStructure (that is only the row highlighted in the
+            //    structure list; with several structures in the local database it can point to a
+            //    different entry than the open window - e.g. a P-1 one: "only one setting available").
+            var structure = GetStructureOfDocument(doc);
             if (structure == null)
             {
                 SetStatus("No structure selected", "Structures: 0", "⚠️");
