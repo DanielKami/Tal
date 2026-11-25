@@ -36,6 +36,12 @@ namespace Tal.Cavity
 
             bool useVertexColors = (_currentDrawMode == DrawMode.MarchingCubesMeshPerVertex
                                  || _currentDrawMode == DrawMode.CavityColorMap);
+            bool useTopologyColors = (_currentDrawMode == DrawMode.TopologyColorMap);
+
+            // v3.74: a draw-mode change alters the baked vertex colours -> rebuild the batch.
+            if (_sceneBatchUsesVertexColors != useVertexColors
+                || _sceneBatchUsesTopologyColors != useTopologyColors)
+                _sceneBatchDirty = true;
 
  // ⭐ All cavities are transparent → always DepthRead + AlphaBlend + sorting.
  // DepthRead = ZWrite off, ZTest on — correct for transparency.
@@ -45,7 +51,7 @@ namespace Tal.Cavity
 
  // ═══ Rebuild batch if dirty ═══
             if (_sceneBatchDirty)
-                BuildSceneBatch(useVertexColors);
+                BuildSceneBatch(useVertexColors, useTopologyColors);
 
             if (_sceneVB == null || _sceneIB == null || _sceneVertCount == 0)
                 return;

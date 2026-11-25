@@ -121,6 +121,40 @@ namespace Tal.Cavity
         private static PropertyType _currentPropertyType = PropertyType.None;
         private const float MIN_RANGE_WIDTH = 0.001f;
 
+        // v3.74: dynamic range is kept PER property type. Before, a single global slot
+        // (_currentMin/_currentMax + _currentPropertyType) was shared by all types, so setting the
+        // Charge / Hydrophobicity range (e.g. in CavityRenderer.UpdateCavityColors right after the
+        // mapper had set the Atomic Number range) silently invalidated the Z range: the colour
+        // scale then got the wrong limits and labels and its bar collapsed to one grey colour.
+        private static readonly object _rangeLock = new object();
+        private static readonly Dictionary<PropertyType, (float min, float max)> _typeRanges
+            = new Dictionary<PropertyType, (float min, float max)>();
+
+        private static bool TryGetDynamic(PropertyType propertyType, out float min, out float max)
+        {
+            lock (_rangeLock)
+            {
+                if (_typeRanges.TryGetValue(propertyType, out var r))
+                {
+                    min = r.min;
+                    max = r.max;
+                    return true;
+                }
+            }
+            min = 0f;
+            max = 0f;
+            return false;
+        }
+
+        private static void StoreDynamic(PropertyType propertyType, float min, float max, bool has)
+        {
+            lock (_rangeLock)
+            {
+                if (has) _typeRanges[propertyType] = (min, max);
+                else _typeRanges.Remove(propertyType);
+            }
+        }
+
         private static Vector4[] _cachedChargeValues;
         private static Vector4[] _cachedHydrophobicityValues;
         private static Vector4[] _cachedAtomicNumberValues;
@@ -218,8 +252,8 @@ namespace Tal.Cavity
         public static (float min, float max) GetPropertyRange(PropertyType propertyType)
         {
  // ⭐ If we have a dynamic range for this type - return it ⭐
-            if (_hasDynamicRange && _currentPropertyType == propertyType)
-                return (_currentMin, _currentMax);
+            if (TryGetDynamic(propertyType, out var __dmin1, out var __dmax1))
+                return (__dmin1, __dmax1);
 
             switch (propertyType)
             {
@@ -244,6 +278,7 @@ namespace Tal.Cavity
                 _currentMin = -0.5f;
                 _currentMax = 0.5f;
                 _hasDynamicRange = false;
+                StoreDynamic(propertyType, 0f, 0f, false);
             }
             else
             {
@@ -260,6 +295,7 @@ namespace Tal.Cavity
                     _currentMax = max;
                 }
                 _hasDynamicRange = true;
+                StoreDynamic(propertyType, _currentMin, _currentMax, true);
             }
         }
 
@@ -271,6 +307,7 @@ namespace Tal.Cavity
             _hasDynamicRange = false;
             _currentMin = -0.5f;
             _currentMax = 0.5f;
+            lock (_rangeLock) _typeRanges.Clear();
         }
 
  /// <summary>
@@ -299,6 +336,7 @@ namespace Tal.Cavity
                 _currentMax = max;
             }
             _hasDynamicRange = true;
+            StoreDynamic(_currentPropertyType, _currentMin, _currentMax, true);
         }
 
         #endregion
@@ -310,8 +348,8 @@ namespace Tal.Cavity
  /// </summary>
         public static string GetMinLabel(PropertyType propertyType)
         {
-            if (_hasDynamicRange && _currentPropertyType == propertyType)
-                return FormatValue(_currentMin, propertyType);
+            if (TryGetDynamic(propertyType, out var __dmin2, out var __dmax2))
+                return FormatValue(__dmin2, propertyType);
 
             switch (propertyType)
             {
@@ -329,9 +367,9 @@ namespace Tal.Cavity
  /// </summary>
         public static string GetMidLabel(PropertyType propertyType)
         {
-            if (_hasDynamicRange && _currentPropertyType == propertyType)
+            if (TryGetDynamic(propertyType, out var __dmin3, out var __dmax3))
             {
-                float mid = (_currentMin + _currentMax) / 2f;
+                float mid = (__dmin3 + __dmax3) / 2f;
                 return FormatValue(mid, propertyType);
             }
 
@@ -351,8 +389,8 @@ namespace Tal.Cavity
  /// </summary>
         public static string GetMaxLabel(PropertyType propertyType)
         {
-            if (_hasDynamicRange && _currentPropertyType == propertyType)
-                return FormatValue(_currentMax, propertyType);
+            if (TryGetDynamic(propertyType, out var __dmin4, out var __dmax4))
+                return FormatValue(__dmax4, propertyType);
 
             switch (propertyType)
             {
@@ -421,10 +459,10 @@ namespace Tal.Cavity
             if (propertyType == PropertyType.Charge || propertyType == PropertyType.Hydrophobicity)
             {
                 float min, max;
-                if (_hasDynamicRange && _currentPropertyType == propertyType)
+                if (TryGetDynamic(propertyType, out var __dmin5, out var __dmax5))
                 {
-                    min = _currentMin;
-                    max = _currentMax;
+                    min = __dmin5;
+                    max = __dmax5;
                 }
                 else
                 {
@@ -470,10 +508,10 @@ namespace Tal.Cavity
             if (propertyType == PropertyType.AtomicNumber)
             {
                 float min, max;
-                if (_hasDynamicRange && _currentPropertyType == propertyType)
+                if (TryGetDynamic(propertyType, out var __dmin6, out var __dmax6))
                 {
-                    min = _currentMin;
-                    max = _currentMax;
+                    min = __dmin6;
+                    max = __dmax6;
                 }
                 else
                 {
@@ -522,10 +560,10 @@ namespace Tal.Cavity
 
  // ⭐⭐⭐ INNE TYPY - MAPOWANIE LINIOWE ⭐⭐⭐
             float min2, max2;
-            if (_hasDynamicRange && _currentPropertyType == propertyType)
+            if (TryGetDynamic(propertyType, out var __dmin7, out var __dmax7))
             {
-                min2 = _currentMin;
-                max2 = _currentMax;
+                min2 = __dmin7;
+                max2 = __dmax7;
             }
             else
             {

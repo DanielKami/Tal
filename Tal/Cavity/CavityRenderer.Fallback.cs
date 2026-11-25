@@ -325,28 +325,13 @@ namespace Tal.Cavity
         {
             if (_graphicsDevice == null || _camera == null) return;
 
-            XnaVector4 GetTopologyColor4(int topologyType)
-            {
-                switch (topologyType)
-                {
-                    case 0: return new XnaVector4(0f, 1f, 0f, 1f);
-                    case 1: return new XnaVector4(1f, 1f, 0f, 1f);
-                    case 2: return new XnaVector4(1f, 0.65f, 0f, 1f);
-                    case 3: return new XnaVector4(1f, 0f, 0f, 1f);
-                    case 4: return new XnaVector4(1f, 0f, 1f, 1f);
-                    case 5: return new XnaVector4(0f, 1f, 1f, 1f);
-                    case 6: return new XnaVector4(1f, 1f, 1f, 1f);
-                    default: return new XnaVector4(0.5f, 0.5f, 0.5f, 1f);
-                }
-            }
-
             foreach (var c in cavities)
             {
                 if (!c.MarchingCubesGenerated || c.MarchingCubesMesh == null) continue;
                 var mesh = c.MarchingCubesMesh;
                 if (!mesh.IsValid) continue;
 
-                XnaVector4 topologyColor = GetTopologyColor4(c.TopologyType);
+                XnaVector4 topologyColor = GetTopologyColor4(c.WallConnections);
                 float alpha = _transparency;
                 if (alpha < 0.99f)
                     topologyColor = new XnaVector4(topologyColor.X, topologyColor.Y, topologyColor.Z, alpha);

@@ -29,6 +29,12 @@ namespace Tal.Cavity
         private bool _sceneBatchDirty = true;
         private bool _sceneIndicesSorted = false;
 
+        // v3.74: colour mode the current batch was built for. The batch bakes the colours into
+        // the vertex buffer, so a change of draw mode (Normal -> Property map -> Topology)
+        // must rebuild it even if nothing else invalidated it.
+        private bool _sceneBatchUsesVertexColors = false;
+        private bool _sceneBatchUsesTopologyColors = false;
+
         private float _sceneLastSortYaw = 0f;
         private float _sceneLastSortPitch = 0f;
 
@@ -46,6 +52,29 @@ namespace Tal.Cavity
 
         private float[] _sceneVerticesFlat;
         private int[] _sceneOriginalIndices;
+
+        #endregion
+
+        #region Topology colours
+
+        /// <summary>
+        /// Colour of a cavity in Topology Map mode, indexed by the number of unit-cell walls
+        /// the cavity touches. Single source for the shader path and the BasicEffect fallback.
+        /// </summary>
+        internal static XnaVector4 GetTopologyColor4(int wallConnections)
+        {
+            switch (wallConnections)
+            {
+                case 0: return new XnaVector4(0f, 1f, 0f, 1f);      // closed - green
+                case 1: return new XnaVector4(1f, 1f, 0f, 1f);      // 1 wall - yellow
+                case 2: return new XnaVector4(1f, 0.65f, 0f, 1f);   // 2 walls - orange
+                case 3: return new XnaVector4(1f, 0f, 0f, 1f);      // 3 walls - red
+                case 4: return new XnaVector4(1f, 0f, 1f, 1f);      // 4 walls - magenta
+                case 5: return new XnaVector4(0f, 1f, 1f, 1f);      // 5 walls - cyan
+                case 6: return new XnaVector4(1f, 1f, 1f, 1f);      // all 6 walls - white
+                default: return new XnaVector4(0.5f, 0.5f, 0.5f, 1f);
+            }
+        }
 
         #endregion
 
@@ -69,7 +98,7 @@ namespace Tal.Cavity
  /// Builds a shared VB/IB from all cavities in _cachedDrawList.
  /// Called raz, when batch jest dirty.
  /// </summary>
-        private void BuildSceneBatch(bool useVertexColors)
+        private void BuildSceneBatch(bool useVertexColors, bool useTopologyColors = false)
         {
             if (_graphicsDevice == null || _graphicsDevice.IsDisposed) return;
 
@@ -132,6 +161,14 @@ namespace Tal.Cavity
                     && cavity.VertexColors4.Length == vertCount;
 
                 XnaVector4 defaultColor = cavity.BaseColor4;
+
+                // v3.74: Topology Map colours by wall contacts (0 = closed ... 6 = all walls),
+                // keeping the cavity's own alpha. Before, this mode fell back to BaseColor4.
+                if (useTopologyColors)
+                {
+                    var tc = GetTopologyColor4(cavity.WallConnections);
+                    defaultColor = new XnaVector4(tc.X, tc.Y, tc.Z, cavity.BaseColor4.W);
+                }
 
  // ═══ Vertices ═══
                 for (int i = 0; i < vertCount; i++)
@@ -201,6 +238,8 @@ namespace Tal.Cavity
 
             _sceneBatchDirty = false;
             _sceneIndicesSorted = false;
+            _sceneBatchUsesVertexColors = useVertexColors;
+            _sceneBatchUsesTopologyColors = useTopologyColors;
 
             Debug.WriteLine($"[CavityRenderer] Scene batch built: " +
                             $"{cavityCount} cavities, {totalVerts} verts, {totalIndices / 3} tris");

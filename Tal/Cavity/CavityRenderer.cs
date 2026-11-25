@@ -186,7 +186,14 @@ namespace Tal.Cavity
         public DrawMode CurrentDrawMode
         {
             get => _currentDrawMode;
-            set => _currentDrawMode = value;
+            set
+            {
+                if (_currentDrawMode != value)
+                {
+                    _currentDrawMode = value;
+                    InvalidateSceneBatch();   // v3.74: colours are baked per draw mode
+                }
+            }
         }
 
         #endregion
