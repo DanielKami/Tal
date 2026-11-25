@@ -157,7 +157,9 @@ namespace Tal.DrawMethods
             float rts = Flags.Instance.RenderTargetScale;
 
  // ═══ Read range from ColorManager ═══
-            var range = ColorManager.GetCurrentRange();
+            // v3.74: range of THIS property type (not the last range set by anyone) -
+            // otherwise Charge/Hydrophobicity updates corrupt the Atomic Number scale.
+            var range = ColorManager.GetPropertyRange(propertyType);
             float min = range.min;
             float max = range.max;
 
