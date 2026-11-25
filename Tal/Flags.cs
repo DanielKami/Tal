@@ -19,7 +19,7 @@ namespace Tal
  /// </summary>
     public sealed class Flags
     {
-        public const string VERSION = "3.71";
+        public const string VERSION = "3.74";
         public static string Friend = "Symmetry replication · directional packing · cavity visibility";
 
  // ─────────────────────────────────────────────────────────────────

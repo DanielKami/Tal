@@ -226,7 +226,7 @@
             <a href="https://dkami.umcs.pl/cavity-detector-in-cif-v1-82/">Cavity detector notes</a>
         </p>
         <p class="editorial-meta">
-            Version 3.71 · Last updated: 2026 · Help aligned with source
+            Version 3.74 · Last updated: 2026 · Help aligned with source
         </p>
 
         <nav>
@@ -410,7 +410,7 @@
             <h3>Help menu</h3>
             <ul>
                 <li><code>Contents</code> (F1) — opens this <code>help.html</code> documentation.</li>
-                <li><code>About</code> — shows <code>Flags.VERSION</code> (currently <strong>3.71</strong>), author, and a scrollable box (vertical scrollbar) listing the projects TAL is based on: the MACE computational package and third-party credits (.NET 8, MonoGame, DockPanel Suite, SharpDX).</li>
+                <li><code>About</code> — shows <code>Flags.VERSION</code> (currently <strong>3.74</strong>), author, and a scrollable box (vertical scrollbar) listing the projects TAL is based on: the MACE computational package and third-party credits (.NET 8, MonoGame, DockPanel Suite, SharpDX).</li>
                 <li>Program home page: <a href="https://dkami.umcs.pl/tal/"><strong>https://dkami.umcs.pl/tal/</strong></a></li>
             </ul>
         </section>
@@ -976,6 +976,15 @@
                 Transforms the active structure between equivalent settings (e.g. P2₁/c ↔ P2₁/n) via <code>SpaceGroupTransformer</code>.
                 Updates cell, coordinates, ADP tensors, and symmetry in place. See <a href="#export">section 13</a>.
             </p>
+            <p>
+                <strong>Which structure is transformed (fixed in 3.74).</strong> The command always acts on the structure shown in the
+                <em>active window</em>. Up to version 3.73 it used the entry that was merely highlighted in the Structure List
+                (<code>StructureStorage.SelectedStructure</code>). With one structure loaded this was the same thing, but with several
+                structures in the local database it could point to a different entry (for example a triclinic <code>P-1</code> structure
+                or the first one in the list) and the program wrongly reported <em>"Only one setting is available for group …
+                Nothing to transform"</em> although the open structure was, say, <code>P2₁/c</code>. The structure is now matched to the active
+                document by file path and name, so the list selection no longer matters.
+            </p>
             <div class="warning">
                 <strong>Warning:</strong> Destructive on the structure in storage — save before use.
             </div>
@@ -1106,10 +1115,29 @@
                     of the nearby atoms. The UI offers:
                     <code>Charge</code>, <code>Hydrophobicity</code>, <code>Atomic Number</code>,
                     <code>VdW Radius</code>, <code>Occupancy</code>.
+                    <em>Fixed in 3.74:</em> if cavities were recalculated while Property Map was active, the new cavities were not
+                    coloured and a stale property mapper from the previous run was reused, so the surface turned grey and the colour scale
+                    disappeared. A fresh mapper is now built for the new cavities and the property is applied immediately; the surface
+                    colours are also rebuilt whenever the display mode changes.
+                    <br><em>Atomic Number legend (3.74):</em> the colour scale keeps a separate range for each property type. Before, one
+                    shared range was overwritten by the Charge/Hydrophobicity update that follows every mapping, so the Z legend showed
+                    correct colours for a moment and then switched to the wrong limits and a single grey bar (Charge and Hydrophobicity were
+                    not visibly affected because their ranges are symmetric and close to the default).
                 </li>
                 <li>
                     <strong>Topology Map:</strong> Colors the cavity surface based on topological features
-                    (number of wall contacts).
+                    (number of unit-cell walls the cavity touches, i.e. whether it is closed, reaches selected walls, or
+                    is connected through all of them):
+                    <span style="color:#1a9a1a"><strong>green</strong></span> = closed (touches no wall),
+                    <span style="color:#c8b400"><strong>yellow</strong></span> = 1 wall,
+                    <span style="color:#e08a00"><strong>orange</strong></span> = 2 walls,
+                    <span style="color:#d00000"><strong>red</strong></span> = 3 walls,
+                    <span style="color:#c000c0"><strong>magenta</strong></span> = 4 walls,
+                    <span style="color:#00a8a8"><strong>cyan</strong></span> = 5 walls,
+                    <strong>white</strong> = all 6 walls (connected through the whole cell).
+                    <em>Fixed in 3.74:</em> in earlier versions the main (shader) renderer ignored this palette and showed the
+                    ordinary per-cavity colours; only the fallback renderer used it. The scene batch also did not rebuild
+                    when the display mode was switched, so colours baked for the previous mode could stay on screen.
                 </li>
                 <li>
                     <strong>Channel Paths:</strong> Analyzes the cavity network to find and visualize
