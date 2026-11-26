@@ -103,11 +103,57 @@ namespace Tal.Forms
             _btnPickColor.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(200, 200, 200);
 
             _lblStatus.ForeColor = System.Drawing.Color.FromArgb(120, 120, 120);
+            _grpChargeModel.BackColor = System.Drawing.Color.FromArgb(248, 248, 250);
+            _grpContrast.BackColor = System.Drawing.Color.FromArgb(248, 248, 250);
+
+            _isUpdating = true;
+            _trkContrast.Value = Math.Clamp(Flags.Instance.AtomColorContrastPercent, _trkContrast.Minimum, _trkContrast.Maximum);
+            _lblContrastValue.Text = _trkContrast.Value + "%";
+            _isUpdating = false;
+
+            _isUpdating = true;   // setting the initial value must not recalculate the charges
+            _cmbChargeModel.SelectedIndex = Flags.Instance.ChargeModel == 1 ? 1 : 0;
+            _isUpdating = false;
+            ChargeModelSwitch.Changed += OnChargeModelChanged;
+            this.Disposed += (s, e) => ChargeModelSwitch.Changed -= OnChargeModelChanged;
         }
 
         #endregion
 
         #region Event Handlers
+
+        private void TrkContrast_ValueChanged(object sender, EventArgs e)
+        {
+            _lblContrastValue.Text = _trkContrast.Value + "%";
+            if (_isUpdating) return;
+            Flags.Instance.AtomColorContrastPercent = _trkContrast.Value;
+            Flags.Instance.VisualRevision++;
+            Flags.Instance.MarkDirty();
+            var mainForm = Application.OpenForms.OfType<MainForm>().FirstOrDefault();
+            mainForm?.RefreshAllDocuments();
+            int mode = GetSelectedMode();
+            if (mode == 5 || mode == 6)
+                _lblStatus.Text = $"Colour contrast: {_trkContrast.Value}%";
+        }
+
+        private void CmbChargeModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_isUpdating) return;
+            ChargeModelSwitch.Change(_cmbChargeModel.SelectedIndex);
+        }
+
+        private void OnChargeModelChanged(int model)
+        {
+            if (this.IsDisposed) return;
+
+            _isUpdating = true;
+            _cmbChargeModel.SelectedIndex = model == 1 ? 1 : 0;
+            _isUpdating = false;
+
+            // the range of the charge colour scale depends on the new charges
+            if (GetSelectedMode() == 5)
+                ApplyColorMode();
+        }
 
         private void Radio_CheckedChanged(object sender, EventArgs e)
         {

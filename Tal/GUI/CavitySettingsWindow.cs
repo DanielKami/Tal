@@ -33,6 +33,9 @@ namespace Tal.Forms
 
             LoadFromFlags();
             UpdateControlsState();
+
+            ChargeModelSwitch.Changed += OnChargeModelChanged;
+            this.Disposed += (s, e) => { ChargeModelSwitch.Changed -= OnChargeModelChanged; _contrastTimer.Stop(); _contrastTimer.Dispose(); };
         }
 
         #endregion
@@ -59,6 +62,8 @@ namespace Tal.Forms
         #endregion
 
         private readonly ToolTip _voxelToolTip = new ToolTip();
+        private bool _loadingProjection;
+        private readonly System.Windows.Forms.Timer _contrastTimer = new System.Windows.Forms.Timer { Interval = 200 };
 
         #region State Management
 
@@ -114,6 +119,39 @@ namespace Tal.Forms
 
             int propType = ValidatePropertyType(flags.CavityPropertyType);
             this.cmbPropertyType.SelectedIndex = propType;
+
+            _loadingProjection = true;
+            this.cmbWeighting.SelectedIndex = flags.CavityPropertyWeighting == 0 ? 0 : 1;
+            int contrast = Math.Clamp(flags.CavityColorContrastPercent, this.trkColorContrast.Minimum, this.trkColorContrast.Maximum);
+            this.trkColorContrast.Value = contrast;
+            this.lblColorContrastValue.Text = contrast + "%";
+            this.cmbChargeModel.SelectedIndex = flags.ChargeModel == 1 ? 1 : 0;
+            _loadingProjection = false;
+
+            const string weightTip =
+                "Weights of the weighted average used to project atomic charge, hydrophobicity and the other\n" +
+                "atomic properties onto the cavity:  P(r) = sum P_i w(d_i) / sum w(d_i), atoms within 3 A.\n" +
+                "1/d²: w = 1/(d² + 1e-6)  (default; Shepard weighting, Eq. 15 of the article)\n" +
+                "1/d: w = 1/sqrt(d² + 1e-6)  (smoother blend, for comparison).\n" +
+                "The property map is recomputed at once; the per-voxel descriptors used in the reports are\n" +
+                "computed during detection, so run the detection again to refresh them.";
+            const string chargeTip =
+                "SQE: split-charge equilibration (Nistor, Verstraelen et al.) - charge transfer along bonds\n" +
+                "with a bond-specific electronegativity difference and hardness; the total charge is conserved.\n" +
+                "Gasteiger (PEOE): iterative partial equalization of orbital electronegativity.";
+            _voxelToolTip.SetToolTip(this.cmbWeighting, weightTip);
+            string contrastTip = "Contrast of the property-map colour scale on the cavity (100% = default). " +
+                "Increase it when the projected values are small (e.g. alternating charges averaged over 3 Å), decrease it to avoid saturation.";
+            _voxelToolTip.SetToolTip(this.trkColorContrast, contrastTip);
+            _voxelToolTip.SetToolTip(this.lblColorContrast, contrastTip);
+            _contrastTimer.Tick += async (s, e) =>
+            {
+                _contrastTimer.Stop();
+                await ReapplyPropertyMapAsync();
+            };
+            _voxelToolTip.SetToolTip(this.lblWeighting, weightTip);
+            _voxelToolTip.SetToolTip(this.cmbChargeModel, chargeTip);
+            _voxelToolTip.SetToolTip(this.lblChargeModel, chargeTip);
 
             UpdateStatus();
         }
@@ -173,6 +211,7 @@ namespace Tal.Forms
             this.btnClearCavities.Enabled = enabled;
 
             this.grpDisplayMode.Enabled = enabled;
+            this.grpProjection.Enabled = enabled;
             this.rbHidden.Enabled = enabled;
             this.rbNormal.Enabled = enabled;
             this.rbPropertyMap.Enabled = enabled;
@@ -485,6 +524,78 @@ namespace Tal.Forms
             }
 
             // ⭐ Reset Progressive AA + refresh the scene
+            Flags.Instance.VisualRevision++;
+            Flags.Instance.MarkDirty();
+        }
+
+        private async void CmbWeighting_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_loadingProjection) return;
+            Flags.Instance.CavityPropertyWeighting = this.cmbWeighting.SelectedIndex == 0 ? 0 : 1;
+            Flags.Instance.MarkDirty();
+            await ReapplyPropertyMapAsync();
+        }
+
+        private void CmbChargeModel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_loadingProjection) return;
+            // recalculates the charges, redraws the atoms and raises Changed (handled below)
+            ChargeModelSwitch.Change(this.cmbChargeModel.SelectedIndex);
+        }
+
+        private async void OnChargeModelChanged(int model)
+        {
+            if (this.IsDisposed) return;
+
+            // keep the list in sync when the model was changed in another window
+            _loadingProjection = true;
+            this.cmbChargeModel.SelectedIndex = model == 1 ? 1 : 0;
+            _loadingProjection = false;
+
+            // descriptors (reports) must follow the selected charge model, whatever property is displayed
+            await ReapplyPropertyMapAsync();
+        }
+
+        private void TrkColorContrast_ValueChanged(object sender, EventArgs e)
+        {
+            this.lblColorContrastValue.Text = this.trkColorContrast.Value + "%";
+            if (_loadingProjection) return;
+            Flags.Instance.CavityColorContrastPercent = this.trkColorContrast.Value;
+            // debounce: re-map once the slider rests
+            _contrastTimer.Stop();
+            _contrastTimer.Start();
+        }
+
+        /// <summary>
+        /// Recomputes the per-voxel descriptors (charge, hydrophobicity, Z_eff) of all cavities with the currently
+        /// selected charge model and distance weighting - no re-detection needed.
+        /// </summary>
+        private void RecomputeCavityDescriptors()
+        {
+            var mainForm = Application.OpenForms["MainForm"] as MainForm;
+            var doc = mainForm?.GetActiveDocument();
+            var renderer = doc?.GetCavityRenderer();
+            var molecule = doc?.GetMolecule();
+            if (renderer == null || molecule == null) return;
+            foreach (var cav in renderer.GetCavities())
+                CavityDetector.ComputeVoxelAtomProperties(cav, molecule);
+        }
+
+        /// <summary>Re-applies the current property map after the weighting or the charge model changed.</summary>
+        private async Task ReapplyPropertyMapAsync()
+        {
+            RecomputeCavityDescriptors();
+            if (this.chkEnableCavity.Checked && this.rbPropertyMap.Checked)
+            {
+                await ApplyCavityPropertyAsync(GetSelectedPropertyType());
+            }
+
+            var mainForm = Application.OpenForms["MainForm"] as MainForm;
+            var doc = mainForm?.GetActiveDocument();
+            var renderer = doc?.GetCavityRenderer();
+            if (renderer != null) renderer.ForceRefresh();
+            doc?.RefreshView();
+
             Flags.Instance.VisualRevision++;
             Flags.Instance.MarkDirty();
         }
@@ -839,6 +950,17 @@ namespace Tal.Forms
             try
             {
                 await renderer.RegenerateMeshWithSmoothingAsync(smoothingValue);
+
+                // The new mesh has no vertex colours: keep the selected display mode
+                // and re-apply the property map instead of falling back to the plain mesh.
+                foreach (var cav in renderer.GetCavities())
+                    cav.LastMappedProperty = CavityPropertyMapper.PropertyType.None;
+
+                if (this.rbPropertyMap.Checked)
+                    await ApplyCavityPropertyAsync(GetSelectedPropertyType());
+
+                renderer.CurrentDrawMode = GetDrawModeFromRadio();
+                renderer.ForceRefresh();
                 doc.RefreshView();
 
                 int triCount = renderer.GetTotalMarchingCubesTriangles();

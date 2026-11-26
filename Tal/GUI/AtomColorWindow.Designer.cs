@@ -26,6 +26,11 @@ namespace Tal.Forms
         private System.Windows.Forms.Button _btnPickColor;
         private System.Windows.Forms.Label _lblStatus;
 
+        private System.Windows.Forms.GroupBox _grpChargeModel;
+        private System.Windows.Forms.ComboBox _cmbChargeModel;
+        private System.Windows.Forms.GroupBox _grpContrast;
+        private System.Windows.Forms.TrackBar _trkContrast;
+        private System.Windows.Forms.Label _lblContrastValue;
         private System.Windows.Forms.GroupBox _grpProperties;
         private System.Windows.Forms.RadioButton _radioLabelNone;
         private System.Windows.Forms.RadioButton _radioLabelCharge;
@@ -49,6 +54,12 @@ namespace Tal.Forms
             _radioSymmetryMolecule = new System.Windows.Forms.RadioButton();
             _radioIndividual = new System.Windows.Forms.RadioButton();
             _radioChargeColor = new System.Windows.Forms.RadioButton();
+            _grpChargeModel = new System.Windows.Forms.GroupBox();
+            _cmbChargeModel = new System.Windows.Forms.ComboBox();
+            _grpContrast = new System.Windows.Forms.GroupBox();
+            _trkContrast = new System.Windows.Forms.TrackBar();
+            _lblContrastValue = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)_trkContrast).BeginInit();
             _radioHydrophobicityColor = new System.Windows.Forms.RadioButton();
             _grpOptions = new System.Windows.Forms.GroupBox();
             // ⭐ USUWAMY _chkApplyToSelected
@@ -260,11 +271,66 @@ namespace Tal.Forms
             _radioLabelHydrophobicity.UseVisualStyleBackColor = true;
 
             // 
+            // _grpChargeModel
+            // 
+            _grpChargeModel.Controls.Add(_cmbChargeModel);
+            _grpChargeModel.Location = new System.Drawing.Point(12, 356);
+            _grpChargeModel.Name = "_grpChargeModel";
+            _grpChargeModel.Size = new System.Drawing.Size(256, 50);
+            _grpChargeModel.TabIndex = 4;
+            _grpChargeModel.TabStop = false;
+            _grpChargeModel.Text = "Charge model";
+            // 
+            // _cmbChargeModel
+            // 
+            _cmbChargeModel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            _cmbChargeModel.Font = new System.Drawing.Font("Segoe UI", 9F);
+            _cmbChargeModel.Items.AddRange(new object[] { "SQE (split-charge)", "Gasteiger (PEOE)" });
+            _cmbChargeModel.Location = new System.Drawing.Point(10, 18);
+            _cmbChargeModel.Name = "_cmbChargeModel";
+            _cmbChargeModel.Size = new System.Drawing.Size(236, 25);
+            _cmbChargeModel.TabIndex = 0;
+            _cmbChargeModel.SelectedIndexChanged += CmbChargeModel_SelectedIndexChanged;
+            // 
+            // _grpContrast
+            // 
+            _grpContrast.Controls.Add(_trkContrast);
+            _grpContrast.Controls.Add(_lblContrastValue);
+            _grpContrast.Location = new System.Drawing.Point(12, 412);
+            _grpContrast.Name = "_grpContrast";
+            _grpContrast.Size = new System.Drawing.Size(256, 50);
+            _grpContrast.TabIndex = 5;
+            _grpContrast.TabStop = false;
+            _grpContrast.Text = "Colour contrast (charge / hydrophobicity)";
+            // 
+            // _trkContrast
+            // 
+            _trkContrast.AutoSize = false;
+            _trkContrast.Location = new System.Drawing.Point(6, 18);
+            _trkContrast.Maximum = 400;
+            _trkContrast.Minimum = 25;
+            _trkContrast.LargeChange = 25;
+            _trkContrast.SmallChange = 5;
+            _trkContrast.TickStyle = System.Windows.Forms.TickStyle.None;
+            _trkContrast.Name = "_trkContrast";
+            _trkContrast.Size = new System.Drawing.Size(190, 28);
+            _trkContrast.TabIndex = 0;
+            _trkContrast.Value = 100;
+            _trkContrast.ValueChanged += TrkContrast_ValueChanged;
+            // 
+            // _lblContrastValue
+            // 
+            _lblContrastValue.AutoSize = true;
+            _lblContrastValue.Location = new System.Drawing.Point(202, 24);
+            _lblContrastValue.Name = "_lblContrastValue";
+            _lblContrastValue.Size = new System.Drawing.Size(40, 15);
+            _lblContrastValue.Text = "100%";
+            // 
             // _lblStatus
             // 
             _lblStatus.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Italic);
             _lblStatus.ForeColor = System.Drawing.Color.FromArgb(120, 120, 120);
-            _lblStatus.Location = new System.Drawing.Point(12, 398);
+            _lblStatus.Location = new System.Drawing.Point(12, 468);
             _lblStatus.Name = "_lblStatus";
             _lblStatus.Size = new System.Drawing.Size(256, 30);
             _lblStatus.TabIndex = 3;
@@ -277,19 +343,24 @@ namespace Tal.Forms
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(248, 248, 250);
-            this.ClientSize = new System.Drawing.Size(280, 440);
+            this.ClientSize = new System.Drawing.Size(280, 526);
             this.Controls.Add(_grpMode);
             this.Controls.Add(_grpProperties);
             this.Controls.Add(_grpOptions);
+            this.Controls.Add(_grpChargeModel);
+            this.Controls.Add(_grpContrast);
             this.Controls.Add(_lblStatus);
             this.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.MinimumSize = new System.Drawing.Size(260, 440);
+            this.MinimumSize = new System.Drawing.Size(260, 526);
             this.Name = "AtomColorWindow";
             this.Text = "Atom Color";
             _grpMode.ResumeLayout(false);
             _grpOptions.ResumeLayout(false);
             _pnlColorPicker.ResumeLayout(false);
             _grpProperties.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)_trkContrast).EndInit();
+            _grpContrast.ResumeLayout(false);
+            _grpContrast.PerformLayout();
             this.ResumeLayout(false);
         }
     }

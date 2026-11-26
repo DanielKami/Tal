@@ -65,6 +65,14 @@ namespace Tal.Forms
             lblStatus = new Label();
             lblCavityCount = new Label();
             grpVoxelEdges = new GroupBox();
+            grpProjection = new GroupBox();
+            lblColorContrast = new Label();
+            trkColorContrast = new TrackBar();
+            lblColorContrastValue = new Label();
+            lblWeighting = new Label();
+            cmbWeighting = new ComboBox();
+            lblChargeModel = new Label();
+            cmbChargeModel = new ComboBox();
             lblVoxelEdges = new Label();
             grpCavityList = new GroupBox();
             lstCavityVisibility = new CheckedListBox();
@@ -77,6 +85,8 @@ namespace Tal.Forms
             ((System.ComponentModel.ISupportInitialize)numSmoothing).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackTransparency).BeginInit();
             grpDisplayMode.SuspendLayout();
+            grpProjection.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)trkColorContrast).BeginInit();
             grpCavityList.SuspendLayout();
             grpVoxelEdges.SuspendLayout();
             SuspendLayout();
@@ -233,7 +243,7 @@ namespace Tal.Forms
             numSmoothing.Name = "numSmoothing";
             numSmoothing.Size = new Size(80, 27);
             numSmoothing.TabIndex = 8;
-            numSmoothing.Value = new decimal(new int[] { 3, 0, 0, 0 });
+            numSmoothing.Value = new decimal(new int[] { 4, 0, 0, 0 });
             numSmoothing.ValueChanged += NumSmoothing_ValueChanged;
             // 
             // lblSmoothing
@@ -373,12 +383,100 @@ namespace Tal.Forms
             rbHidden.CheckedChanged += RbDisplayMode_CheckedChanged;
 
             // 
+            // grpProjection
+            // 
+            grpProjection.Controls.Add(cmbChargeModel);
+            grpProjection.Controls.Add(lblChargeModel);
+            grpProjection.Controls.Add(cmbWeighting);
+            grpProjection.Controls.Add(lblWeighting);
+            grpProjection.Controls.Add(lblColorContrast);
+            grpProjection.Controls.Add(trkColorContrast);
+            grpProjection.Controls.Add(lblColorContrastValue);
+            grpProjection.Location = new Point(12, 578);
+            grpProjection.Name = "grpProjection";
+            grpProjection.Size = new Size(301, 132);
+            grpProjection.TabIndex = 9;
+            grpProjection.TabStop = false;
+            grpProjection.Text = "Charges and property projection";
+            // 
+            // lblChargeModel
+            // 
+            lblChargeModel.AutoSize = true;
+            lblChargeModel.Location = new Point(10, 29);
+            lblChargeModel.Name = "lblChargeModel";
+            lblChargeModel.Size = new Size(100, 20);
+            lblChargeModel.TabIndex = 0;
+            lblChargeModel.Text = "Charge model:";
+            // 
+            // cmbChargeModel
+            // 
+            cmbChargeModel.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbChargeModel.Items.AddRange(new object[] { "SQE (split-charge)", "Gasteiger (PEOE)" });
+            cmbChargeModel.Location = new Point(130, 26);
+            cmbChargeModel.Name = "cmbChargeModel";
+            cmbChargeModel.Size = new Size(160, 28);
+            cmbChargeModel.TabIndex = 1;
+            cmbChargeModel.SelectedIndexChanged += CmbChargeModel_SelectedIndexChanged;
+            // 
+            // lblColorContrast
+            // 
+            lblColorContrast.AutoSize = true;
+            lblColorContrast.Location = new Point(10, 99);
+            lblColorContrast.Name = "lblColorContrast";
+            lblColorContrast.Size = new Size(70, 20);
+            lblColorContrast.TabIndex = 4;
+            lblColorContrast.Text = "Contrast:";
+            // 
+            // trkColorContrast
+            // 
+            trkColorContrast.AutoSize = false;
+            trkColorContrast.Location = new Point(80, 94);
+            trkColorContrast.Maximum = 400;
+            trkColorContrast.Minimum = 25;
+            trkColorContrast.Name = "trkColorContrast";
+            trkColorContrast.Size = new Size(160, 30);
+            trkColorContrast.SmallChange = 5;
+            trkColorContrast.LargeChange = 25;
+            trkColorContrast.TabIndex = 5;
+            trkColorContrast.TickFrequency = 25;
+            trkColorContrast.TickStyle = TickStyle.None;
+            trkColorContrast.Value = 100;
+            trkColorContrast.ValueChanged += TrkColorContrast_ValueChanged;
+            // 
+            // lblColorContrastValue
+            // 
+            lblColorContrastValue.AutoSize = true;
+            lblColorContrastValue.Location = new Point(244, 99);
+            lblColorContrastValue.Name = "lblColorContrastValue";
+            lblColorContrastValue.Size = new Size(46, 20);
+            lblColorContrastValue.TabIndex = 6;
+            lblColorContrastValue.Text = "100%";
+            // 
+            // lblWeighting
+            // 
+            lblWeighting.AutoSize = true;
+            lblWeighting.Location = new Point(10, 63);
+            lblWeighting.Name = "lblWeighting";
+            lblWeighting.Size = new Size(120, 20);
+            lblWeighting.TabIndex = 2;
+            lblWeighting.Text = "Distance weight:";
+            // 
+            // cmbWeighting
+            // 
+            cmbWeighting.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbWeighting.Items.AddRange(new object[] { "1/d", "1/d²" });
+            cmbWeighting.Location = new Point(130, 60);
+            cmbWeighting.Name = "cmbWeighting";
+            cmbWeighting.Size = new Size(160, 28);
+            cmbWeighting.TabIndex = 3;
+            cmbWeighting.SelectedIndexChanged += CmbWeighting_SelectedIndexChanged;
+            // 
             // grpCavityList
             // 
             grpCavityList.Controls.Add(lstCavityVisibility);
             grpCavityList.Controls.Add(btnCavitiesAll);
             grpCavityList.Controls.Add(btnCavitiesNone);
-            grpCavityList.Location = new Point(12, 578);
+            grpCavityList.Location = new Point(12, 718);
             grpCavityList.Name = "grpCavityList";
             grpCavityList.Size = new Size(301, 160);
             grpCavityList.TabIndex = 8;
@@ -419,7 +517,7 @@ namespace Tal.Forms
             // 
             // btnExportReport
             // 
-            btnExportReport.Location = new Point(12, 746);
+            btnExportReport.Location = new Point(12, 886);
             btnExportReport.Name = "btnExportReport";
             btnExportReport.Size = new Size(301, 30);
             btnExportReport.TabIndex = 5;
@@ -430,7 +528,7 @@ namespace Tal.Forms
             // grpVoxelEdges
             // 
             grpVoxelEdges.Controls.Add(lblVoxelEdges);
-            grpVoxelEdges.Location = new Point(12, 784);
+            grpVoxelEdges.Location = new Point(12, 924);
             grpVoxelEdges.Name = "grpVoxelEdges";
             grpVoxelEdges.Size = new Size(301, 80);
             grpVoxelEdges.TabIndex = 7;
@@ -451,7 +549,7 @@ namespace Tal.Forms
             // 
             lblStatus.AutoSize = true;
             lblStatus.ForeColor = Color.Gray;
-            lblStatus.Location = new Point(12, 872);
+            lblStatus.Location = new Point(12, 1012);
             lblStatus.Name = "lblStatus";
             lblStatus.Size = new Size(50, 20);
             lblStatus.TabIndex = 6;
@@ -461,7 +559,7 @@ namespace Tal.Forms
             // 
             lblCavityCount.AutoSize = true;
             lblCavityCount.ForeColor = Color.Gray;
-            lblCavityCount.Location = new Point(227, 872);
+            lblCavityCount.Location = new Point(227, 976);
             lblCavityCount.Name = "lblCavityCount";
             lblCavityCount.Size = new Size(75, 20);
             lblCavityCount.TabIndex = 7;
@@ -474,13 +572,14 @@ namespace Tal.Forms
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(248, 248, 250);
             AutoScroll = true;
-            AutoScrollMinSize = new Size(325, 904);
-            ClientSize = new Size(340, 904);
+            AutoScrollMinSize = new Size(325, 1008);
+            ClientSize = new Size(340, 1044);
             Controls.Add(lblCavityCount);
             Controls.Add(grpVoxelEdges);
             Controls.Add(lblStatus);
             Controls.Add(btnExportReport);
             Controls.Add(grpCavityList);
+            Controls.Add(grpProjection);
             Controls.Add(grpDisplayMode);
             Controls.Add(grpDetection);
             Controls.Add(chkEnableCavity);
@@ -497,6 +596,9 @@ namespace Tal.Forms
             ((System.ComponentModel.ISupportInitialize)trackTransparency).EndInit();
             grpDisplayMode.ResumeLayout(false);
             grpDisplayMode.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)trkColorContrast).EndInit();
+            grpProjection.ResumeLayout(false);
+            grpProjection.PerformLayout();
             grpCavityList.ResumeLayout(false);
             grpVoxelEdges.ResumeLayout(false);
             ResumeLayout(false);
@@ -535,6 +637,14 @@ namespace Tal.Forms
         private System.Windows.Forms.Button btnExportReport;
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.Label lblCavityCount;
+        private System.Windows.Forms.GroupBox grpProjection;
+        private System.Windows.Forms.Label lblWeighting;
+        private System.Windows.Forms.ComboBox cmbWeighting;
+        private System.Windows.Forms.Label lblColorContrast;
+        private System.Windows.Forms.TrackBar trkColorContrast;
+        private System.Windows.Forms.Label lblColorContrastValue;
+        private System.Windows.Forms.Label lblChargeModel;
+        private System.Windows.Forms.ComboBox cmbChargeModel;
         private System.Windows.Forms.GroupBox grpCavityList;
         private System.Windows.Forms.CheckedListBox lstCavityVisibility;
         private System.Windows.Forms.Button btnCavitiesAll;
