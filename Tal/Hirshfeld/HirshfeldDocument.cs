@@ -130,6 +130,9 @@ namespace Tal.Hirshfeld
         private (int binDe, int binDi)[] _vertexBins;
         private (int binDe, int binDi) _highlightedBin = (-1, -1);
 
+        /// <summary>Centres (surface coordinates) of the patches of the highlighted fingerprint bin - a ring is drawn around each.</summary>
+        private readonly List<Vector3> _highlightCenters = new List<Vector3>();
+
         private HirshfeldAtomDistanceDiagnostics _lastDiagnostics;
 
         private HashSet<string> _activeContactFilter;
@@ -1823,6 +1826,7 @@ namespace Tal.Hirshfeld
                     pos, normals[i], colVec);
             }
 
+            _highlightCenters.Clear();
             if (_highlightedBin.binDe >= 0)
             {
                 if (_vertexBins == null)
@@ -1832,12 +1836,27 @@ namespace Tal.Hirshfeld
                 else
                 {
                     int matchCount = 0;
+                    // greedy clustering of the matching vertices (1.5 Å) -> one ring per patch (max 24)
+                    var clSum = new List<Vector3>();
+                    var clCnt = new List<int>();
                     for (int i = 0; i < n && i < _vertexBins.Length; i++)
                     {
                         if (_vertexBins[i].binDe == _highlightedBin.binDe
                             && _vertexBins[i].binDi == _highlightedBin.binDi)
+                        {
                             matchCount++;
+                            Vector3 v = _surface.Vertices[i];
+                            int found = -1;
+                            for (int c = 0; c < clSum.Count; c++)
+                            {
+                                if (Vector3.DistanceSquared(clSum[c] / clCnt[c], v) < 2.25f) { found = c; break; }
+                            }
+                            if (found >= 0) { clSum[found] += v; clCnt[found]++; }
+                            else if (clSum.Count < 24) { clSum.Add(v); clCnt.Add(1); }
+                        }
                     }
+                    for (int c = 0; c < clSum.Count; c++)
+                        _highlightCenters.Add(clSum[c] / clCnt[c]);
 
                     LogInfo($"[Hirshfeld.DEBUG] Highlight ({_highlightedBin.binDe},{_highlightedBin.binDi}) " +
                             $"→ {matchCount}/{n} vertices match");
@@ -2858,11 +2877,69 @@ namespace Tal.Hirshfeld
                     _device.DepthStencilState = _depthDefaultWrite;
                 }
 
+                DrawHighlightRings(world, view, proj);
+
                 _device.Present();
             }
             catch (Exception ex)
             {
                 LogError($"[Hirshfeld] Render error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Draws a screen-space ring (dark outline + white ring) around the point(s) selected in the fingerprint,
+        /// so the yellow spot is easy to find on the surface. Always visible (no depth test).
+        /// </summary>
+        private void DrawHighlightRings(Matrix world, Matrix view, Matrix proj)
+        {
+            if (_highlightedBin.binDe < 0 || _highlightCenters.Count == 0) return;
+            if (_spriteBatch == null || _pixelTexture == null || _surface == null) return;
+
+            float s = _sceneScale * _zoomFactor;
+            Vector3 shift = _molecule?.MoleculeShift ?? Vector3.Zero;
+            var vp = _device.Viewport;
+            float radius = Math.Max(12f, vp.Height / 28f);
+
+            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,
+                DepthStencilState.None, RasterizerState.CullNone);
+            try
+            {
+                foreach (var c in _highlightCenters)
+                {
+                    Vector3 p = vp.Project((c - shift) * s, proj, view, world);
+                    if (p.Z < 0f || p.Z > 1f) continue;
+                    var center = new Vector2(p.X, p.Y);
+                    DrawScreenCircle(center, radius, 5f, new Color(0, 0, 0, 230));     // dark outline (contrast on light surfaces)
+                    DrawScreenCircle(center, radius, 2.5f, new Color(255, 255, 255, 255)); // white ring
+                }
+            }
+            finally
+            {
+                _spriteBatch.End();
+                _device.DepthStencilState = _depthDefaultWrite;
+                _device.BlendState = BlendState.Opaque;
+            }
+        }
+
+        private void DrawScreenCircle(Vector2 center, float radius, float thickness, Color color)
+        {
+            const int segments = 48;
+            Vector2 prev = center + new Vector2(radius, 0f);
+            for (int i = 1; i <= segments; i++)
+            {
+                float a = MathHelper.TwoPi * i / segments;
+                Vector2 cur = center + new Vector2((float)Math.Cos(a), (float)Math.Sin(a)) * radius;
+                Vector2 d = cur - prev;
+                float len = d.Length();
+                if (len > 0.01f)
+                {
+                    float angle = (float)Math.Atan2(d.Y, d.X);
+                    // slight overlap so that segments join without gaps
+                    _spriteBatch.Draw(_pixelTexture, prev, null, color, angle,
+                        new Vector2(0f, 0.5f), new Vector2(len + 0.75f, thickness), SpriteEffects.None, 0f);
+                }
+                prev = cur;
             }
         }
 

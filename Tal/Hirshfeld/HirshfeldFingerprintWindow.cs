@@ -122,6 +122,9 @@ namespace Tal.Hirshfeld
 
         private System.Drawing.Point? _clickMarkerPixel = null;
 
+        /// <summary>Position of the marker inside the plot in normalised coordinates (0..1, y downwards); the marker follows the plot on resize / export.</summary>
+        private Vector2 _clickMarkerNorm;
+
         public Action<int, int> OnRegionClicked;
         public Action<(int binDe, int binDi)[]> OnVertexBinsUpdated;
 
@@ -668,7 +671,7 @@ namespace Tal.Hirshfeld
             if (_binSize <= 0) _binSize = BIN_SIZE_DEFAULT;
 
             float span = _rangeMax - _rangeMin;
-            int binsInRange = Math.Max(1, (int)MathF.Ceiling(span / _binSize));
+            int binsInRange = Math.Max(1, (int)MathF.Ceiling(span / _binSize - 1e-3f));   // -1e-3: float noise must not add a whole extra bin (it would stretch the map against the axes)
 
             if (binsInRange > MAX_TOTAL_CELLS)
             {
@@ -762,11 +765,13 @@ namespace Tal.Hirshfeld
 
             float logMax = MathF.Log(1f + maxCount);
 
-            for (int bj = 0; bj < binsInRange; bj++)
+            // bins[binDi, binDe]: the picture must have d_e on X (column = binDe) and d_i on Y (row = binDi, from the bottom),
+            // the same mapping that the mouse selection, the yellow bin outline, the grid and the axis labels use.
+            for (int bj = 0; bj < binsInRange; bj++)          // bj = binDe -> column
             {
-                int cellRowBase = (binsInRange - 1 - bj) * DENSITY_MULT;
+                int cellColBase = bj * DENSITY_MULT;
 
-                for (int bi = 0; bi < binsInRange; bi++)
+                for (int bi = 0; bi < binsInRange; bi++)      // bi = binDi -> row
                 {
                     int count = bins[bi, bj];
                     if (count <= 0) continue;
@@ -798,7 +803,7 @@ namespace Tal.Hirshfeld
                     }
 
                     uint col = (uint)(0xFF << 24 | b << 16 | g << 8 | r);
-                    int cellColBase = bi * DENSITY_MULT;
+                    int cellRowBase = (binsInRange - 1 - bi) * DENSITY_MULT;
 
                     for (int dy = 0; dy < DENSITY_MULT; dy++)
                     {
@@ -869,8 +874,8 @@ namespace Tal.Hirshfeld
                         int newW = Math.Max(_panel.Width, 1);
                         int newH = Math.Max(_panel.Height, 1);
 
-                        if (Math.Abs(pp.BackBufferWidth - newW) > 4 ||
-                            Math.Abs(pp.BackBufferHeight - newH) > 4)
+                        // the back buffer must match the panel exactly: with a tolerance the picture is stretched
+                        // and the marker / mouse positions drift by a few pixels
                         {
                             pp.BackBufferWidth = newW;
                             pp.BackBufferHeight = newH;
@@ -925,7 +930,7 @@ namespace Tal.Hirshfeld
                     DrawZoomRectangle();
 
                 if (_clickMarkerPixel.HasValue)
-                    DrawClickMarker(_clickMarkerPixel.Value);
+                    DrawClickMarker(plotX, plotY, plotSize);
 
                 _spriteBatch.End();
 
@@ -1076,16 +1081,52 @@ namespace Tal.Hirshfeld
             _spriteBatch.Draw(_whitePixel, new Rectangle(ix + iw - 2, iy, 2, ih), highlight);
         }
 
-        private void DrawClickMarker(System.Drawing.Point pos)
+        /// <summary>
+        /// Crosshair marker: ring with four ticks and a dot at its exact centre. The centre is the selected point of the map
+        /// (white outline + red body so that it is visible on every heat-map colour).
+        /// </summary>
+        private void DrawClickMarker(int plotX, int plotY, int plotSize)
         {
-            const int DIAM = 14;
-            int half = DIAM / 2;
+            var c = new Vector2(plotX + _clickMarkerNorm.X * plotSize, plotY + _clickMarkerNorm.Y * plotSize);
 
-            var dest = new Rectangle(pos.X - half, pos.Y - half, DIAM, DIAM);
-            var whiteRing = new Rectangle(pos.X - half - 1, pos.Y - half - 1, DIAM + 2, DIAM + 2);
+            float r = Math.Max(9f, plotSize / 45f);      // ring radius
+            float gap = r * 0.35f;                         // free space around the aiming point
+            float tick = r * 0.55f;                        // ticks stick out of the ring
+            float w = 2f;                                  // line width
 
-            _spriteBatch.Draw(_circleTexture, whiteRing, Color.White);
-            _spriteBatch.Draw(_circleTexture, dest, Color.Red);
+            // white outline first, red on top
+            DrawMarkerGeometry(c, r, gap, tick, w + 2.5f, Color.White, 3.5f);
+            DrawMarkerGeometry(c, r, gap, tick, w, Color.Red, 2.2f);
+        }
+
+        private void DrawMarkerGeometry(Vector2 c, float r, float gap, float tick, float w, Color col, float dot)
+        {
+            const int seg = 40;
+            Vector2 prev = c + new Vector2(r, 0f);
+            for (int i = 1; i <= seg; i++)
+            {
+                float a = MathHelper.TwoPi * i / seg;
+                Vector2 cur = c + new Vector2(MathF.Cos(a), MathF.Sin(a)) * r;
+                DrawMarkerLine(prev, cur, w, col);
+                prev = cur;
+            }
+            // four ticks: from the gap around the centre to outside the ring
+            DrawMarkerLine(c + new Vector2(gap, 0), c + new Vector2(r + tick, 0), w, col);
+            DrawMarkerLine(c - new Vector2(gap, 0), c - new Vector2(r + tick, 0), w, col);
+            DrawMarkerLine(c + new Vector2(0, gap), c + new Vector2(0, r + tick), w, col);
+            DrawMarkerLine(c - new Vector2(0, gap), c - new Vector2(0, r + tick), w, col);
+            // aiming point exactly at the centre
+            int d = (int)MathF.Round(dot);
+            _spriteBatch.Draw(_whitePixel, new Rectangle((int)MathF.Round(c.X) - d, (int)MathF.Round(c.Y) - d, 2 * d, 2 * d), col);
+        }
+
+        private void DrawMarkerLine(Vector2 a, Vector2 b, float width, Color col)
+        {
+            Vector2 d = b - a;
+            float len = d.Length();
+            if (len < 0.01f) return;
+            _spriteBatch.Draw(_whitePixel, a, null, col, MathF.Atan2(d.Y, d.X),
+                new Vector2(0f, 0.5f), new Vector2(len + 0.75f, width), SpriteEffects.None, 0f);
         }
 
         private void DrawZoomRectangle()
@@ -1227,6 +1268,47 @@ namespace Tal.Hirshfeld
 
         #region Mouse
 
+        /// <summary>
+        /// If the clicked bin holds no data, moves the selection to the nearest populated bin within a small tolerance
+        /// (about 10 screen pixels), so that the marker - drawn at the bin centre - points at a real point of the map.
+        /// </summary>
+        private void SnapToPopulatedBin(ref int binDe, ref int binDi)
+        {
+            var hist = _analysis?.FingerprintHistogram;
+            if (hist == null || hist.Count == 0 || _binsInRange <= 0 || _lastPlotSize <= 0) return;
+            if (hist.ContainsKey((binDe, binDi))) return;
+
+            int maxR = Math.Max(2, (int)Math.Ceiling(10.0 * _binsInRange / _lastPlotSize));
+            long best = long.MaxValue;
+            int bestDe = binDe, bestDi = binDi;
+            for (int dx = -maxR; dx <= maxR; dx++)
+            {
+                for (int dy = -maxR; dy <= maxR; dy++)
+                {
+                    int e = binDe + dx, i = binDi + dy;
+                    if (e < 0 || i < 0 || e >= _binsInRange || i >= _binsInRange) continue;
+                    if (!hist.ContainsKey((e, i))) continue;
+                    long d2 = (long)dx * dx + (long)dy * dy;
+                    if (d2 < best) { best = d2; bestDe = e; bestDi = i; }
+                }
+            }
+            binDe = bestDe;
+            binDi = bestDi;
+        }
+
+        /// <summary>Mouse position (panel pixels) converted to back-buffer pixels - the coordinates of the plot layout.</summary>
+        private float DevX(MouseEventArgs e)
+        {
+            int bw = _device?.PresentationParameters.BackBufferWidth ?? _panel.Width;
+            return e.X * (float)bw / Math.Max(1, _panel.Width);
+        }
+
+        private float DevY(MouseEventArgs e)
+        {
+            int bh = _device?.PresentationParameters.BackBufferHeight ?? _panel.Height;
+            return e.Y * (float)bh / Math.Max(1, _panel.Height);
+        }
+
         private void Panel_MouseDown(object sender, MouseEventArgs e)
         {
             _panel.Focus();
@@ -1240,8 +1322,8 @@ namespace Tal.Hirshfeld
             if (e.Button == MouseButtons.Left)
             {
                 bool clickedInPlot =
-                    e.X >= _lastPlotX && e.X < _lastPlotX + _lastPlotSize &&
-                    e.Y >= _lastPlotY && e.Y < _lastPlotY + _lastPlotSize;
+                    DevX(e) >= _lastPlotX && DevX(e) < _lastPlotX + _lastPlotSize &&
+                    DevY(e) >= _lastPlotY && DevY(e) < _lastPlotY + _lastPlotSize;
 
                 if (clickedInPlot)
                 {
@@ -1285,23 +1367,25 @@ namespace Tal.Hirshfeld
             else if (e.Button == MouseButtons.Right)
             {
                 bool clickedInPlot =
-                    e.X >= _lastPlotX && e.X < _lastPlotX + _lastPlotSize &&
-                    e.Y >= _lastPlotY && e.Y < _lastPlotY + _lastPlotSize;
+                    DevX(e) >= _lastPlotX && DevX(e) < _lastPlotX + _lastPlotSize &&
+                    DevY(e) >= _lastPlotY && DevY(e) < _lastPlotY + _lastPlotSize;
 
                 if (clickedInPlot && _analysis != null && _binsInRange > 0)
                 {
-                    float tx = (e.X - _lastPlotX) / (float)_lastPlotSize;
-                    float ty = (e.Y - _lastPlotY) / (float)_lastPlotSize;
+                    float tx = (DevX(e) - _lastPlotX) / (float)_lastPlotSize;
+                    float ty = (DevY(e) - _lastPlotY) / (float)_lastPlotSize;
 
                     int binDe = (int)(tx * _binsInRange);
                     int binDi = (int)((1f - ty) * _binsInRange);
 
                     binDe = Math.Clamp(binDe, 0, _binsInRange - 1);
                     binDi = Math.Clamp(binDi, 0, _binsInRange - 1);
+                    SnapToPopulatedBin(ref binDe, ref binDi);
 
                     _selectedBinDe = binDe;
                     _selectedBinDi = binDi;
                     _clickMarkerPixel = new System.Drawing.Point(e.X, e.Y);
+                    _clickMarkerNorm = new Vector2((binDe + 0.5f) / _binsInRange, 1f - (binDi + 0.5f) / _binsInRange);
 
                     OnRegionClicked?.Invoke(binDe, binDi);
 
@@ -1452,23 +1536,25 @@ namespace Tal.Hirshfeld
                     else
                     {
                         bool clickedInPlot =
-                            e.X >= _lastPlotX && e.X < _lastPlotX + _lastPlotSize &&
-                            e.Y >= _lastPlotY && e.Y < _lastPlotY + _lastPlotSize;
+                            DevX(e) >= _lastPlotX && DevX(e) < _lastPlotX + _lastPlotSize &&
+                            DevY(e) >= _lastPlotY && DevY(e) < _lastPlotY + _lastPlotSize;
 
                         if (clickedInPlot && _analysis != null && _binsInRange > 0)
                         {
-                            float tx = (e.X - _lastPlotX) / (float)_lastPlotSize;
-                            float ty = (e.Y - _lastPlotY) / (float)_lastPlotSize;
+                            float tx = (DevX(e) - _lastPlotX) / (float)_lastPlotSize;
+                            float ty = (DevY(e) - _lastPlotY) / (float)_lastPlotSize;
 
                             int binDe = (int)(tx * _binsInRange);
                             int binDi = (int)((1f - ty) * _binsInRange);
 
                             binDe = Math.Clamp(binDe, 0, _binsInRange - 1);
                             binDi = Math.Clamp(binDi, 0, _binsInRange - 1);
+                            SnapToPopulatedBin(ref binDe, ref binDi);
 
                             _selectedBinDe = binDe;
                             _selectedBinDi = binDi;
                             _clickMarkerPixel = new System.Drawing.Point(e.X, e.Y);
+                            _clickMarkerNorm = new Vector2((binDe + 0.5f) / _binsInRange, 1f - (binDi + 0.5f) / _binsInRange);
 
                             OnRegionClicked?.Invoke(binDe, binDi);
 
@@ -1657,13 +1743,7 @@ namespace Tal.Hirshfeld
                 }
 
                 if (_clickMarkerPixel.HasValue)
-                {
-                    float k = renderSize / (float)Math.Max(_panel.Width, 1);
-                    var scaled = new System.Drawing.Point(
-                        (int)(_clickMarkerPixel.Value.X * k),
-                        (int)(_clickMarkerPixel.Value.Y * k));
-                    DrawClickMarker(scaled);
-                }
+                    DrawClickMarker(plotX, plotY, plotSize);
 
                 _spriteBatch.End();
 
