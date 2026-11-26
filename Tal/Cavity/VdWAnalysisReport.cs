@@ -110,6 +110,8 @@ namespace Tal.Cavity
             sb.AppendLine($"  Voxel volume:   {CellParameters.GetVoxelVolume():F6} Å³");
             sb.AppendLine($"  Voxel edges:    {CellParameters.GetVoxelEdgeSummary()}");
             sb.AppendLine($"  Micro-tuning:   {(Flags.Instance.MicroTuneVoxelSize ? "ON" : "OFF")}");
+            sb.AppendLine($"  Property weight:{PropertyWeighting.Describe(PropertyWeighting.CurrentMode)}");
+            sb.AppendLine($"  Charge model:   {(Flags.Instance.ChargeModel == 1 ? "Gasteiger (PEOE)" : "SQE")}");
             sb.AppendLine($"  Atoms in cell:  {results.AtomCount}");
             sb.AppendLine($"  Cell mass:      {results.CellMass:F2} u");
             sb.AppendLine();

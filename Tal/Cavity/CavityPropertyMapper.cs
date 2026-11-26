@@ -250,6 +250,15 @@ namespace Tal.Cavity
             _totalErrors = 0;
 
             CurrentProperty = propertyType;
+            // Atom values (e.g. charges) and the distance weighting may have changed since the last run.
+            // Cavities that already carry colours for this property are skipped by the per-cavity check
+            // (LastMappedProperty), so the old colours must be invalidated or the map is never redrawn.
+            ClearCache();
+            if (_cavities != null)
+            {
+                foreach (var c in _cavities)
+                    if (c != null) c.LastMappedProperty = PropertyType.None;
+            }
 
             if (propertyType == PropertyType.None)
             {
@@ -753,6 +762,7 @@ namespace Tal.Cavity
         {
             if (nearbyAtoms.Count == 0 || propertyValues == null) return fallback;
 
+            var mode = PropertyWeighting.CurrentMode;
             float weightedSum = 0;
             float weightSum = 0;
 
@@ -760,7 +770,7 @@ namespace Tal.Cavity
             {
                 if (nearby.AtomIndex < 0 || nearby.AtomIndex >= propertyValues.Length) continue;
                 float value = propertyValues[nearby.AtomIndex];
-                float weight = 1.0f / (nearby.Distance + 0.1f);
+                float weight = PropertyWeighting.Weight(nearby.Distance, mode);
                 weightedSum += value * weight;
                 weightSum += weight;
             }
@@ -797,14 +807,15 @@ namespace Tal.Cavity
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private float GetContrast(PropertyType propertyType)
         {
+            float scale = Math.Clamp(Flags.Instance.CavityColorContrastPercent, 25, 400) / 100f;
             switch (propertyType)
             {
                 case PropertyType.Charge:
-                    return 4.2f;
+                    return 4.2f * scale;
                 case PropertyType.Hydrophobicity:
-                    return 1.5f;
+                    return 1.5f * scale;
                 default:
-                    return 1.0f;
+                    return 1.0f * scale;
             }
         }
 

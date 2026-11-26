@@ -60,7 +60,7 @@ namespace Tal.DrawMethods
                 case 5:
                     try
                     {
-                        var color = ColorManager.ValueToVector3(atom.charge, ColorManager.PropertyType.Charge);
+                        var color = ColorManager.ValueToVector3(atom.charge, ColorManager.PropertyType.Charge, Flags.Instance.AtomColorContrast);
                         if (float.IsNaN(color.X) || float.IsNaN(color.Y) || float.IsNaN(color.Z))
                             return new Vector3(0.5f, 0.5f, 0.5f);
                         return color;
@@ -70,7 +70,7 @@ namespace Tal.DrawMethods
                 case 6:
                     try
                     {
-                        var color = ColorManager.ValueToVector3(atom.Hydrophobicity, ColorManager.PropertyType.Hydrophobicity);
+                        var color = ColorManager.ValueToVector3(atom.Hydrophobicity, ColorManager.PropertyType.Hydrophobicity, Flags.Instance.AtomColorContrast);
                         if (float.IsNaN(color.X) || float.IsNaN(color.Y) || float.IsNaN(color.Z))
                             return new Vector3(0.5f, 0.5f, 0.5f);
                         return color;

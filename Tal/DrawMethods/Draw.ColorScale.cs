@@ -118,7 +118,9 @@ namespace Tal.DrawMethods
             float x = viewportWidth - scaleWidth - margin;
             float y = viewportHeight - scaleHeight - margin - 100 * rts;
 
-            DrawColorScaleInternal(x, y, scaleWidth, scaleHeight, propertyType, title);
+            // atom colouring by property: the bar shows the same contrast as the atoms
+            float barContrast = (mode == 5 || mode == 6) ? Flags.Instance.AtomColorContrast : 1.0f;
+            DrawColorScaleInternal(x, y, scaleWidth, scaleHeight, propertyType, title, barContrast);
         }
 
         #endregion
@@ -149,7 +151,7 @@ namespace Tal.DrawMethods
  /// </summary>
         private void DrawColorScaleInternal(
             float x, float y, float width, float height,
-            ColorManager.PropertyType propertyType, string title)
+            ColorManager.PropertyType propertyType, string title, float contrast = 1.0f)
         {
             SpriteFont font = GetLabelFont();
             if (_spriteBatch == null || font == null || _camera == null) return;
@@ -219,7 +221,7 @@ namespace Tal.DrawMethods
                 {
                     float t = i / (float)segments;
                     float value = min + t * (max - min);
-                    Vector4 colorVec = ColorManager.ValueToVector4(value, propertyType);
+                    Vector4 colorVec = ColorManager.ValueToVector4(value, propertyType, contrast);
 
                     float segX = x + i * segWidth;
  // Last segment extends to the exact right edge — fixes

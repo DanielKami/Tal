@@ -212,6 +212,8 @@ namespace Tal.Cavity
             }
             sb.AppendLine($"  Micro-tuning:            {(Flags.Instance.MicroTuneVoxelSize ? $"ON (range ±{Flags.Instance.MicroTuneRangePercent:F1}%)" : "OFF (floor)")}");
             sb.AppendLine($"  Voxel volume:            {voxelVolume:F6} Å³");
+            sb.AppendLine($"  Property weighting:      {PropertyWeighting.Describe(PropertyWeighting.CurrentMode)}");
+            sb.AppendLine($"  Charge model:            {(Flags.Instance.ChargeModel == 1 ? "Gasteiger (PEOE)" : "SQE (split-charge equilibration)")}");
             sb.AppendLine($"  Max SDF distance:        {detector.Scanner?.MaxDistFine ?? 0:F3} Å");
             sb.AppendLine($"  Non-orthogonal cell:     {(CellParameters.IsNonOrthogonal() ? "YES" : "NO")}");
             sb.AppendLine();

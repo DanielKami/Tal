@@ -104,6 +104,91 @@ namespace Tal.Cavity
         public Action<string, float> ProgressChanged { get; set; }
 
  /// <summary>Gets the molecule instance.</summary>
+        /// <summary>
+        /// Computes the per-voxel descriptors that come from the atoms (charge, hydrophobicity, Z_eff) as the
+        /// weighted average over atoms within 3 Å. Uses the charges currently stored in the atoms
+        /// (i.e. the selected charge model: SQE or Gasteiger) and the selected distance weighting (1/d or 1/d²).
+        /// Called during detection and again, without re-detection, when the model or the weighting changes.
+        /// </summary>
+        public static void ComputeVoxelAtomProperties(Cavity cavity, Molecule molecule)
+        {
+            if (cavity?.Voxels == null || cavity.Voxels.Count == 0) return;
+            int voxelCount = cavity.Voxels.Count;
+            cavity.VoxelCharges = new float[voxelCount];
+            cavity.VoxelHydrophobicity = new float[voxelCount];
+            cavity.VoxelZEffective = new float[voxelCount];
+
+            float searchRadius = 3.0f;
+            float searchRadiusSq = searchRadius * searchRadius;
+            var weightMode = PropertyWeighting.CurrentMode;
+
+            int atomCountLocal = molecule?.NumberOfAtoms ?? 0;
+            Vector3[] atomPos = null;
+            float[] atomCharge = null;
+            float[] atomHydro = null;
+            float[] atomZ = null;
+
+            if (atomCountLocal > 0 && molecule.atom != null)
+            {
+                atomPos = new Vector3[atomCountLocal];
+                atomCharge = new float[atomCountLocal];
+                atomHydro = new float[atomCountLocal];
+                atomZ = new float[atomCountLocal];
+
+                for (int j = 0; j < atomCountLocal; j++)
+                {
+                    var atom = molecule.atom[j];
+                    atomPos[j] = new Vector3(atom.Coordinate.X, atom.Coordinate.Y, atom.Coordinate.Z);
+                    atomCharge[j] = atom.charge;
+                    atomHydro[j] = atom.Hydrophobicity;
+                    atomZ[j] = atom.AtomicNumber;
+                }
+            }
+
+            for (int vi = 0; vi < voxelCount; vi++)
+            {
+                var voxel = cavity.Voxels[vi];
+                Vector3 pos = new Vector3(voxel.X, voxel.Y, voxel.Z);
+
+                float chargeSum = 0f, hydroSum = 0f, zSum = 0f;
+                float weightSum = 0f;
+
+                if (atomCountLocal > 0 && atomPos != null)
+                {
+                    for (int j = 0; j < atomCountLocal; j++)
+                    {
+                        float dx = atomPos[j].X - pos.X;
+                        float dy = atomPos[j].Y - pos.Y;
+                        float dz = atomPos[j].Z - pos.Z;
+                        float distSq = dx * dx + dy * dy + dz * dz;
+
+                        if (distSq < searchRadiusSq && distSq > 0.0001f)
+                        {
+                            float dist = MathF.Sqrt(distSq);
+                            float w = PropertyWeighting.Weight(dist, weightMode);
+                            chargeSum += atomCharge[j] * w;
+                            hydroSum += atomHydro[j] * w;
+                            zSum += atomZ[j] * w;
+                            weightSum += w;
+                        }
+                    }
+                }
+
+                if (weightSum > 0)
+                {
+                    cavity.VoxelCharges[vi] = chargeSum / weightSum;
+                    cavity.VoxelHydrophobicity[vi] = hydroSum / weightSum;
+                    cavity.VoxelZEffective[vi] = zSum / weightSum;
+                }
+                else
+                {
+                    cavity.VoxelCharges[vi] = 0f;
+                    cavity.VoxelHydrophobicity[vi] = 0f;
+                    cavity.VoxelZEffective[vi] = 0f;
+                }
+            }
+        }
+
         public Molecule Molecule => _molecule;
 
         #endregion
@@ -886,82 +971,12 @@ namespace Tal.Cavity
                 if (cavity.Voxels != null && cavity.Voxels.Count > 0)
                 {
                     int voxelCount = cavity.Voxels.Count;
-                    cavity.VoxelCharges = new float[voxelCount];
-                    cavity.VoxelHydrophobicity = new float[voxelCount];
-                    cavity.VoxelZEffective = new float[voxelCount];
                     cavity.VoxelFracX = new float[voxelCount];
                     cavity.VoxelFracY = new float[voxelCount];
                     cavity.VoxelFracZ = new float[voxelCount];
 
-                    var molecule = _molecule;
-                    float searchRadius = 3.0f;
-                    float searchRadiusSq = searchRadius * searchRadius;
-
-                    int atomCountLocal = molecule?.NumberOfAtoms ?? 0;
-                    Vector3[] atomPos = null;
-                    float[] atomCharge = null;
-                    float[] atomHydro = null;
-                    float[] atomZ = null;
-
-                    if (atomCountLocal > 0 && molecule.atom != null)
-                    {
-                        atomPos = new Vector3[atomCountLocal];
-                        atomCharge = new float[atomCountLocal];
-                        atomHydro = new float[atomCountLocal];
-                        atomZ = new float[atomCountLocal];
-
-                        for (int j = 0; j < atomCountLocal; j++)
-                        {
-                            var atom = molecule.atom[j];
-                            atomPos[j] = new Vector3(atom.Coordinate.X, atom.Coordinate.Y, atom.Coordinate.Z);
-                            atomCharge[j] = atom.charge;
-                            atomHydro[j] = atom.Hydrophobicity;
-                            atomZ[j] = atom.AtomicNumber;
-                        }
-                    }
-
-                    for (int vi = 0; vi < voxelCount; vi++)
-                    {
-                        var voxel = cavity.Voxels[vi];
-                        Vector3 pos = new Vector3(voxel.X, voxel.Y, voxel.Z);
-
-                        float chargeSum = 0f, hydroSum = 0f, zSum = 0f;
-                        float weightSum = 0f;
-
-                        if (atomCountLocal > 0 && atomPos != null)
-                        {
-                            for (int j = 0; j < atomCountLocal; j++)
-                            {
-                                float dx = atomPos[j].X - pos.X;
-                                float dy = atomPos[j].Y - pos.Y;
-                                float dz = atomPos[j].Z - pos.Z;
-                                float distSq = dx * dx + dy * dy + dz * dz;
-
-                                if (distSq < searchRadiusSq && distSq > 0.0001f)
-                                {
-                                    float dist = MathF.Sqrt(distSq);
-                                    float w = 1.0f / (dist + 0.1f);
-                                    chargeSum += atomCharge[j] * w;
-                                    hydroSum += atomHydro[j] * w;
-                                    zSum += atomZ[j] * w;
-                                    weightSum += w;
-                                }
-                            }
-                        }
-
-                        if (weightSum > 0)
-                        {
-                            cavity.VoxelCharges[vi] = chargeSum / weightSum;
-                            cavity.VoxelHydrophobicity[vi] = hydroSum / weightSum;
-                            cavity.VoxelZEffective[vi] = zSum / weightSum;
-                        }
-                        else
-                        {
-                            cavity.VoxelCharges[vi] = 0f;
-                            cavity.VoxelHydrophobicity[vi] = 0f;
-                            cavity.VoxelZEffective[vi] = 0f;
-                        }
-                    }
+                    // charges / hydrophobicity / Z_eff: current charge model and distance weighting
+                    ComputeVoxelAtomProperties(cavity, _molecule);
 
  // Calculate accurate fractional coordinates from PeriodicGrid
                     if (periodicGrid != null && periodicGrid.FracX != null && region.Voxels != null)

@@ -477,6 +477,75 @@ namespace Tal.Calculate
 
         #endregion
 
+        #region Shared Topology
+
+ /// <summary>
+ /// Bond topology of the symmetry-equivalent atoms (bonds from covalent/vdW radii, hybridization codes).
+ /// Shared by the PEOE and the SQE calculator so that both models see exactly the same bonds.
+ /// </summary>
+        internal sealed class ChargeTopology
+        {
+            public int Count;
+            public Vector3[] Cart;
+            public float[] Occupancy;
+            public int[] AtomicNumbers;
+            public List<int>[] Neighbors;
+            public List<float>[] NeighborDistances;
+            /// <summary>PEOE hybridization code: equal to Z for sp3/other, 60/70/80/160 = sp2, 600/700 = sp, 666/777/166 = aromatic.</summary>
+            public int[] HybridizationCodes;
+        }
+
+ /// <summary>
+ /// Builds the bond topology of <paramref name="molecule"/>.SymetryEquivalents.
+ /// Returns null when there are no atoms.
+ /// </summary>
+        internal static ChargeTopology BuildTopology(Molecule molecule)
+        {
+            if (molecule == null || molecule.SymetryEquivalents == null || molecule.SymetryEquivalents.Count == 0)
+                return null;
+
+            var calc = new PEOEChargeCalculator(molecule);
+            int n = molecule.SymetryEquivalents.Count;
+            calc.InitializeBuffers(n);
+
+            var atoms = new Molecule.AtomSimple[n];
+            var z = new int[n];
+            var occ = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                atoms[i] = molecule.SymetryEquivalents[i];
+                z[i] = atoms[i].AtomicNumber;
+                occ[i] = atoms[i].occupancy;
+                calc._tempNeighbors[i].Clear();
+                calc._tempNeighborDistances[i].Clear();
+            }
+
+            Matrix U = Matrix.Transpose(molecule.FractionaltoCarttesianMatrix(0, 0, 0));
+            var cart = new Vector3[n];
+            for (int i = 0; i < n; i++)
+                cart[i] = Vector3.Transform(new Vector3(atoms[i].x, atoms[i].y, atoms[i].z), U);
+
+            calc.BuildBonds(n, cart, occ, z, calc._tempNeighbors, calc._tempNeighborDistances);
+            calc.DetectAromaticRings(calc._tempNeighbors, atoms);
+
+            var hyb = new int[n];
+            for (int i = 0; i < n; i++)
+                hyb[i] = calc.DetermineHybridization(i, calc._tempNeighbors, calc._tempNeighborDistances, atoms);
+
+            return new ChargeTopology
+            {
+                Count = n,
+                Cart = cart,
+                Occupancy = occ,
+                AtomicNumbers = z,
+                Neighbors = calc._tempNeighbors,
+                NeighborDistances = calc._tempNeighborDistances,
+                HybridizationCodes = hyb
+            };
+        }
+
+        #endregion
+
         #region Buffer Initialization
 
  /// <summary>
