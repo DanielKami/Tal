@@ -138,6 +138,22 @@
             font-style: italic;
         }
         
+        .helpfig {
+            margin: 1.4em 0;
+            padding: 0.8em 0.6em 0.5em 0.6em;
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .helpfig figcaption {
+            font-size: 0.9em;
+            text-align: left;
+            margin-top: 0.6em;
+            padding: 0 0.6em;
+        }
+
         .note {
             background-color: #fffbe6;
             border-left: 4px solid #ffd400;
@@ -240,6 +256,9 @@
                 <li><a href="#symmetry">4b. Symmetry Elements</a></li>
                 <li><a href="#calculations">5. Calculations</a></li>
                 <li><a href="#cavity">6. Cavity Analysis</a></li>
+                <li><a href="#cavity-minkowski">6.2a. Exclusion body: ellipsoid vs. Minkowski sum</a></li>
+                <li><a href="#cavity-property-maps">6.2b. How surface properties are mapped</a></li>
+                <li><a href="#cavity-channel-closure">6.4a. Channel closure and ellipsoid orientation</a></li>
                 <li><a href="#cavity-spacegroup">6.10. Space-group consistency test</a></li>
                 <li><a href="#hirshfeld">7. Hirshfeld Surface Analysis</a></li>
                 <li><a href="#powder">8. Powder Diffraction</a></li>
@@ -495,6 +514,16 @@
                 <li>Individual Color (Selected Atoms)</li>
                 <li>Charge</li>
                 <li>Hydrophobicity</li>
+            </ul>
+            <p>
+                Additional controls of the window:
+            </p>
+            <ul>
+                <li><strong>Charge model</strong> — <em>SQE (split-charge)</em> or <em>Gasteiger (PEOE)</em> (<code>Flags.ChargeModel</code>, the same setting as in the Cavity Settings window).
+                    Changing it recalculates the charges of the current structure and redraws the atom colours, the labels and the colour scale.</li>
+                <li><strong>Colour contrast (charge / hydrophobicity)</strong> (<code>Flags.AtomColorContrastPercent</code>, 25–400 %, default 100 %) — stretches (&gt;100 %) or compresses (&lt;100 %)
+                    the colour scale around its middle, <code>t' = (t − 0.5)·c + 0.5</code>. It affects atoms coloured by charge or hydrophobicity, the colour scale bar and the POV-Ray export;
+                    it does not change the charge values.</li>
             </ul>
 
             <h3>4.3. Labels</h3>
@@ -989,14 +1018,50 @@
                 <strong>Warning:</strong> Destructive on the structure in storage — save before use.
             </div>
 
-            <h3>5.10b. Partial charges and hydrophobicity</h3>
+            <h3 id="partial-charges">5.10b. Partial charges and hydrophobicity</h3>
             <p>
-                Colour-by-charge and cavity property maps use per-atom charges from
-                <code>PEOEChargeCalculator</code> (Gasteiger–Marsili partial equalization of orbital electronegativity)
-                or <code>SqeChargeCalculator</code> (self-consistent charge equilibration).
+                Colour-by-charge and cavity property maps use per-atom charges from one of two models, selected with
+                <em>Charge model</em> in the Cavity Settings window (<code>Flags.ChargeModel</code>, default SQE):
+                <code>SqeChargeCalculator</code> (split-charge equilibration, SQE) or
+                <code>PEOEChargeCalculator</code> (Gasteiger–Marsili partial equalization of orbital electronegativity).
+                Changing the model recalculates the charges at once and refreshes the property map.
                 Hydrophobicity comes from <code>HydrophobicityCalculator</code>.
                 Bond multiplicity for display (double/triple sticks, aromatic rings) is estimated by
                 <code>BondOrderAnalyzer</code> from hybridization and typical bond lengths.
+            </p>
+
+            <h4>SQE — split-charge equilibration</h4>
+            <p>
+                <code>SqeChargeCalculator</code> implements the split-charge equilibration model
+                (Nistor, Polihronov, Müser, Mosey, <em>J. Chem. Phys.</em> <strong>125</strong> (2006);
+                Verstraelen, Van Speybroeck, Waroquier, <em>J. Chem. Phys.</em> <strong>131</strong> (2009)), which extends the charge equilibration (QEq)
+                method of Rappé and Goddard (1991) by bond-hardness parameters κ<sub>ij</sub>. The formulation is Eq. (16) of the article.
+                The atomic charge is the reference charge plus the split charges transferred across the bonds of the atom,
+            </p>
+            <pre><code>q<sub>i</sub> = q<sub>i</sub>⁰ + Σ<sub>j</sub> p<sub>ij</sub>,      p<sub>ij</sub> = −p<sub>ji</sub>,   (i, j) ∈ B</code></pre>
+            <p>
+                so the charge of every bonded fragment is conserved exactly, without a separate normalisation step (formal reference charges
+                q<sub>i</sub>⁰ are set to 0). The split charges <code>p<sub>ij</sub></code> minimise
+            </p>
+            <pre><code>E<sub>SQE</sub>({p<sub>ij</sub>}) = Σ<sub>i</sub> ( χ<sub>i</sub>⁰ q<sub>i</sub> + ½ η<sub>i</sub>⁰ q<sub>i</sub>² ) + ½ Σ<sub>i≠j</sub> J<sub>ij</sub> q<sub>i</sub> q<sub>j</sub> + ½ Σ<sub>(i,j)∈B</sub> κ<sub>ij</sub> p<sub>ij</sub>²</code></pre>
+            <ul>
+                <li><strong>χ<sub>i</sub>⁰</strong> (eV) — electronegativity and <strong>η<sub>i</sub>⁰</strong> (eV/e²) — hardness (on-site Coulomb integral J<sub>ii</sub>) of the element; for C, N, O and S the sp² and sp (and aromatic) states have their own values, taken from the hybridization found by the same bond analysis as the Gasteiger model.</li>
+                <li><strong>J<sub>ij</sub></strong> — shielded (Ohno–Klopman) Coulomb kernel, <code>J<sub>ij</sub> = 14.3996 / √(r² + a<sub>ij</sub>²)</code> with <code>a<sub>ij</sub> = 2·14.3996 / (η<sub>i</sub> + η<sub>j</sub>)</code> (eV/e², r in Å), so that J<sub>ii</sub> = η<sub>i</sub>. It acts between all atoms that carry a split charge (an isolated cluster, no Ewald summation; for more than 1500 atoms the kernel is cut at 15 Å).</li>
+                <li><strong>κ<sub>ij</sub></strong> (eV/e²) — bond hardness. As in the article, κ<sub>ij</sub> → 0 gives full QEq electronegativity equalisation and κ<sub>ij</sub> → ∞ keeps the reference charges (no transfer). In the program κ<sub>ij</sub> is derived from the element bond-softness parameter β: <code>κ<sub>ij</sub> = κ<sub>0</sub> / √(β<sub>i</sub>β<sub>j</sub>)</code>, κ<sub>0</sub> = 3 eV/e² (chosen so that charges of organic molecules have the magnitude of Gasteiger charges; the article gives no value), so a more ionic (larger β) pair has a softer bond.</li>
+            </ul>
+            <p>
+                Stationarity with respect to p<sub>ij</sub> gives <code>p<sub>ij</sub> = (χ̃<sub>j</sub> − χ̃<sub>i</sub>) / κ<sub>ij</sub></code>
+                with <code>χ̃<sub>i</sub> = ∂E<sub>SQE</sub>/∂q<sub>i</sub></code> (as in the article); written for all bonds at once this is the linear system
+                <code>[ Bᵀ (diag η + J) B + diag κ ] p = −Δχ</code>, <code>Δχ<sub>b</sub> = χ<sub>i</sub> − χ<sub>j</sub></code>
+                (B is the atom–bond incidence matrix), which is solved by Jacobi-preconditioned conjugate gradients to a relative residual
+                of 10<sup>−9</sup>. The debug log lists the number of atoms, bonds, Coulomb pairs, iterations and the residual.
+                No artificial clamping of the charges is applied.
+            </p>
+            <p>
+                <strong>Limitations.</strong> Bonds are those of the Gasteiger model (covalent/vdW radii, <code>Flags.BOND_FACTOR</code>). An atom without any bond
+                has no split-charge variable and keeps q = 0, so purely ionic crystals without bonds in the sense of that criterion get zero charges;
+                formal charges of ions are not set. The parameters χ⁰, η⁰, β are generic element values and the mapping β → κ<sub>ij</sub> is a choice of this implementation (the article lists no numerical κ values); they are not fitted to a reference charge set — use the charges as a
+                qualitative property map. The occupancy of disordered atoms is not used in the equilibration; it only weights the reported total charge.
             </p>
 
             <h3>5.10. Normalize Hydrogens...</h3>
@@ -1055,6 +1120,22 @@
                     the edges come from the legacy floor rule). Without a structure it shows the values of the last detection.
                 </li>
                 <li>
+                    <strong>Charge model</strong> (<code>cmbChargeModel</code>, <code>Flags.ChargeModel</code>, default SQE) — partial-charge model used for the
+                    charge property: <em>SQE (split-charge)</em> or <em>Gasteiger (PEOE)</em>. Changing it recalculates the charges of the current structure
+                    and re-applies the property map; the per-voxel descriptors (charge, hydrophobicity, Z<sub>eff</sub>) used by the reports are recomputed too, without a new detection. See section 5.10b.
+                </li>
+                <li>
+                    <strong>Distance weight</strong> (<code>cmbWeighting</code>, <code>Flags.CavityPropertyWeighting</code>, default 1/d²) — weight law of the
+                    average that projects atomic charge, hydrophobicity and the other atomic properties onto the cavity: <code>1/(d²+ε)</code>
+                    (Eq. 15 of the article) or <code>1/√(d²+ε)</code>, ε = 10<sup>−6</sup> Å². See the description of the property map.
+                </li>
+                <li>
+                    <strong>Contrast</strong> (<code>trkColorContrast</code>, <code>Flags.CavityColorContrastPercent</code>, 25–400 %, default 100 %) — multiplies the built-in contrast of the
+                    property map on the cavity (charge ×4.2, hydrophobicity ×1.5, other properties ×1.0). Increase it when the projected values are small
+                    (the weighted average over atoms within 3 Å partly cancels charges of opposite sign); decrease it if the map saturates.
+                    Only the colours change; the descriptor values do not. The scale bar always shows the basic scale.
+                </li>
+                <li>
                     <strong>VdW Multiplier</strong> (<code>numVdwMultiplier</code>, <code>Flags.VdWValue</code>, default 1.00) —
                     scales every atom’s van der Waals radius. See <a href="#vdwanalysis">section 15</a>.
                 </li>
@@ -1069,8 +1150,9 @@
                     <strong>Transparency</strong> (<code>trackTransparency</code>, <code>Flags.transparency</code>) — cavity mesh opacity.
                 </li>
                 <li>
-                    <strong>Smoothing</strong> (<code>numSmoothing</code>, <code>Flags.smuth</code>, default 3) —
-                    Gaussian / Laplacian smoothing iterations before Marching Cubes.
+                    <strong>Smoothing</strong> (<code>numSmoothing</code>, <code>Flags.smuth</code>, default 4) —
+                    Gaussian / Laplacian smoothing iterations before Marching Cubes. Changing it regenerates the mesh and keeps the selected display mode
+                    (a displayed property map is re-applied to the new mesh).
                 </li>
             </ul>
             <div class="note">
@@ -1361,6 +1443,143 @@ R_cart = A · R_frac · A⁻¹</code></pre>
                 </ul>
             </div>
 
+            <h3 id="cavity-minkowski">6.2a. Exclusion body of an atom: ellipsoid versus Minkowski sum</h3>
+            <p>
+                The cavity is the set of grid points that lie outside the <em>exclusion body</em> of every atom.
+                For an atom with the van der Waals radius <code>r = VdWValue·r<sub>vdw</sub> + ProbeRadius</code>
+                and the 1σ thermal half-axes <code>σ<sub>k</sub> = √|λ<sub>k</sub>|</code> (section 6.2), the physically
+                natural body is the <strong>Minkowski sum</strong> of the 1σ thermal ellipsoid <em>E</em><sub>σ</sub> and a ball of
+                radius <code>r</code>: all points that are at most <code>r</code> away from the thermal ellipsoid.
+                Its extent in the direction <code>n</code> is
+            </p>
+            <pre><code>h<sub>Mink</sub>(n) = r + δ(n),        δ(n) = √(nᵀ·U·n)</code></pre>
+            <p>
+                with the same <code>δ(n)</code> that governs the erosion model of section 6.4.
+            </p>
+            <p>
+                The outer surface of this body is <em>not</em> an ellipsoid, and the distance to it cannot be written in
+                closed form. The scanner therefore uses the ellipsoid with the same axes as the thermal ellipsoid and the
+                semi-axes <strong>enlarged by the same constant</strong>:
+            </p>
+            <pre><code>R<sub>k</sub> = r + σ<sub>k</sub>,      q(p) = Σ<sub>k</sub> (ξ<sub>k</sub> / R<sub>k</sub>)²,      point p is blocked when q(p) ≤ 1</code></pre>
+            <p>
+                where <code>ξ<sub>k</sub></code> are the components of <code>p − r<sub>atom</sub></code> along the principal
+                axes. This is <em>not</em> a scaled copy of the thermal ellipsoid: the thin axis grows by exactly as much
+                (in Å) as the long one.
+            </p>
+
+            <figure class="helpfig">
+<svg viewBox="0 0 780 400" width="100%" style="max-width:780px;height:auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Exclusion body of one atom: Minkowski sum versus the ellipsoid with semi-axes r plus sigma">
+<g font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="var(--text-color,#333)">
+<path d="M516.0,205.0 L515.7,211.0 L514.9,216.8 L513.7,222.4 L512.0,227.6 L510.1,232.4 L507.9,236.8 L505.6,240.7 L503.2,244.3 L500.8,247.4 L498.4,250.2 L496.0,252.6 L493.7,254.8 L491.5,256.7 L489.4,258.5 L487.4,260.0 L485.4,261.4 L483.5,262.6 L481.7,263.7 L480.0,264.7 L478.3,265.6 L476.7,266.4 L475.1,267.2 L473.6,267.9 L472.2,268.6 L470.7,269.2 L469.3,269.7 L468.0,270.3 L466.6,270.8 L465.3,271.2 L464.0,271.7 L462.8,272.1 L461.5,272.5 L460.3,272.9 L459.1,273.2 L457.8,273.6 L456.6,273.9 L455.4,274.2 L454.2,274.5 L453.1,274.8 L451.9,275.1 L450.7,275.3 L449.5,275.6 L448.4,275.8 L447.2,276.1 L446.0,276.3 L444.8,276.5 L443.7,276.8 L442.5,277.0 L441.3,277.2 L440.1,277.4 L438.9,277.6 L437.7,277.7 L436.5,277.9 L435.4,278.1 L434.2,278.3 L433.0,278.4 L431.7,278.6 L430.5,278.7 L429.3,278.9 L428.1,279.0 L426.9,279.1 L425.7,279.3 L424.4,279.4 L423.2,279.5 L422.0,279.6 L420.7,279.7 L419.5,279.8 L418.2,279.9 L417.0,280.0 L415.7,280.1 L414.4,280.2 L413.2,280.3 L411.9,280.4 L410.6,280.4 L409.4,280.5 L408.1,280.6 L406.8,280.6 L405.5,280.7 L404.2,280.7 L402.9,280.8 L401.7,280.8 L400.4,280.9 L399.1,280.9 L397.8,280.9 L396.5,280.9 L395.2,281.0 L393.9,281.0 L392.6,281.0 L391.3,281.0 L390.0,281.0 L388.7,281.0 L387.4,281.0 L386.1,281.0 L384.8,281.0 L383.5,280.9 L382.2,280.9 L380.9,280.9 L379.6,280.9 L378.3,280.8 L377.1,280.8 L375.8,280.7 L374.5,280.7 L373.2,280.6 L371.9,280.6 L370.6,280.5 L369.4,280.4 L368.1,280.4 L366.8,280.3 L365.6,280.2 L364.3,280.1 L363.0,280.0 L361.8,279.9 L360.5,279.8 L359.3,279.7 L358.0,279.6 L356.8,279.5 L355.6,279.4 L354.3,279.3 L353.1,279.1 L351.9,279.0 L350.7,278.9 L349.5,278.7 L348.3,278.6 L347.0,278.4 L345.8,278.3 L344.6,278.1 L343.5,277.9 L342.3,277.7 L341.1,277.6 L339.9,277.4 L338.7,277.2 L337.5,277.0 L336.3,276.8 L335.2,276.5 L334.0,276.3 L332.8,276.1 L331.6,275.8 L330.5,275.6 L329.3,275.3 L328.1,275.1 L326.9,274.8 L325.8,274.5 L324.6,274.2 L323.4,273.9 L322.2,273.6 L320.9,273.2 L319.7,272.9 L318.5,272.5 L317.2,272.1 L316.0,271.7 L314.7,271.2 L313.4,270.8 L312.0,270.3 L310.7,269.7 L309.3,269.2 L307.8,268.6 L306.4,267.9 L304.9,267.2 L303.3,266.4 L301.7,265.6 L300.0,264.7 L298.3,263.7 L296.5,262.6 L294.6,261.4 L292.6,260.0 L290.6,258.5 L288.5,256.7 L286.3,254.8 L284.0,252.6 L281.6,250.2 L279.2,247.4 L276.8,244.3 L274.4,240.7 L272.1,236.8 L269.9,232.4 L268.0,227.6 L266.3,222.4 L265.1,216.8 L264.3,211.0 L264.0,205.0 L264.3,199.0 L265.1,193.2 L266.3,187.6 L268.0,182.4 L269.9,177.6 L272.1,173.2 L274.4,169.3 L276.8,165.7 L279.2,162.6 L281.6,159.8 L284.0,157.4 L286.3,155.2 L288.5,153.3 L290.6,151.5 L292.6,150.0 L294.6,148.6 L296.5,147.4 L298.3,146.3 L300.0,145.3 L301.7,144.4 L303.3,143.6 L304.9,142.8 L306.4,142.1 L307.8,141.4 L309.3,140.8 L310.7,140.3 L312.0,139.7 L313.4,139.2 L314.7,138.8 L316.0,138.3 L317.2,137.9 L318.5,137.5 L319.7,137.1 L320.9,136.8 L322.2,136.4 L323.4,136.1 L324.6,135.8 L325.8,135.5 L326.9,135.2 L328.1,134.9 L329.3,134.7 L330.5,134.4 L331.6,134.2 L332.8,133.9 L334.0,133.7 L335.2,133.5 L336.3,133.2 L337.5,133.0 L338.7,132.8 L339.9,132.6 L341.1,132.4 L342.3,132.3 L343.5,132.1 L344.6,131.9 L345.8,131.7 L347.0,131.6 L348.3,131.4 L349.5,131.3 L350.7,131.1 L351.9,131.0 L353.1,130.9 L354.3,130.7 L355.6,130.6 L356.8,130.5 L358.0,130.4 L359.3,130.3 L360.5,130.2 L361.8,130.1 L363.0,130.0 L364.3,129.9 L365.6,129.8 L366.8,129.7 L368.1,129.6 L369.4,129.6 L370.6,129.5 L371.9,129.4 L373.2,129.4 L374.5,129.3 L375.8,129.3 L377.1,129.2 L378.3,129.2 L379.6,129.1 L380.9,129.1 L382.2,129.1 L383.5,129.1 L384.8,129.0 L386.1,129.0 L387.4,129.0 L388.7,129.0 L390.0,129.0 L391.3,129.0 L392.6,129.0 L393.9,129.0 L395.2,129.0 L396.5,129.1 L397.8,129.1 L399.1,129.1 L400.4,129.1 L401.7,129.2 L402.9,129.2 L404.2,129.3 L405.5,129.3 L406.8,129.4 L408.1,129.4 L409.4,129.5 L410.6,129.6 L411.9,129.6 L413.2,129.7 L414.4,129.8 L415.7,129.9 L417.0,130.0 L418.2,130.1 L419.5,130.2 L420.7,130.3 L422.0,130.4 L423.2,130.5 L424.4,130.6 L425.7,130.7 L426.9,130.9 L428.1,131.0 L429.3,131.1 L430.5,131.3 L431.7,131.4 L433.0,131.6 L434.2,131.7 L435.4,131.9 L436.5,132.1 L437.7,132.3 L438.9,132.4 L440.1,132.6 L441.3,132.8 L442.5,133.0 L443.7,133.2 L444.8,133.5 L446.0,133.7 L447.2,133.9 L448.4,134.2 L449.5,134.4 L450.7,134.7 L451.9,134.9 L453.1,135.2 L454.2,135.5 L455.4,135.8 L456.6,136.1 L457.8,136.4 L459.1,136.8 L460.3,137.1 L461.5,137.5 L462.8,137.9 L464.0,138.3 L465.3,138.8 L466.6,139.2 L468.0,139.7 L469.3,140.3 L470.7,140.8 L472.2,141.4 L473.6,142.1 L475.1,142.8 L476.7,143.6 L478.3,144.4 L480.0,145.3 L481.7,146.3 L483.5,147.4 L485.4,148.6 L487.4,150.0 L489.4,151.5 L491.5,153.3 L493.7,155.2 L496.0,157.4 L498.4,159.8 L500.8,162.6 L503.2,165.7 L505.6,169.3 L507.9,173.2 L510.1,177.6 L512.0,182.4 L513.7,187.6 L514.9,193.2 L515.7,199.0 L516.0,205.0 Z" fill="#f4b183" fill-opacity="0.35" stroke="#d2691e" stroke-width="2"/>
+<ellipse cx="390" cy="205" rx="126.0" ry="76.0" fill="none" stroke="#1f6fb5" stroke-width="2.2"/>
+<circle cx="390" cy="205" r="64.0" fill="none" stroke="#777" stroke-width="1.5" stroke-dasharray="6 4"/>
+<ellipse cx="390" cy="205" rx="62.0" ry="12.0" fill="#9bc2e6" fill-opacity="0.6" stroke="#2e75b6" stroke-width="1.5"/>
+<line x1="252.0" y1="205" x2="528.0" y2="205" stroke="#555" stroke-width="1" />
+<line x1="390" y1="117.0" x2="390" y2="293.0" stroke="#555" stroke-width="1" />
+<circle cx="390" cy="205" r="3.5" fill="#222"/>
+<circle cx="516.0" cy="205" r="4.5" fill="#fff" stroke="#c00000" stroke-width="2"/>
+<circle cx="264.0" cy="205" r="4.5" fill="#fff" stroke="#c00000" stroke-width="2"/>
+<circle cx="390" cy="129.0" r="4.5" fill="#fff" stroke="#c00000" stroke-width="2"/>
+<circle cx="390" cy="281.0" r="4.5" fill="#fff" stroke="#c00000" stroke-width="2"/>
+<circle cx="454.2" cy="135.5" r="4.5" fill="#fff" stroke="#d2691e" stroke-width="2"/>
+<circle cx="451.4" cy="138.6" r="4.5" fill="#fff" stroke="#1f6fb5" stroke-width="2"/>
+<text x="215" y="92" text-anchor="end" font-weight="600">1σ thermal ellipse</text><text x="215" y="108" text-anchor="end">semi-axes σ₁, σ₂</text>
+<line x1="219" y1="96" x2="345.36" y2="196.6" stroke="#2e75b6" stroke-width="1" />
+<text x="215" y="172" text-anchor="end" font-weight="600">vdW sphere</text><text x="215" y="188" text-anchor="end">radius r = f·r_vdw (+ probe)</text>
+
+<line x1="219" y1="180" x2="337.5742691655045" y2="241.70889192646695" stroke="#777" stroke-width="1" />
+<text x="565" y="72" text-anchor="start" font-weight="600">True Minkowski sum</text><text x="565" y="88" text-anchor="start">(thermal ellipse ⊕ ball r)</text>
+<line x1="561" y1="76" x2="454.2462264683333" y2="135.48991285755608" stroke="#d2691e" stroke-width="1" />
+<text x="565" y="330" text-anchor="start" font-weight="600">Ellipsoid used by the scanner</text><text x="565" y="346" text-anchor="start">semi-axes R<tspan font-size="10" dy="3">k</tspan><tspan dy="-3"> = r + σ</tspan><tspan font-size="10" dy="3">k</tspan></text>
+<line x1="561" y1="334" x2="486.5215998329912" y2="253.85185833617697" stroke="#1f6fb5" stroke-width="1" />
+<text x="565" y="150" text-anchor="start">○ coincide exactly on</text><text x="565" y="166" text-anchor="start">  the principal axes</text>
+<line x1="561" y1="154" x2="521.0" y2="203" stroke="#c00000" stroke-width="1" />
+<text x="390" y="372" text-anchor="middle" font-size="12" opacity="0.85">Off-axis the ellipsoid lies inside the Minkowski sum (inner approximation). σ is drawn ≈ 5× larger than typical, for visibility.</text>
+<text x="390" y="389" text-anchor="middle" font-size="12" opacity="0.85">Typical atoms: σ/r ≈ 0.1–0.2, so the two outlines almost coincide.</text>
+</g></svg>
+                <figcaption>
+                    <strong>Figure 6.2a.</strong> Section through one atom in the plane of two principal axes.
+                    The dashed circle is the vdW sphere, the small blue ellipse the 1σ thermal ellipse, the orange outline the true
+                    Minkowski sum and the blue outline the ellipsoid <code>R<sub>k</sub> = r + σ<sub>k</sub></code> used by the
+                    scanner. The two coincide exactly on the principal axes (red circles) and differ only in between, where the
+                    ellipsoid lies slightly <em>inside</em> the Minkowski sum.
+                </figcaption>
+            </figure>
+
+            <h4>How good is the approximation?</h4>
+            <ul>
+                <li>
+                    <strong>Exact on the principal axes</strong> and for isotropic atoms. If <code>σ<sub>1</sub> = σ<sub>2</sub> = σ<sub>3</sub> = √U<sub>iso</sub></code>
+                    the body is a sphere of radius <code>r + √U<sub>iso</sub></code>, which <em>is</em> the Minkowski sum of two balls.
+                </li>
+                <li>
+                    <strong>Inner approximation elsewhere.</strong> The extent of the ellipsoid is
+                    <code>h<sub>ell</sub>(n) = √(r² + 2r·Σσ<sub>k</sub>n<sub>k</sub>² + δ(n)²)</code>. Because
+                    <code>Σσ<sub>k</sub>n<sub>k</sub>² ≤ √(Σσ<sub>k</sub>²n<sub>k</sub>²) = δ(n)</code> for a unit vector <code>n</code>
+                    (Cauchy–Schwarz), <code>h<sub>ell</sub>(n) ≤ r + δ(n)</code> in every direction: the ellipsoid is always
+                    contained in the Minkowski sum. Equality holds along the axes.
+                </li>
+                <li>
+                    <strong>The error is small.</strong> For a carbon atom (<code>r</code> = 1.70 Å) with
+                    <code>σ</code> = 0.25, 0.15, 0.10 Å the largest deficit over all directions is about 0.015 Å
+                    (below 1% of <code>r</code>); halfway between axes 1 and 2 it is about 0.006 Å. The ratio
+                    <code>σ/r</code> of real structures is typically 0.1–0.2, so the outlines in the figure (drawn with
+                    σ about five times larger) are practically indistinguishable.
+                </li>
+                <li>
+                    <strong>Consequence.</strong> Off the principal axes the exclusion body is marginally too small, so the
+                    void is marginally too large; the reported volume reduction is, if anything, slightly underestimated.
+                    The statement <code>V<sub>ADP</sub> ⊆ V<sub>static</sub></code> is not affected, because
+                    <code>R<sub>k</sub> ≥ r</code> in all directions.
+                </li>
+                <li>
+                    <strong>The probe adds no further error.</strong> The Minkowski sum is associative:
+                    <code>(E<sub>σ</sub> ⊕ ball(r)) ⊕ ball(p) = E<sub>σ</sub> ⊕ ball(r + p)</code>, so a probe radius
+                    simply increases <code>r</code>.
+                </li>
+            </ul>
+
+            <h3 id="cavity-property-maps">6.2b. How surface properties are mapped</h3>
+            <p>
+                The <em>Property Map</em> display colours every vertex of the cavity surface by an atomic property. The values are
+                taken from the atoms near the vertex, so the colour tells you what <em>lines the wall</em> at that spot.
+            </p>
+            <h4>Per-atom values</h4>
+            <ul>
+                <li><strong>Charge</strong> — partial charge in units of <em>e</em> from the charge model chosen in <em>Charge model</em> (SQE split-charge equilibration by default, or Gasteiger; see <a href="#partial-charges">section 5.10b</a>). It is an atomic partial charge, <em>not</em> an electron density (e/Å³).</li>
+                <li><strong>Hydrophobicity</strong> — the Eisenberg–Weiss value of the element (positive = hydrophobic, negative = hydrophilic), reduced by a penalty of 0.15 for every polar neighbour (an atom bonded at 0.3–1.9 Å whose own value is below −0.2).</li>
+                <li><strong>Atomic Number</strong> — the atomic number <em>Z</em> of the atom. Averaged over the wall it is a distance-weighted <em>nuclear-charge</em> descriptor: it shows whether the cavity is lined by light atoms (H, C, N, O) or by heavy ones (halogens, S, metals). It is <em>not</em> an atomic polarisability.</li>
+                <li><strong>VdW Radius</strong> and <strong>Occupancy</strong> — the tabulated radius and the site occupancy.</li>
+            </ul>
+            <h4>From atoms to a vertex</h4>
+            <p>
+                For every vertex Tal collects the atoms within the <em>search radius</em> (default 3.0 Å). The vertex value is the
+                normalized inverse-distance-squared (Shepard) weighted mean, Eq. (15) of the article. The weight law can be changed with
+                <em>Distance weight</em> in the Cavity Settings window (<code>Flags.CavityPropertyWeighting</code>):
+            </p>
+            <pre><code>P(v) = Σ w<sub>i</sub>·P<sub>i</sub> / Σ w<sub>i</sub>
+1/d²  (default, article):  w<sub>i</sub> = 1 / (d<sub>i</sub>² + ε),    ε = 10<sup>−6</sup> Å²
+1/d   (for comparison):    w<sub>i</sub> = 1 / √(d<sub>i</sub>² + ε)</code></pre>
+            <p>
+                where <code>d<sub>i</sub></code> is the distance from the vertex to atom <em>i</em> and ε only prevents the singularity at d = 0.
+                The 1/d² law is local and follows the nearest atoms; 1/d blends more neighbours. The same switch
+                applies to the per-voxel charge, hydrophobicity and Z<sub>eff</sub> values stored at detection (used by the QSPR descriptors and the reports);
+                the property map is recomputed immediately when the switch is changed, whereas the per-voxel values are refreshed by running the detection again.
+                The setting is written to the single-run and VdW reports. Because the weights are
+                normalised, <code>P(v)</code> always lies between the smallest and the largest <code>P<sub>i</sub></code> of the
+                neighbours, keeps the unit of the property, and tends to the value of the nearest atom when one atom dominates.
+                A vertex with no atom inside the search radius is drawn in a neutral fallback colour.
+            </p>
+            <h4>From value to colour and legend</h4>
+            <p>
+                The value is converted to a colour with a palette whose range is kept <strong>separately for every property</strong>
+                (Charge and Hydrophobicity: from the molecule; Atomic Number: <em>Z</em> = 1–10, so heavier atoms such as S or Cl
+                take the top colour; VdW Radius and Occupancy: fixed ranges). The colour legend always shows the range of the property
+                that is currently displayed. For Charge (factor 4.2) and Hydrophobicity (factor 1.5) the middle of the palette is
+                stretched for contrast; this changes only the colours, never the values.
+            </p>
+
             <h3>6.3. Resolution, memory and performance</h3>
             <p>
                 The number of voxels in the supercell grid grows cubically with the resolution:
@@ -1437,6 +1656,10 @@ voxel volume = |(edge_a·â × edge_b·b̂ × edge_c·ĉ)| = V_cell / (N_a · N_
                 <li>
                     <strong>Micro-tuning OFF</strong> (default, legacy rule): <code>N = floor(|axis| / Resolution)</code>.
                     The edge is always equal to or slightly larger than the nominal value (up to ~1/N larger).
+                    <em>Note on the publication:</em> the grid equation of the paper (Eq. 2) rounds to the nearest integer,
+                    <code>N = max(1, ⌊L / h<sub>0</sub> + 0.5⌋)</code> with h<sub>0</sub> = <em>Resolution</em>, whereas the program without micro-tuning uses <code>floor</code>
+                    (and keeps at least 8 voxels per axis instead of 1). The rounding rule
+                    is available in the program as micro-tuning ON with <em>Max deviation</em> = 0 %; switch it on (and re-run the detection) to reproduce the paper's grid.
                 </li>
                 <li>
                     <strong>Micro-tuning ON</strong>: for each axis all N whose edge lies within <em>Max deviation ± (%)</em>
@@ -1546,6 +1769,59 @@ voxel volume = |(edge_a·â × edge_b·b̂ × edge_c·ĉ)| = V_cell / (N_a · N_
                 parameter together with <code>κ<sub>ADP</sub></code>. The effects of volume loss and of
                 connectivity change are two observables of the same erosion; they are <em>not</em> two
                 independent factors that multiply each other.
+            </p>
+
+            <h4 id="cavity-channel-closure">Effect 2a — the same ADPs can close or keep open a channel, depending on orientation</h4>
+            <p>
+                The neck condition of Effect 2 uses the displacement <em>towards the void</em>. For the two walls of a neck
+                with outward normals <code>n</code> and <code>−n</code> this is <code>δ(n)</code> of the atoms that face each other, so
+                a neck of static width <code>w</code> closes when <code>δ<sub>1</sub> + δ<sub>2</sub> ≥ w</code>.
+                Two crystals with identical <code>U<sub>eq</sub></code> and identical principal amplitudes can therefore behave
+                differently: if the long axes of the ellipsoids point <em>into</em> the channel, <code>δ ≈ σ<sub>max</sub></code> and the neck
+                closes; if the same ellipsoids lie <em>along</em> the walls, <code>δ ≈ σ<sub>min</sub></code> and the channel stays open
+                (Figure 6.4a).
+            </p>
+
+            <figure class="helpfig">
+<svg viewBox="0 0 780 370" width="100%" style="max-width:780px;height:auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Channel closing depends on ellipsoid orientation">
+<g font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="var(--text-color,#333)">
+<text x="20" y="26" font-weight="600">A  Long axes point into the channel</text><rect x="59.0" y="100" width="276" height="68" fill="#a9d18e"/><ellipse cx="82" cy="100" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="128" cy="100" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="174" cy="100" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="220" cy="100" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="266" cy="100" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="312" cy="100" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="82" cy="168" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="128" cy="168" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="174" cy="168" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="220" cy="168" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="266" cy="168" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="312" cy="168" rx="27" ry="36" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="82" cy="100" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="128" cy="100" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="174" cy="100" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="220" cy="100" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="266" cy="100" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="312" cy="100" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="82" cy="168" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="128" cy="168" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="174" cy="168" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="220" cy="168" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="266" cy="168" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><ellipse cx="312" cy="168" rx="27" ry="36" fill="#bdd7ee" stroke="none"/><circle cx="82" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="82" cy="100" r="2.5" fill="#222"/><circle cx="128" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="128" cy="100" r="2.5" fill="#222"/><circle cx="174" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="174" cy="100" r="2.5" fill="#222"/><circle cx="220" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="220" cy="100" r="2.5" fill="#222"/><circle cx="266" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="266" cy="100" r="2.5" fill="#222"/><circle cx="312" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="312" cy="100" r="2.5" fill="#222"/><circle cx="82" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="82" cy="168" r="2.5" fill="#222"/><circle cx="128" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="128" cy="168" r="2.5" fill="#222"/><circle cx="174" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="174" cy="168" r="2.5" fill="#222"/><circle cx="220" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="220" cy="168" r="2.5" fill="#222"/><circle cx="266" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="266" cy="168" r="2.5" fill="#222"/><circle cx="312" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="312" cy="168" r="2.5" fill="#222"/><line x1="26" y1="134.0" x2="372" y2="134.0" stroke="#1b5e20" stroke-width="1.6" stroke-dasharray="7 4"/><polygon points="372,134.0 363,130.0 363,138.0" fill="#1b5e20"/>
+<text x="400" y="26" font-weight="600">B  Long axes lie along the walls</text><rect x="439.0" y="100" width="276" height="68" fill="#a9d18e"/><ellipse cx="462" cy="100" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="508" cy="100" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="554" cy="100" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="600" cy="100" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="646" cy="100" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="692" cy="100" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="462" cy="168" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="508" cy="168" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="554" cy="168" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="600" cy="168" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="646" cy="168" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="692" cy="168" rx="36" ry="27" fill="none" stroke="#1f6fb5" stroke-width="3.4"/><ellipse cx="462" cy="100" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="508" cy="100" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="554" cy="100" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="600" cy="100" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="646" cy="100" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="692" cy="100" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="462" cy="168" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="508" cy="168" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="554" cy="168" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="600" cy="168" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="646" cy="168" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><ellipse cx="692" cy="168" rx="36" ry="27" fill="#bdd7ee" stroke="none"/><circle cx="462" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="462" cy="100" r="2.5" fill="#222"/><circle cx="508" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="508" cy="100" r="2.5" fill="#222"/><circle cx="554" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="554" cy="100" r="2.5" fill="#222"/><circle cx="600" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="600" cy="100" r="2.5" fill="#222"/><circle cx="646" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="646" cy="100" r="2.5" fill="#222"/><circle cx="692" cy="100" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="692" cy="100" r="2.5" fill="#222"/><circle cx="462" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="462" cy="168" r="2.5" fill="#222"/><circle cx="508" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="508" cy="168" r="2.5" fill="#222"/><circle cx="554" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="554" cy="168" r="2.5" fill="#222"/><circle cx="600" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="600" cy="168" r="2.5" fill="#222"/><circle cx="646" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="646" cy="168" r="2.5" fill="#222"/><circle cx="692" cy="168" r="22" fill="none" stroke="#555" stroke-width="1" stroke-dasharray="4 3"/><circle cx="692" cy="168" r="2.5" fill="#222"/><line x1="406" y1="134.0" x2="752" y2="134.0" stroke="#1b5e20" stroke-width="1.6" stroke-dasharray="7 4"/><polygon points="752,134.0 743,130.0 743,138.0" fill="#1b5e20"/>
+<line x1="76" y1="128.0" x2="88" y2="140.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="76" y1="140.0" x2="88" y2="128.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="122" y1="128.0" x2="134" y2="140.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="122" y1="140.0" x2="134" y2="128.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="168" y1="128.0" x2="180" y2="140.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="168" y1="140.0" x2="180" y2="128.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="214" y1="128.0" x2="226" y2="140.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="214" y1="140.0" x2="226" y2="128.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="260" y1="128.0" x2="272" y2="140.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="260" y1="140.0" x2="272" y2="128.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="306" y1="128.0" x2="318" y2="140.0" stroke="#c00000" stroke-width="2.2"/>
+<line x1="306" y1="140.0" x2="318" y2="128.0" stroke="#c00000" stroke-width="2.2"/>
+<text x="20" y="245">Static neck width w = 24 (arbitrary units).</text><text x="20" y="262">δ₁ + δ₂ = 14 + 14 = 28 ≥ w: both necks close.</text><text x="20" y="279">The channel is cut into isolated pockets (×).</text>
+<text x="400" y="245">Same atoms, same σ values, rotated ADPs.</text><text x="400" y="262">δ₁ + δ₂ = 5 + 5 = 10 &lt; w: the neck stays open.</text><text x="400" y="279">The channel remains one connected path.</text>
+<rect x="20" y="314" width="22" height="13" fill="#bdd7ee" stroke="#1f6fb5" stroke-width="1.6"/><text x="48" y="325">exclusion body  R<tspan font-size="10" dy="3">k</tspan><tspan dy="-3"> = r + σ</tspan><tspan font-size="10" dy="3">k</tspan></text>
+<circle cx="300" cy="320" r="7" fill="none" stroke="#666" stroke-dasharray="3 2"/><text x="314" y="325">vdW sphere r</text>
+<rect x="430" y="314" width="22" height="13" fill="#a9d18e"/><text x="458" y="325">free void</text>
+<line x1="560" y1="320" x2="590" y2="320" stroke="#1b5e20" stroke-width="1.6" stroke-dasharray="7 4"/><text x="598" y="325">channel axis</text>
+</g></svg>
+                <figcaption>
+                    <strong>Figure 6.4a.</strong> Two rows of atoms forming the walls of a channel (schematic, arbitrary units,
+                    <code>r</code> = 22, <code>σ<sub>long</sub></code> = 14, <code>σ<sub>short</sub></code> = 5, static neck width
+                    <code>w</code> = 24). <strong>A:</strong> long axes perpendicular to the walls, <code>δ<sub>1</sub> + δ<sub>2</sub> = 28 ≥ w</code>:
+                    the exclusion bodies touch at every pair of facing atoms (×) and the channel breaks up into isolated pockets.
+                    <strong>B:</strong> the same atoms with the ellipsoids rotated by 90°, <code>δ<sub>1</sub> + δ<sub>2</sub> = 10 &lt; w</code>:
+                    the free void (green) remains one connected path.
+                </figcaption>
+            </figure>
+
+            <p>
+                Two practical conclusions. First, thermal motion can <em>split</em> a static channel or remove a small cavity, but it can
+                never <em>join</em> regions that are separate in the static model (the ADP void is a subset of the static void).
+                Second, an isotropic inflation by <code>σ<sub>max</sub></code> would close channel B as well, and an inflation by
+                <code>√U<sub>eq</sub></code> would be wrong for both; only the direction-dependent <code>δ(n)</code> of the ADP mode
+                gets both cases right.
             </p>
 
             <h4>What is δ for an ellipsoid?</h4>
@@ -3432,6 +3708,17 @@ H···H         412.5    30.9     16840
                 (<code>255, 255, 0, alpha</code>). When the user changes the bin size or the
                 range, the new bins are pushed back through <code>OnVertexBinsUpdated</code> so
                 the highlight remains correct.
+            </p>
+            <p>
+                The point selected on the map (right mouse button) is marked with a red <strong>crosshair</strong>: a ring with four ticks and an aiming dot
+                exactly at its centre (white outline for contrast). The centre is the selected point; the marker is stored in plot coordinates, so it stays on
+                the same point of the map when the window is resized and in the exported PNG. The crosshair sits at the centre of the selected bin; if the clicked bin is empty, the selection snaps to the nearest populated bin within about 10 screen pixels. The selected bin is outlined in yellow. The map has d<sub>e</sub> on the X axis and d<sub>i</sub> on the Y axis; the mouse selection, the bin outline and the crosshair use the same mapping as the picture.
+            </p>
+            <p>
+                To make the yellow spot easy to find, a <strong>ring</strong> (white, with a dark outline) is drawn around it in the 3D view
+                (<code>HirshfeldDocument.DrawHighlightRings</code>). The ring is a screen-space circle placed at the centre of each patch of the selected bin
+                (vertices of the bin closer than 1.5 Å are grouped into one patch, at most 24 rings), is always visible (no depth test)
+                and disappears together with the highlight.
             </p>
 
             <h4>Save PNG</h4>

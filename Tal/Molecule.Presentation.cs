@@ -44,7 +44,7 @@ namespace Tal
             Debug.WriteLine($"[Presentation] SymetryEquivalents.Count={SymetryEquivalents.Count}");
 
  // Step 2: Calculate charges
-            CalculateAndAssignCharges(ChargeMethod.SQE);
+            CalculateAndAssignCharges(SelectedChargeMethod);
 
  // Step 3: Calculate hydrophobicity
             CalculateAndAssignHydrophobicity();

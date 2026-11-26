@@ -305,7 +305,7 @@ namespace Tal
         public float SharpenStrength { get; set; } = 0.0f;
 
  /// <summary>Generic smoothing parameter (legacy).</summary>
-        public int smuth { get; set; } = 3;
+        public int smuth { get; set; } = 4;
 
  /// <summary>Transparency level (legacy, 0..100).</summary>
         public int transparency { get; set; } = 10;
@@ -960,6 +960,21 @@ namespace Tal
         public int CavityDrawMode { get; set; } = 0;
         public int CavityPropertyType { get; set; } = 1;
 
+        /// <summary>Distance weighting of atomic properties projected onto the cavity: 0 = 1/d, 1 = 1/d² (default, Eq. 15 of the article).</summary>
+        public int CavityPropertyWeighting { get; set; } = 1;
+
+        /// <summary>Contrast of the cavity property-map colour scale in percent (100 = default; 25..400).</summary>
+        public int CavityColorContrastPercent { get; set; } = 100;
+
+        /// <summary>Contrast of the atom colouring by charge / hydrophobicity in percent (100 = default; 25..400).</summary>
+        public int AtomColorContrastPercent { get; set; } = 100;
+
+        /// <summary>Contrast multiplier for the atom colour scale (1.0 = default).</summary>
+        public float AtomColorContrast => Math.Clamp(AtomColorContrastPercent, 25, 400) / 100f;
+
+        /// <summary>Partial-charge model: 0 = SQE (split-charge equilibration), 1 = Gasteiger-Marsili (PEOE).</summary>
+        public int ChargeModel { get; set; } = 0;
+
  /// <summary>
  /// Single switch for cavity computation mode.
  ///
@@ -1458,6 +1473,10 @@ namespace Tal
             VdWValue = other.VdWValue;
             CavityDrawMode = other.CavityDrawMode;
             CavityPropertyType = other.CavityPropertyType;
+            CavityPropertyWeighting = other.CavityPropertyWeighting;
+            CavityColorContrastPercent = other.CavityColorContrastPercent;
+            AtomColorContrastPercent = other.AtomColorContrastPercent;
+            ChargeModel = other.ChargeModel;
 
  // ── Bonds / atoms ──
             MAX_ATOM_DISTANCE = other.MAX_ATOM_DISTANCE;
@@ -1808,6 +1827,10 @@ namespace Tal
             MicroTuneRangePercent = 5.0f;
             CavityDrawMode = 0;
             CavityPropertyType = 0;
+            CavityPropertyWeighting = 1;
+            CavityColorContrastPercent = 100;
+            AtomColorContrastPercent = 100;
+            ChargeModel = 0;
             SDFNeedsRebuild = false;
             UseSDFCorrection = true;
 

@@ -27,6 +27,19 @@ namespace Tal
 
         #region Public API
 
+ /// <summary>Charge model selected in Flags (0 = SQE, 1 = Gasteiger).</summary>
+        public static ChargeMethod SelectedChargeMethod =>
+            Flags.Instance.ChargeModel == 1 ? ChargeMethod.Gasteiger : ChargeMethod.SQE;
+
+ /// <summary>
+ /// Recalculates charges with the model selected in Flags and copies them to the 3D atoms.
+ /// </summary>
+        public void RecalculateCharges()
+        {
+            CalculateAndAssignCharges(SelectedChargeMethod);
+            CopyChargesTo3DAtoms();
+        }
+
  /// <summary>
  /// Calculates and assigns charges using the specified method.
  /// </summary>
@@ -248,16 +261,44 @@ namespace Tal
         #region Propagation to 3D atoms
 
  /// <summary>
- /// Copies charges from symmetry equivalents to 3D atoms
- /// by matching Cartesian positions.
+ /// Copies the charges of the symmetry equivalents / asymmetric unit to the 3D atoms.
+ /// A 3D atom is identified by (symmetry operation, asymmetric atom) = (SymmetryEquivalentNumberInCell,
+ /// AsymmetricIndexPlusOne), which every 3D atom inherits from the list it was generated from, also for
+ /// atoms added by the packing / neighbour expansion. The fractional coordinates of the lists cannot be compared
+ /// with the (centred, Cartesian) 3D coordinates, so atoms without such an index fall back to a coordinate match.
  /// </summary>
         private void CopyChargesTo3DAtoms()
         {
             if (atom == null || NumberOfAtoms == 0 || SymetryEquivalents == null || SymetryEquivalents.Count == 0)
                 return;
 
+            var bySymmetry = new Dictionary<long, float>(SymetryEquivalents.Count);
+            for (int j = 0; j < SymetryEquivalents.Count; j++)
+            {
+                var s = SymetryEquivalents[j];
+                if (s.AsymmetricIndexPlusOne <= 0) continue;
+                long key = ((long)s.SymmetryEquivalentNumberInCell << 32) | (uint)s.AsymmetricIndexPlusOne;
+                if (!bySymmetry.ContainsKey(key)) bySymmetry[key] = s.charge;
+            }
+
             for (int i = 0; i < NumberOfAtoms; i++)
             {
+                int asymPlusOne = atom[i].AsymmetricIndexPlusOne;
+                if (asymPlusOne > 0)
+                {
+                    long key = ((long)atom[i].SymmetryEquivalentNumberInCell << 32) | (uint)asymPlusOne;
+                    if (bySymmetry.TryGetValue(key, out float q))
+                    {
+                        atom[i].charge = q;
+                        continue;
+                    }
+                    if (AsymmetricPart != null && asymPlusOne <= AsymmetricPart.Count)
+                    {
+                        atom[i].charge = AsymmetricPart[asymPlusOne - 1].charge;
+                        continue;
+                    }
+                }
+
                 for (int j = 0; j < SymetryEquivalents.Count; j++)
                 {
                     float dx = Math.Abs(atom[i].Coordinate.X - SymetryEquivalents[j].x);

@@ -1635,7 +1635,7 @@ namespace Tal
                     case 5:
                         try
                         {
-                            var c = ColorManager.ValueToVector3(atom.charge, ColorManager.PropertyType.Charge);
+                            var c = ColorManager.ValueToVector3(atom.charge, ColorManager.PropertyType.Charge, Flags.Instance.AtomColorContrast);
                             raw = (float.IsNaN(c.X) || float.IsNaN(c.Y) || float.IsNaN(c.Z))
                                 ? new Vector3(0.5f) : c;
                         }
@@ -1644,7 +1644,7 @@ namespace Tal
                     case 6:
                         try
                         {
-                            var c = ColorManager.ValueToVector3(atom.Hydrophobicity, ColorManager.PropertyType.Hydrophobicity);
+                            var c = ColorManager.ValueToVector3(atom.Hydrophobicity, ColorManager.PropertyType.Hydrophobicity, Flags.Instance.AtomColorContrast);
                             raw = (float.IsNaN(c.X) || float.IsNaN(c.Y) || float.IsNaN(c.Z))
                                 ? new Vector3(0.5f) : c;
                         }
